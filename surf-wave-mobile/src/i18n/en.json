@@ -1,0 +1,106 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "noData": "No data",
+    "seeMore": "See more",
+    "close": "Close"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "googleLogin": "Continue with Google",
+    "appleLogin": "Continue with Apple",
+    "welcome": "Welcome",
+    "nickname": "Nickname",
+    "email": "Email"
+  },
+  "home": {
+    "title": "Home",
+    "nearbySpots": "Nearby Surf Spots",
+    "favoriteSpots": "Favorites",
+    "currentConditions": "Current Conditions",
+    "forecast": "Forecast"
+  },
+  "spots": {
+    "title": "Spots",
+    "detail": "Spot Details",
+    "favorite": "Favorite",
+    "vote": "Vote",
+    "votes": {
+      "perfect": "Perfect",
+      "mediocre": "Mediocre",
+      "flat": "Flat"
+    },
+    "difficulty": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    }
+  },
+  "forecast": {
+    "waveHeight": "Wave Height",
+    "wavePeriod": "Wave Period",
+    "windSpeed": "Wind Speed",
+    "windDirection": "Wind Direction",
+    "tide": "Tide",
+    "temperature": "Temperature",
+    "waterTemp": "Water Temp"
+  },
+  "diary": {
+    "title": "Surf Diary",
+    "create": "New Entry",
+    "date": "Date",
+    "spot": "Spot",
+    "board": "Board",
+    "duration": "Duration",
+    "satisfaction": "Rating",
+    "memo": "Notes"
+  },
+  "feed": {
+    "title": "Community",
+    "createPost": "Create Post",
+    "like": "Like",
+    "comment": "Comment",
+    "bookmark": "Bookmark",
+    "report": "Report"
+  },
+  "qna": {
+    "title": "Q&A",
+    "ask": "Ask Question",
+    "answer": "Answer",
+    "accept": "Accept"
+  },
+  "guide": {
+    "title": "Guide",
+    "categories": {
+      "basics": "Surfing Basics",
+      "safety": "Safety",
+      "equipment": "Equipment",
+      "etiquette": "Etiquette"
+    }
+  },
+  "mypage": {
+    "title": "My Page",
+    "profile": "Profile",
+    "settings": "Settings",
+    "notifications": "Notifications",
+    "favorites": "Favorites"
+  },
+  "settings": {
+    "title": "Settings",
+    "notifications": "Notification Settings",
+    "language": "Language",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "version": "Version"
+  }
+}

@@ -1,0 +1,8 @@
+export enum GuideCategory {
+  BEGINNER = 'BEGINNER',
+  TECHNIQUE = 'TECHNIQUE',
+  SAFETY = 'SAFETY',
+  EQUIPMENT = 'EQUIPMENT',
+  ETIQUETTE = 'ETIQUETTE',
+  WEATHER = 'WEATHER',
+}

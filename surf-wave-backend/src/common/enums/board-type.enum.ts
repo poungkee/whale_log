@@ -1,0 +1,10 @@
+export enum BoardType {
+  SHORTBOARD = 'SHORTBOARD',
+  LONGBOARD = 'LONGBOARD',
+  FUNBOARD = 'FUNBOARD',
+  FISH = 'FISH',
+  SUP = 'SUP',
+  BODYBOARD = 'BODYBOARD',
+  FOIL = 'FOIL',
+  OTHER = 'OTHER',
+}

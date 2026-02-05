@@ -1,0 +1,106 @@
+{
+  "common": {
+    "loading": "로딩 중...",
+    "error": "오류가 발생했습니다",
+    "retry": "다시 시도",
+    "cancel": "취소",
+    "confirm": "확인",
+    "save": "저장",
+    "delete": "삭제",
+    "edit": "수정",
+    "search": "검색",
+    "noData": "데이터가 없습니다",
+    "seeMore": "더보기",
+    "close": "닫기"
+  },
+  "auth": {
+    "login": "로그인",
+    "logout": "로그아웃",
+    "register": "회원가입",
+    "googleLogin": "Google로 계속하기",
+    "appleLogin": "Apple로 계속하기",
+    "welcome": "환영합니다",
+    "nickname": "닉네임",
+    "email": "이메일"
+  },
+  "home": {
+    "title": "홈",
+    "nearbySpots": "주변 서핑 스팟",
+    "favoriteSpots": "즐겨찾기",
+    "currentConditions": "현재 상태",
+    "forecast": "예보"
+  },
+  "spots": {
+    "title": "스팟",
+    "detail": "스팟 상세",
+    "favorite": "즐겨찾기",
+    "vote": "투표",
+    "votes": {
+      "perfect": "완벽해요",
+      "mediocre": "보통이에요",
+      "flat": "파도 없어요"
+    },
+    "difficulty": {
+      "beginner": "초보",
+      "intermediate": "중급",
+      "advanced": "상급"
+    }
+  },
+  "forecast": {
+    "waveHeight": "파고",
+    "wavePeriod": "파주기",
+    "windSpeed": "풍속",
+    "windDirection": "풍향",
+    "tide": "조수",
+    "temperature": "기온",
+    "waterTemp": "수온"
+  },
+  "diary": {
+    "title": "서핑 일기",
+    "create": "일기 작성",
+    "date": "날짜",
+    "spot": "스팟",
+    "board": "보드",
+    "duration": "서핑 시간",
+    "satisfaction": "만족도",
+    "memo": "메모"
+  },
+  "feed": {
+    "title": "커뮤니티",
+    "createPost": "글 작성",
+    "like": "좋아요",
+    "comment": "댓글",
+    "bookmark": "북마크",
+    "report": "신고"
+  },
+  "qna": {
+    "title": "Q&A",
+    "ask": "질문하기",
+    "answer": "답변하기",
+    "accept": "채택"
+  },
+  "guide": {
+    "title": "가이드",
+    "categories": {
+      "basics": "서핑 기초",
+      "safety": "안전",
+      "equipment": "장비",
+      "etiquette": "에티켓"
+    }
+  },
+  "mypage": {
+    "title": "마이페이지",
+    "profile": "프로필",
+    "settings": "설정",
+    "notifications": "알림",
+    "favorites": "즐겨찾기"
+  },
+  "settings": {
+    "title": "설정",
+    "notifications": "알림 설정",
+    "language": "언어",
+    "privacy": "개인정보처리방침",
+    "terms": "이용약관",
+    "version": "버전"
+  }
+}
