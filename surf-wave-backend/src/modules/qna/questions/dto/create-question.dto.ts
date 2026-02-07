@@ -1,3 +1,7 @@
+/**
+ * @file create-question.dto.ts
+ * @description 질문 생성 요청 DTO - 제목, 내용, 태그
+ */
 import { IsString, IsOptional, IsArray, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 

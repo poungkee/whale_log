@@ -1,3 +1,7 @@
+/**
+ * @file terms.entity.ts
+ * @description 약관 엔티티 - terms 테이블, 약관 제목/내용/버전/필수여부
+ */
 import {
   Column,
   CreateDateColumn,

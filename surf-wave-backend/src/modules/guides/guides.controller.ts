@@ -1,3 +1,12 @@
+/**
+ * @file guides.controller.ts
+ * @description 가이드 컨트롤러 - 서핑 교육 콘텐츠 조회, 학습 진행도 API
+ *
+ * @endpoints
+ * - GET  /guides          - 가이드 목록 조회
+ * - GET  /guides/:id      - 가이드 상세 조회
+ * - POST /guides/:id/progress - 학습 진행도 업데이트
+ */
 import { Controller, Get, Post, Param, Query, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { GuidesService } from './guides.service';

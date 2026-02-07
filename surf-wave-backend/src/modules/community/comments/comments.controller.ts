@@ -1,3 +1,13 @@
+/**
+ * @file comments.controller.ts
+ * @description 댓글 컨트롤러 - 댓글/대댓글 CRUD API
+ *
+ * @endpoints
+ * - POST   /posts/:postId/comments      - 댓글 작성
+ * - GET    /posts/:postId/comments      - 댓글 목록 조회
+ * - PATCH  /posts/:postId/comments/:id  - 댓글 수정
+ * - DELETE /posts/:postId/comments/:id  - 댓글 삭제
+ */
 import {
   Controller,
   Get,

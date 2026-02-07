@@ -1,3 +1,7 @@
+/**
+ * @file create-spot.dto.ts
+ * @description 스팟 생성 DTO (관리자) - 이름, 좌표, 난이도, 주소 등
+ */
 import {
   IsString,
   IsOptional,

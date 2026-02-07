@@ -1,3 +1,7 @@
+/**
+ * @file answer.entity.ts
+ * @description 답변 엔티티 - answers 테이블
+ */
 import {
   Column,
   Entity,

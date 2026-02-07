@@ -1,3 +1,12 @@
+/**
+ * @file guides.service.ts
+ * @description 가이드 서비스 - 교육 콘텐츠 조회 및 학습 진행도 관리
+ *
+ * @methods
+ * - findAll: 가이드 목록 조회
+ * - findOne: 가이드 상세 조회
+ * - markProgress: 학습 진행도 업데이트
+ */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';

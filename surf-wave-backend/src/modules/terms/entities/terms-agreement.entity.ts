@@ -1,3 +1,7 @@
+/**
+ * @file terms-agreement.entity.ts
+ * @description 약관 동의 엔티티 - terms_agreements 테이블, 사용자별 동의 이력
+ */
 import {
   Column,
   CreateDateColumn,

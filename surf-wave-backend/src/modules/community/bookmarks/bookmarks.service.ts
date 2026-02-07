@@ -1,3 +1,10 @@
+/**
+ * @file bookmarks.service.ts
+ * @description 북마크 서비스 - 게시글 북마크 토글 비즈니스 로직
+ *
+ * @methods
+ * - toggle: 북마크 토글 (추가/취소)
+ */
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';

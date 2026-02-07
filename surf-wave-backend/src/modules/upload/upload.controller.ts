@@ -1,3 +1,11 @@
+/**
+ * @file upload.controller.ts
+ * @description 업로드 컨트롤러 - S3 Presigned URL 발급 API
+ *
+ * @endpoints
+ * - POST /upload/presigned-url  - Presigned URL 발급
+ * - POST /upload/file           - 파일 직접 업로드
+ */
 import {
   Controller,
   Post,

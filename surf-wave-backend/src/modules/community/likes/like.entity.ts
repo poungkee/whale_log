@@ -1,3 +1,7 @@
+/**
+ * @file like.entity.ts
+ * @description 좋아요 엔티티 - likes 테이블, 사용자-게시글 좋아요 관계
+ */
 import {
   Column,
   CreateDateColumn,

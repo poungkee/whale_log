@@ -1,3 +1,7 @@
+/**
+ * @file forecast-query.dto.ts
+ * @description 예보 조회 쿼리 DTO - 날짜 범위, 스팟 ID 등 필터
+ */
 import { IsOptional, IsDateString, IsInt, Min, Max } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';

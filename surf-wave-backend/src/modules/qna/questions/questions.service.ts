@@ -1,3 +1,15 @@
+/**
+ * @file questions.service.ts
+ * @description 질문 서비스 - 질문 CRUD 및 채택 비즈니스 로직
+ *
+ * @methods
+ * - create: 질문 작성
+ * - findAll: 질문 목록 조회 (검색, 태그 필터)
+ * - findOne: 질문 상세 조회
+ * - update: 질문 수정
+ * - remove: 질문 삭제
+ * - acceptAnswer: 답변 채택
+ */
 import {
   Injectable,
   NotFoundException,

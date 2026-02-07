@@ -1,3 +1,11 @@
+/**
+ * @file terms.controller.ts
+ * @description 약관 컨트롤러 - 약관 조회, 동의 처리 API
+ *
+ * @endpoints
+ * - GET  /terms       - 약관 목록 조회
+ * - POST /terms/agree - 약관 동의 처리
+ */
 import { Controller, Get, Post, Body } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TermsService } from './terms.service';

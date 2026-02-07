@@ -1,3 +1,17 @@
+/**
+ * @file posts.controller.ts
+ * @description 게시글 컨트롤러 - 커뮤니티 게시글 CRUD, 좋아요, 북마크, 신고 API
+ *
+ * @endpoints
+ * - POST   /posts              - 게시글 작성
+ * - GET    /posts              - 게시글 목록 조회
+ * - GET    /posts/:id          - 게시글 상세 조회
+ * - PATCH  /posts/:id          - 게시글 수정
+ * - DELETE /posts/:id          - 게시글 삭제
+ * - POST   /posts/:id/like     - 좋아요 토글
+ * - POST   /posts/:id/bookmark - 북마크 토글
+ * - POST   /posts/:id/report   - 게시글 신고
+ */
 import {
   Controller,
   Get,

@@ -1,3 +1,7 @@
+/**
+ * @file agree-terms.dto.ts
+ * @description 약관 동의 요청 DTO - 동의할 약관 ID 목록
+ */
 import { IsArray, IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 

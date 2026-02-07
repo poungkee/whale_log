@@ -1,3 +1,16 @@
+/**
+ * @file notifications.service.ts
+ * @description 알림 서비스 - 알림 생성/조회/읽음처리, 조건 알림 CRUD
+ *
+ * @methods
+ * - getNotifications: 알림 목록 조회
+ * - markAsRead: 알림 읽음 처리
+ * - createConditionAlert: 파도 조건 알림 생성
+ * - getConditionAlerts: 조건 알림 목록 조회
+ * - updateConditionAlert: 조건 알림 수정
+ * - deleteConditionAlert: 조건 알림 삭제
+ * - sendNotification: 알림 전송
+ */
 import {
   Injectable,
   NotFoundException,

@@ -1,3 +1,7 @@
+/**
+ * @file post.entity.ts
+ * @description 게시글 엔티티 - posts 테이블
+ */
 import {
   Column,
   Entity,

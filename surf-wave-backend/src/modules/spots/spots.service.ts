@@ -1,3 +1,15 @@
+/**
+ * @file spots.service.ts
+ * @description 서핑 스팟 서비스 - 스팟 CRUD, 즐겨찾기, 투표 비즈니스 로직
+ *
+ * 주요 기능:
+ * - findAll: 필터(지역/난이도/검색어) + 페이지네이션으로 스팟 목록 조회
+ * - findNearby: GPS 좌표 기반 주변 스팟 검색 (Bounding Box 알고리즘)
+ * - findById: 스팟 상세 정보 + 즐겨찾기 여부
+ * - vote: 오늘의 서핑 컨디션 투표 (하루 1회 제한)
+ * - getVoteDistribution: 오늘의 투표 집계 결과
+ * - addFavorite / removeFavorite: 즐겨찾기 토글
+ */
 import {
   Injectable,
   NotFoundException,
@@ -12,6 +24,7 @@ import { SpotVote } from './entities/spot-vote.entity';
 import { SpotQueryDto } from './dto/spot-query.dto';
 import { NearbyQueryDto } from './dto/nearby-query.dto';
 import { VoteType } from '../../common/enums/vote-type.enum';
+import { Difficulty } from '../../common/enums/difficulty.enum';
 import { getBoundingBox } from '../../common/utils/geo.util';
 import { formatDate } from '../../common/utils/date.util';
 
@@ -26,7 +39,7 @@ export class SpotsService {
     private readonly voteRepository: Repository<SpotVote>,
   ) {}
 
-  async findAll(query: SpotQueryDto, userId: string) {
+  async findAll(query: SpotQueryDto, userId?: string) {
     const { region, difficulty, search, page = 1, limit = 20 } = query;
 
     const qb = this.spotRepository
@@ -49,8 +62,8 @@ export class SpotsService {
       .take(limit)
       .getManyAndCount();
 
-    // Check favorites for current user
-    const favoriteSpotIds = await this.getUserFavoriteIds(userId);
+    // Check favorites for current user (if logged in)
+    const favoriteSpotIds = userId ? await this.getUserFavoriteIds(userId) : [];
     const spotsWithFavorite = spots.map((spot) => ({
       ...spot,
       isFavorited: favoriteSpotIds.includes(spot.id),
@@ -69,7 +82,7 @@ export class SpotsService {
     };
   }
 
-  async findNearby(query: NearbyQueryDto, userId: string) {
+  async findNearby(query: NearbyQueryDto, userId?: string) {
     const { lat, lng, radius = 50 } = query;
     const bounds = getBoundingBox(lat, lng, radius);
 
@@ -86,14 +99,14 @@ export class SpotsService {
       })
       .getMany();
 
-    const favoriteSpotIds = await this.getUserFavoriteIds(userId);
+    const favoriteSpotIds = userId ? await this.getUserFavoriteIds(userId) : [];
     return spots.map((spot) => ({
       ...spot,
       isFavorited: favoriteSpotIds.includes(spot.id),
     }));
   }
 
-  async findById(spotId: string, userId: string) {
+  async findById(spotId: string, userId?: string) {
     const spot = await this.spotRepository.findOne({
       where: { id: spotId, isActive: true },
     });
@@ -101,14 +114,18 @@ export class SpotsService {
       throw new NotFoundException('Spot not found');
     }
 
-    const isFavorited = await this.favoriteRepository.findOne({
-      where: { spotId, userId },
-    });
+    let isFavorited = false;
+    if (userId) {
+      const favorite = await this.favoriteRepository.findOne({
+        where: { spotId, userId },
+      });
+      isFavorited = !!favorite;
+    }
 
-    return { ...spot, isFavorited: !!isFavorited };
+    return { ...spot, isFavorited };
   }
 
-  async getVoteDistribution(spotId: string, userId: string) {
+  async getVoteDistribution(spotId: string, userId?: string) {
     const today = formatDate(new Date());
 
     const votes = await this.voteRepository
@@ -127,9 +144,10 @@ export class SpotsService {
       totalVotes: 0,
     };
 
-    votes.forEach((v) => {
+    votes.forEach((v: { voteType: string; count: string }) => {
       const count = parseInt(v.count, 10);
-      distribution[v.voteType.toLowerCase()] = count;
+      const key = v.voteType.toLowerCase() as 'perfect' | 'flat' | 'mediocre';
+      distribution[key] = count;
       distribution.totalVotes += count;
     });
 
@@ -201,6 +219,45 @@ export class SpotsService {
       throw new NotFoundException('Favorite not found');
     }
     return { message: 'Removed from favorites' };
+  }
+
+  /** 활성 상태(isActive=true)인 스팟 목록 조회 (크론 예보 수집용) */
+  async findAllActive(): Promise<Spot[]> {
+    return this.spotRepository.find({
+      where: { isActive: true },
+      select: ['id', 'name', 'latitude', 'longitude'],
+    });
+  }
+
+  /** 대시보드용: 레벨에 따라 적합한 난이도의 활성 스팟 조회 */
+  async findAllActiveForDashboard(level?: Difficulty): Promise<Spot[]> {
+    const qb = this.spotRepository
+      .createQueryBuilder('spot')
+      .select([
+        'spot.id',
+        'spot.name',
+        'spot.latitude',
+        'spot.longitude',
+        'spot.difficulty',
+        'spot.region',
+        'spot.description',
+      ])
+      .where('spot.isActive = :isActive', { isActive: true });
+
+    if (level === Difficulty.BEGINNER) {
+      qb.andWhere('spot.difficulty = :diff', { diff: Difficulty.BEGINNER });
+    } else if (level === Difficulty.INTERMEDIATE) {
+      qb.andWhere('spot.difficulty IN (:...diffs)', {
+        diffs: [Difficulty.BEGINNER, Difficulty.INTERMEDIATE],
+      });
+    } else if (level === Difficulty.ADVANCED) {
+      qb.andWhere('spot.difficulty IN (:...diffs)', {
+        diffs: [Difficulty.BEGINNER, Difficulty.INTERMEDIATE, Difficulty.ADVANCED],
+      });
+    }
+    // EXPERT or undefined → return all active spots
+
+    return qb.orderBy('spot.name', 'ASC').getMany();
   }
 
   private async getUserFavoriteIds(userId: string): Promise<string[]> {

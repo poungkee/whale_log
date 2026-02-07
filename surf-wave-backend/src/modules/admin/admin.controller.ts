@@ -1,3 +1,19 @@
+/**
+ * @file admin.controller.ts
+ * @description 관리자 컨트롤러 - 관리자 전용 CRUD API (ADMIN 역할 필요)
+ *
+ * @endpoints
+ * - POST   /admin/spots            - 스팟 생성
+ * - PATCH  /admin/spots/:id        - 스팟 수정
+ * - DELETE /admin/spots/:id        - 스팟 삭제
+ * - POST   /admin/guides           - 가이드 생성
+ * - PATCH  /admin/guides/:id       - 가이드 수정
+ * - DELETE /admin/guides/:id       - 가이드 삭제
+ * - POST   /admin/users/:id/suspend - 사용자 정지
+ * - GET    /admin/reports           - 신고 목록 조회
+ * - PATCH  /admin/reports/:id       - 신고 처리
+ * - POST   /admin/broadcast         - 전체 공지 전송
+ */
 import {
   Controller,
   Get,

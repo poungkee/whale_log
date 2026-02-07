@@ -1,3 +1,15 @@
+/**
+ * @file diary.service.ts
+ * @description 다이어리 서비스 - 서핑 일지 CRUD 비즈니스 로직
+ *
+ * @methods
+ * - create: 서핑 일지 작성
+ * - findAll: 일지 목록 조회 (페이지네이션)
+ * - findOne: 일지 상세 조회
+ * - update: 일지 수정
+ * - remove: 일지 삭제
+ * - getCalendar: 캘린더 기반 서핑 기록 조회
+ */
 import {
   Injectable,
   NotFoundException,

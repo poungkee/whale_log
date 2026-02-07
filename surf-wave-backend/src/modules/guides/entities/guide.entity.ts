@@ -1,3 +1,7 @@
+/**
+ * @file guide.entity.ts
+ * @description 가이드 엔티티 - guides 테이블, 교육 콘텐츠 정보
+ */
 import {
   Column,
   CreateDateColumn,

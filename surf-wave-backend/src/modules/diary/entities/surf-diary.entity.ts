@@ -1,3 +1,7 @@
+/**
+ * @file surf-diary.entity.ts
+ * @description 서핑 다이어리 엔티티 - surf_diaries 테이블, 서핑 세션 기록
+ */
 import {
   Column,
   Entity,

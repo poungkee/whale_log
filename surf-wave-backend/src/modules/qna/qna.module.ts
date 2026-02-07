@@ -1,3 +1,7 @@
+/**
+ * @file qna.module.ts
+ * @description Q&A(질문/답변) 모듈 - 서핑 관련 질문과 답변
+ */
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { QuestionsController } from './questions/questions.controller';

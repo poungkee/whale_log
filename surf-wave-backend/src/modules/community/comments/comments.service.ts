@@ -1,3 +1,13 @@
+/**
+ * @file comments.service.ts
+ * @description 댓글 서비스 - 댓글 CRUD 및 대댓글 중첩 비즈니스 로직
+ *
+ * @methods
+ * - create: 댓글/대댓글 작성
+ * - findByPost: 게시글별 댓글 목록 조회
+ * - update: 댓글 수정
+ * - remove: 댓글 삭제
+ */
 import {
   Injectable,
   NotFoundException,

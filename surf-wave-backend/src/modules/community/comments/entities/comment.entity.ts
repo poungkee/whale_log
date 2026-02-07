@@ -1,3 +1,7 @@
+/**
+ * @file comment.entity.ts
+ * @description 댓글 엔티티 - comments 테이블, 대댓글 자기참조 관계
+ */
 import {
   Column,
   Entity,

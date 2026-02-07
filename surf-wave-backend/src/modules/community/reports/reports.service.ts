@@ -1,3 +1,11 @@
+/**
+ * @file reports.service.ts
+ * @description 신고 서비스 - 콘텐츠 신고 접수 비즈니스 로직
+ *
+ * @methods
+ * - reportPost: 게시글 신고 접수
+ * - reportComment: 댓글 신고 접수
+ */
 import { Injectable, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';

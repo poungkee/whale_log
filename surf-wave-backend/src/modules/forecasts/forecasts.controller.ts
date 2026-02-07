@@ -1,3 +1,10 @@
+/**
+ * @file forecasts.controller.ts
+ * @description 예보 컨트롤러 - 스팟별 파도/날씨 예보 조회 API
+ *
+ * @endpoints
+ * - GET /spots/:spotId/forecast - 스팟별 예보 데이터 조회
+ */
 import { Controller, Get, Param, Query, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ForecastsService } from './forecasts.service';

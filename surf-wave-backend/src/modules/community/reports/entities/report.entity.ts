@@ -1,3 +1,7 @@
+/**
+ * @file report.entity.ts
+ * @description 신고 엔티티 - reports 테이블, 신고 사유/상태/대상 콘텐츠
+ */
 import {
   Column,
   Entity,

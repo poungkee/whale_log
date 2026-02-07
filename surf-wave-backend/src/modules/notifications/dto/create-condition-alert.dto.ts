@@ -1,3 +1,7 @@
+/**
+ * @file create-condition-alert.dto.ts
+ * @description 파도 조건 알림 생성 DTO - 스팟, 최소 파고, 최대 풍속 등 조건 설정
+ */
 import { IsUUID, IsOptional, IsNumber, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 

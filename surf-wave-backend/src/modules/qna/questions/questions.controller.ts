@@ -1,3 +1,14 @@
+/**
+ * @file questions.controller.ts
+ * @description 질문 컨트롤러 - Q&A 질문 CRUD API
+ *
+ * @endpoints
+ * - POST   /questions          - 질문 작성
+ * - GET    /questions          - 질문 목록 조회
+ * - GET    /questions/:id      - 질문 상세 조회
+ * - PATCH  /questions/:id      - 질문 수정
+ * - DELETE /questions/:id      - 질문 삭제
+ */
 import {
   Controller,
   Get,

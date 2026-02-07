@@ -1,3 +1,7 @@
+/**
+ * @file question-query.dto.ts
+ * @description 질문 목록 조회 쿼리 DTO - 검색/정렬/태그 필터
+ */
 import { IsOptional, IsString, IsIn } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { PaginationDto } from '../../../../common/dto/pagination.dto';

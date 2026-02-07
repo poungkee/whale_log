@@ -1,3 +1,7 @@
+/**
+ * @file condition-alert.entity.ts
+ * @description 파도 조건 알림 엔티티 - condition_alerts 테이블, 자동 알림 조건 설정
+ */
 import {
   Column,
   CreateDateColumn,

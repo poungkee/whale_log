@@ -1,3 +1,14 @@
+/**
+ * @file posts.service.ts
+ * @description 게시글 서비스 - 게시글 CRUD 비즈니스 로직
+ *
+ * @methods
+ * - create: 게시글 작성
+ * - findAll: 게시글 목록 조회 (페이지네이션, 검색)
+ * - findOne: 게시글 상세 조회
+ * - update: 게시글 수정
+ * - remove: 게시글 삭제
+ */
 import {
   Injectable,
   NotFoundException,

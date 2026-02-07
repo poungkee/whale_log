@@ -1,3 +1,7 @@
+/**
+ * @file notification.entity.ts
+ * @description 알림 엔티티 - notifications 테이블, 푸시 알림 기록
+ */
 import {
   Column,
   CreateDateColumn,

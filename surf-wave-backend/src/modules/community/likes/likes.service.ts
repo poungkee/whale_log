@@ -1,3 +1,10 @@
+/**
+ * @file likes.service.ts
+ * @description 좋아요 서비스 - 게시글 좋아요 토글 비즈니스 로직
+ *
+ * @methods
+ * - toggle: 좋아요 토글 (추가/취소)
+ */
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';

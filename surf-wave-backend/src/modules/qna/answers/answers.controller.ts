@@ -1,3 +1,12 @@
+/**
+ * @file answers.controller.ts
+ * @description 답변 컨트롤러 - Q&A 답변 CRUD 및 채택 API
+ *
+ * @endpoints
+ * - PATCH  /answers/:id       - 답변 수정
+ * - DELETE /answers/:id       - 답변 삭제
+ * - POST   /answers/:id/accept - 답변 채택
+ */
 import {
   Controller,
   Patch,

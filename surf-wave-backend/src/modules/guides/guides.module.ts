@@ -1,3 +1,7 @@
+/**
+ * @file guides.module.ts
+ * @description 서핑 가이드(교육 콘텐츠) 모듈
+ */
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { GuidesController } from './guides.controller';

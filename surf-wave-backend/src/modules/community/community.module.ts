@@ -1,3 +1,7 @@
+/**
+ * @file community.module.ts
+ * @description 커뮤니티 모듈 - 게시글, 댓글, 좋아요, 북마크, 신고 통합 모듈
+ */
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostsController } from './posts/posts.controller';

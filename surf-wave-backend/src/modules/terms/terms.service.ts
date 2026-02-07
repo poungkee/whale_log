@@ -1,3 +1,11 @@
+/**
+ * @file terms.service.ts
+ * @description 약관 서비스 - 약관 조회 및 동의 기록 비즈니스 로직
+ *
+ * @methods
+ * - findAll: 약관 목록 조회
+ * - agreeTerms: 약관 동의 처리
+ */
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';

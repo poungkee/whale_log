@@ -1,3 +1,7 @@
+/**
+ * @file data-source.ts
+ * @description TypeORM DataSource 설정 - 마이그레이션 CLI에서 사용하는 DB 연결 설정
+ */
 import { DataSource, DataSourceOptions } from 'typeorm';
 import * as dotenv from 'dotenv';
 

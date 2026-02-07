@@ -1,3 +1,7 @@
+/**
+ * @file create-guide.dto.ts
+ * @description 가이드 생성 DTO (관리자) - 제목, 내용, 카테고리, 난이도
+ */
 import {
   IsString,
   IsOptional,

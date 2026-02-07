@@ -1,3 +1,10 @@
+/**
+ * @file spot-vote.entity.ts
+ * @description 스팟 컨디션 투표 엔티티 - spot_votes 테이블 매핑
+ *
+ * 사용자가 특정 스팟의 오늘 파도 상태에 대해 투표한 기록을 저장합니다.
+ * userId + spotId + votedDate 조합이 유니크하여 하루 1회만 투표 가능합니다.
+ */
 import {
   Column,
   CreateDateColumn,

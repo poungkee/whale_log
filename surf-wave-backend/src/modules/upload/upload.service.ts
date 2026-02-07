@@ -1,3 +1,11 @@
+/**
+ * @file upload.service.ts
+ * @description 업로드 서비스 - S3 Presigned URL 생성 비즈니스 로직
+ *
+ * @methods
+ * - generatePresignedUrl: Presigned URL 생성
+ * - uploadFile: 파일 직접 업로드
+ */
 import {
   Injectable,
   Inject,

@@ -1,3 +1,7 @@
+/**
+ * @file post-image.entity.ts
+ * @description 게시글 이미지 엔티티 - post_images 테이블
+ */
 import {
   Column,
   CreateDateColumn,

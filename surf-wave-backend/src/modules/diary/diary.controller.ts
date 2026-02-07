@@ -1,3 +1,15 @@
+/**
+ * @file diary.controller.ts
+ * @description 다이어리 컨트롤러 - 서핑 일지 작성/조회/수정/삭제 API
+ *
+ * @endpoints
+ * - POST   /diary         - 서핑 일지 작성
+ * - GET    /diary         - 서핑 일지 목록 조회
+ * - GET    /diary/calendar - 캘린더 기반 서핑 기록 조회
+ * - GET    /diary/:id     - 서핑 일지 상세 조회
+ * - PATCH  /diary/:id     - 서핑 일지 수정
+ * - DELETE /diary/:id     - 서핑 일지 삭제
+ */
 import {
   Controller,
   Get,

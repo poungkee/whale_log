@@ -1,3 +1,19 @@
+/**
+ * @file admin.service.ts
+ * @description 관리자 서비스 - 관리 기능 비즈니스 로직
+ *
+ * @methods
+ * - createSpot: 스팟 생성
+ * - updateSpot: 스팟 수정
+ * - deleteSpot: 스팟 삭제
+ * - createGuide: 가이드 생성
+ * - updateGuide: 가이드 수정
+ * - deleteGuide: 가이드 삭제
+ * - suspendUser: 사용자 정지
+ * - getReports: 신고 목록 조회
+ * - resolveReport: 신고 처리
+ * - broadcast: 전체 공지 전송
+ */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull, Not } from 'typeorm';

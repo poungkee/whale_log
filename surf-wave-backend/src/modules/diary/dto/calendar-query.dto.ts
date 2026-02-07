@@ -1,3 +1,7 @@
+/**
+ * @file calendar-query.dto.ts
+ * @description 캘린더 조회 쿼리 DTO - 연/월 기준 서핑 기록 조회
+ */
 import { IsInt, Min, Max } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';

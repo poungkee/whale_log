@@ -1,3 +1,13 @@
+/**
+ * @file answers.service.ts
+ * @description 답변 서비스 - 답변 CRUD 및 채택 비즈니스 로직
+ *
+ * @methods
+ * - create: 답변 작성
+ * - update: 답변 수정
+ * - remove: 답변 삭제
+ * - accept: 답변 채택
+ */
 import {
   Injectable,
   NotFoundException,

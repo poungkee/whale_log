@@ -1,3 +1,7 @@
+/**
+ * @file create-diary.dto.ts
+ * @description 다이어리 생성 요청 DTO - 서핑 날짜, 스팟, 보드종류, 파도상태, 감상 등
+ */
 import {
   IsUUID,
   IsDateString,

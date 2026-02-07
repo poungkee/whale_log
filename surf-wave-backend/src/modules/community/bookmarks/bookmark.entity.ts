@@ -1,3 +1,7 @@
+/**
+ * @file bookmark.entity.ts
+ * @description 북마크 엔티티 - bookmarks 테이블, 사용자-게시글 북마크 관계
+ */
 import {
   Column,
   CreateDateColumn,

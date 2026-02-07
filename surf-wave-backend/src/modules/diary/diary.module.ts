@@ -1,3 +1,7 @@
+/**
+ * @file diary.module.ts
+ * @description 서핑 다이어리(일지) 모듈 - 서핑 세션 기록 CRUD
+ */
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DiaryController } from './diary.controller';

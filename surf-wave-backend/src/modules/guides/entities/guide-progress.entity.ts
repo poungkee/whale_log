@@ -1,3 +1,7 @@
+/**
+ * @file guide-progress.entity.ts
+ * @description 가이드 학습 진행도 엔티티 - guide_progress 테이블
+ */
 import {
   Column,
   CreateDateColumn,

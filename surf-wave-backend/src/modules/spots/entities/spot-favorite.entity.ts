@@ -1,3 +1,11 @@
+/**
+ * @file spot-favorite.entity.ts
+ * @description 스팟 즐겨찾기 엔티티 - spot_favorites 테이블 매핑
+ *
+ * 사용자가 즐겨찾기한 서핑 스팟 정보를 저장합니다.
+ * userId + spotId 조합이 유니크하여 중복 즐겨찾기를 방지합니다.
+ * User, Spot과 다대일(ManyToOne) 관계입니다.
+ */
 import {
   Column,
   CreateDateColumn,

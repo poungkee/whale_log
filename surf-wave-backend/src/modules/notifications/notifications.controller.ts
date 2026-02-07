@@ -1,3 +1,15 @@
+/**
+ * @file notifications.controller.ts
+ * @description 알림 컨트롤러 - 알림 목록 조회, 읽음 처리, 조건 알림 설정 API
+ *
+ * @endpoints
+ * - GET    /notifications               - 알림 목록 조회
+ * - PATCH  /notifications/:id/read      - 알림 읽음 처리
+ * - POST   /notifications/condition-alerts   - 파도 조건 알림 생성
+ * - GET    /notifications/condition-alerts   - 조건 알림 목록 조회
+ * - PATCH  /notifications/condition-alerts/:id - 조건 알림 수정
+ * - DELETE /notifications/condition-alerts/:id - 조건 알림 삭제
+ */
 import {
   Controller,
   Get,

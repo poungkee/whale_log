@@ -1,3 +1,7 @@
+/**
+ * @file create-post.dto.ts
+ * @description 게시글 생성 요청 DTO - 제목, 내용, 이미지 URL 목록
+ */
 import { IsString, IsOptional, IsUUID, IsArray, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 

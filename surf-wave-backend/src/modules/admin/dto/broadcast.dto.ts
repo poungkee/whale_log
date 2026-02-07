@@ -1,3 +1,7 @@
+/**
+ * @file broadcast.dto.ts
+ * @description 전체 공지 알림 DTO (관리자) - 공지 제목, 내용
+ */
 import { IsString, IsOptional, IsObject } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 

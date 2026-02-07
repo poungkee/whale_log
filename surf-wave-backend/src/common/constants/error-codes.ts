@@ -1,76 +1,111 @@
+/**
+ * @file error-codes.ts
+ * @description 애플리케이션 전역 에러 코드 정의 파일
+ *
+ * 모든 도메인별 에러 코드와 메시지를 중앙에서 관리합니다.
+ * 각 에러는 고유한 코드(예: AUTH_001)와 사용자에게 표시할 메시지를 포함합니다.
+ * 프론트엔드에서 에러 코드를 기반으로 적절한 UI 처리를 할 수 있도록 합니다.
+ *
+ * 에러 코드 체계:
+ * - AUTH_0XX : 인증 관련 에러
+ * - USER_0XX : 사용자 관련 에러
+ * - SPOT_0XX : 서핑 스팟 관련 에러
+ * - DIARY_0XX : 다이어리 관련 에러
+ * - POST_0XX : 게시글 관련 에러
+ * - COMMENT_0XX : 댓글 관련 에러
+ * - QUESTION_0XX : 질문 관련 에러
+ * - ANSWER_0XX : 답변 관련 에러
+ * - REPORT_0XX : 신고 관련 에러
+ * - UPLOAD_0XX : 파일 업로드 관련 에러
+ * - COMMON_0XX : 공통 에러
+ */
+
+/** 에러 상세 정보 인터페이스 - 코드와 메시지로 구성 */
 interface ErrorDetail {
-  code: string;
-  message: string;
+  code: string;      // 고유 에러 코드 (예: AUTH_001)
+  message: string;   // 에러 설명 메시지
 }
 
+/** 인증 관련 에러 타입 */
 interface AuthErrors {
-  INVALID_TOKEN: ErrorDetail;
-  USER_NOT_FOUND: ErrorDetail;
-  ALREADY_REGISTERED: ErrorDetail;
-  UNAUTHORIZED: ErrorDetail;
+  INVALID_TOKEN: ErrorDetail;       // 유효하지 않거나 만료된 토큰
+  USER_NOT_FOUND: ErrorDetail;      // DB에서 인증된 사용자를 찾을 수 없음
+  ALREADY_REGISTERED: ErrorDetail;  // 이미 가입된 사용자
+  UNAUTHORIZED: ErrorDetail;        // 인증이 필요한 리소스에 비인증 접근
 }
 
+/** 사용자 관련 에러 타입 */
 interface UserErrors {
-  NICKNAME_TAKEN: ErrorDetail;
-  PROFILE_NOT_FOUND: ErrorDetail;
-  SUSPENDED: ErrorDetail;
+  NICKNAME_TAKEN: ErrorDetail;      // 닉네임 중복
+  PROFILE_NOT_FOUND: ErrorDetail;   // 사용자 프로필 없음
+  SUSPENDED: ErrorDetail;           // 정지된 계정
 }
 
+/** 서핑 스팟 관련 에러 타입 */
 interface SpotErrors {
-  NOT_FOUND: ErrorDetail;
-  ALREADY_VOTED_TODAY: ErrorDetail;
-  ALREADY_FAVORITED: ErrorDetail;
+  NOT_FOUND: ErrorDetail;             // 스팟을 찾을 수 없음
+  ALREADY_VOTED_TODAY: ErrorDetail;   // 오늘 이미 투표함
+  ALREADY_FAVORITED: ErrorDetail;     // 이미 즐겨찾기에 추가됨
 }
 
+/** 서핑 다이어리 관련 에러 타입 */
 interface DiaryErrors {
-  NOT_FOUND: ErrorDetail;
-  NOT_OWNER: ErrorDetail;
-  INVALID_DATE: ErrorDetail;
+  NOT_FOUND: ErrorDetail;     // 다이어리 항목 없음
+  NOT_OWNER: ErrorDetail;     // 다이어리 소유자가 아님
+  INVALID_DATE: ErrorDetail;  // 유효하지 않은 날짜
 }
 
+/** 커뮤니티 게시글 관련 에러 타입 */
 interface PostErrors {
-  NOT_FOUND: ErrorDetail;
-  NOT_AUTHOR: ErrorDetail;
-  HIDDEN: ErrorDetail;
+  NOT_FOUND: ErrorDetail;   // 게시글 없음
+  NOT_AUTHOR: ErrorDetail;  // 작성자가 아님
+  HIDDEN: ErrorDetail;      // 숨김 처리된 게시글
 }
 
+/** 댓글 관련 에러 타입 */
 interface CommentErrors {
-  NOT_FOUND: ErrorDetail;
-  NOT_AUTHOR: ErrorDetail;
-  MAX_DEPTH_EXCEEDED: ErrorDetail;
+  NOT_FOUND: ErrorDetail;           // 댓글 없음
+  NOT_AUTHOR: ErrorDetail;          // 작성자가 아님
+  MAX_DEPTH_EXCEEDED: ErrorDetail;  // 최대 중첩 깊이 초과
 }
 
+/** Q&A 질문 관련 에러 타입 */
 interface QuestionErrors {
-  NOT_FOUND: ErrorDetail;
-  NOT_AUTHOR: ErrorDetail;
-  ALREADY_CLOSED: ErrorDetail;
+  NOT_FOUND: ErrorDetail;       // 질문 없음
+  NOT_AUTHOR: ErrorDetail;      // 작성자가 아님
+  ALREADY_CLOSED: ErrorDetail;  // 이미 마감된 질문
 }
 
+/** Q&A 답변 관련 에러 타입 */
 interface AnswerErrors {
-  NOT_FOUND: ErrorDetail;
-  NOT_AUTHOR: ErrorDetail;
-  ALREADY_ACCEPTED: ErrorDetail;
+  NOT_FOUND: ErrorDetail;         // 답변 없음
+  NOT_AUTHOR: ErrorDetail;        // 작성자가 아님
+  ALREADY_ACCEPTED: ErrorDetail;  // 이미 채택된 답변이 있음
 }
 
+/** 신고 관련 에러 타입 */
 interface ReportErrors {
-  NOT_FOUND: ErrorDetail;
-  DUPLICATE: ErrorDetail;
-  SELF_REPORT: ErrorDetail;
+  NOT_FOUND: ErrorDetail;    // 신고 없음
+  DUPLICATE: ErrorDetail;    // 중복 신고
+  SELF_REPORT: ErrorDetail;  // 자기 자신의 콘텐츠 신고 불가
 }
 
+/** 파일 업로드 관련 에러 타입 */
 interface UploadErrors {
-  FILE_TOO_LARGE: ErrorDetail;
-  INVALID_TYPE: ErrorDetail;
-  MAX_COUNT_EXCEEDED: ErrorDetail;
+  FILE_TOO_LARGE: ErrorDetail;    // 파일 크기 초과
+  INVALID_TYPE: ErrorDetail;      // 지원하지 않는 파일 타입
+  MAX_COUNT_EXCEEDED: ErrorDetail; // 최대 파일 수 초과
 }
 
+/** 공통 에러 타입 */
 interface CommonErrors {
-  FORBIDDEN: ErrorDetail;
-  NOT_FOUND: ErrorDetail;
-  BAD_REQUEST: ErrorDetail;
-  INTERNAL_ERROR: ErrorDetail;
+  FORBIDDEN: ErrorDetail;      // 권한 없음 (403)
+  NOT_FOUND: ErrorDetail;      // 리소스 없음 (404)
+  BAD_REQUEST: ErrorDetail;    // 잘못된 요청 (400)
+  INTERNAL_ERROR: ErrorDetail; // 서버 내부 오류 (500)
 }
 
+/** 전체 에러 코드 구조 인터페이스 - 도메인별로 그룹화 */
 interface ErrorCodes {
   AUTH: AuthErrors;
   USER: UserErrors;
@@ -85,6 +120,7 @@ interface ErrorCodes {
   COMMON: CommonErrors;
 }
 
+/** 에러 코드 상수 객체 - 서비스 레이어에서 예외 발생 시 이 코드를 참조하여 일관된 에러 응답 생성 */
 export const ERROR_CODES: ErrorCodes = {
   AUTH: {
     INVALID_TOKEN: { code: 'AUTH_001', message: 'Invalid or expired authentication token' },

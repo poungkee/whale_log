@@ -1,3 +1,7 @@
+/**
+ * @file fcm.provider.ts
+ * @description FCM 프로바이더 - Firebase Cloud Messaging으로 푸시 알림 전송
+ */
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { FIREBASE_ADMIN } from '../../../config/firebase.config';
 import * as admin from 'firebase-admin';
@@ -49,7 +53,7 @@ export class FcmProvider {
       this.logger.log(`Push notification sent to ${fcmToken.substring(0, 20)}...`);
       return true;
     } catch (error) {
-      this.logger.error(`Failed to send push notification: ${error.message}`);
+      this.logger.error(`Failed to send push notification: ${(error as Error).message}`);
       return false;
     }
   }
@@ -80,7 +84,7 @@ export class FcmProvider {
         failureCount: response.failureCount,
       };
     } catch (error) {
-      this.logger.error(`Failed to send multicast: ${error.message}`);
+      this.logger.error(`Failed to send multicast: ${(error as Error).message}`);
       return { successCount: 0, failureCount: fcmTokens.length };
     }
   }

@@ -1,3 +1,7 @@
+/**
+ * @file admin.module.ts
+ * @description 관리자 모듈 - 스팟/가이드 관리, 사용자 제재, 신고 처리, 공지 전송
+ */
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminController } from './admin.controller';

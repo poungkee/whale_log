@@ -1,3 +1,7 @@
+/**
+ * @file diary-image.entity.ts
+ * @description 다이어리 이미지 엔티티 - diary_images 테이블, 다이어리 첨부 사진
+ */
 import {
   Column,
   CreateDateColumn,
