@@ -36,6 +36,7 @@ coverage/
 # Temporary files
 *.zip
 extracted_ref/
+surf-wave-design/
 
 # React Native
 surf-wave-mobile/ios/Pods/
