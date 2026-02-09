@@ -120,11 +120,11 @@ export class AuthService {
    */
   private async verifyToken(token: string): Promise<admin.auth.DecodedIdToken> {
     if (!this.firebaseAdmin) {
-      // Dev mode mock
+      // Dev mode mock - use token value as deterministic UID
       this.logger.warn('Firebase not configured, using mock token');
       return {
-        uid: 'mock-uid-' + Date.now(),
-        email: 'mock@example.com',
+        uid: 'mock-uid-' + token,
+        email: token,
       } as admin.auth.DecodedIdToken;
     }
 
