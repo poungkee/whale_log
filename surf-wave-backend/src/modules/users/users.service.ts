@@ -15,9 +15,10 @@ import { SocialProvider } from '../../common/enums/social-provider.enum';
 
 /** 사용자 생성 시 필요한 데이터 인터페이스 (내부용) */
 interface CreateUserDto {
-  firebaseUid: string;
+  firebaseUid?: string | null;
   email: string;
   nickname: string;
+  passwordHash?: string | null;
   provider?: SocialProvider;
 }
 
@@ -96,6 +97,43 @@ export class UsersService {
       totalFavoriteSpots: 0,
       surfDaysThisMonth: 0,
       surfDaysThisYear: 0,
+    };
+  }
+
+  /**
+   * sanitizeUser - 사용자 응답에서 민감 정보 제거
+   *
+   * passwordHash, fcmToken 등 클라이언트에 노출되면 안 되는 필드를 제거합니다.
+   * GET /users/me, PATCH /users/me 응답에 사용됩니다.
+   *
+   * @param user - DB에서 조회한 User 엔티티 (모든 필드 포함)
+   * @returns 민감 정보가 제거된 안전한 사용자 데이터
+   */
+  sanitizeUser(user: User): {
+    id: string;
+    email: string;
+    nickname: string;
+    bio: string | null;
+    avatarUrl: string | null;
+    role: string;
+    surfLevel: string | null;
+    provider: string | null;
+    notificationsEnabled: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  } {
+    return {
+      id: user.id,
+      email: user.email,
+      nickname: user.nickname,
+      bio: user.bio,
+      avatarUrl: user.avatarUrl,
+      role: user.role,
+      surfLevel: user.surfLevel,
+      provider: user.provider,
+      notificationsEnabled: user.notificationsEnabled,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     };
   }
 

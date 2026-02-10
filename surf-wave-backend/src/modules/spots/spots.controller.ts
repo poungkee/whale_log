@@ -39,21 +39,21 @@ export class SpotsController {
   @Public()
   @ApiOperation({ summary: 'Get spots list with filters' })
   async getSpots(@Query() query: SpotQueryDto, @CurrentUser() user?: RequestUser) {
-    return this.spotsService.findAll(query, user?.uid);
+    return this.spotsService.findAll(query, user?.id);
   }
 
   @Get('nearby')
   @Public()
   @ApiOperation({ summary: 'Get nearby spots' })
   async getNearbySpots(@Query() query: NearbyQueryDto, @CurrentUser() user?: RequestUser) {
-    return this.spotsService.findNearby(query, user?.uid);
+    return this.spotsService.findNearby(query, user?.id);
   }
 
   @Get('favorites')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get my favorite spots' })
   async getFavorites(@CurrentUser() user: RequestUser) {
-    return this.spotsService.getFavorites(user.uid);
+    return this.spotsService.getFavorites(user.id);
   }
 
   @Get(':spotId')
@@ -63,7 +63,7 @@ export class SpotsController {
     @Param('spotId', ParseUUIDPipe) spotId: string,
     @CurrentUser() user?: RequestUser,
   ) {
-    return this.spotsService.findById(spotId, user?.uid);
+    return this.spotsService.findById(spotId, user?.id);
   }
 
   @Get(':spotId/votes')
@@ -73,7 +73,7 @@ export class SpotsController {
     @Param('spotId', ParseUUIDPipe) spotId: string,
     @CurrentUser() user?: RequestUser,
   ) {
-    return this.spotsService.getVoteDistribution(spotId, user?.uid);
+    return this.spotsService.getVoteDistribution(spotId, user?.id);
   }
 
   @Post(':spotId/vote')
@@ -84,7 +84,7 @@ export class SpotsController {
     @Body() voteDto: VoteDto,
     @CurrentUser() user: RequestUser,
   ) {
-    return this.spotsService.vote(spotId, user.uid, voteDto.voteType);
+    return this.spotsService.vote(spotId, user.id, voteDto.voteType);
   }
 
   @Post(':spotId/favorite')
@@ -94,7 +94,7 @@ export class SpotsController {
     @Param('spotId', ParseUUIDPipe) spotId: string,
     @CurrentUser() user: RequestUser,
   ) {
-    return this.spotsService.addFavorite(spotId, user.uid);
+    return this.spotsService.addFavorite(spotId, user.id);
   }
 
   @Delete(':spotId/favorite')
@@ -104,6 +104,6 @@ export class SpotsController {
     @Param('spotId', ParseUUIDPipe) spotId: string,
     @CurrentUser() user: RequestUser,
   ) {
-    return this.spotsService.removeFavorite(spotId, user.uid);
+    return this.spotsService.removeFavorite(spotId, user.id);
   }
 }

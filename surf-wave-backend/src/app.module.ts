@@ -11,13 +11,15 @@
  */
 
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { getDatabaseConfig } from './config/database.config';
+import { FirebaseAuthGuard } from './common/guards/firebase-auth.guard';
 
 /** ===== 기능 모듈 임포트 ===== */
-import { AuthModule } from './modules/auth/auth.module';           // 인증 (Firebase 기반 로그인/회원가입)
+import { AuthModule } from './modules/auth/auth.module';           // 인증 (JWT 기반 로그인/회원가입/소셜 로그인)
 import { UsersModule } from './modules/users/users.module';        // 사용자 프로필 관리
 import { SpotsModule } from './modules/spots/spots.module';        // 서핑 스팟 (해변 위치) 관리
 import { ForecastsModule } from './modules/forecasts/forecasts.module'; // 파도/날씨 예보
@@ -68,7 +70,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module'; // 대�
     ScheduleModule.forRoot(),
 
     /** ===== 기능 모듈 등록 ===== */
-    AuthModule,           // 인증 모듈: 소셜 로그인, 토큰 검증
+    AuthModule,           // 인증 모듈: JWT 기반 로그인/회원가입, Google/Kakao 소셜 로그인 (JwtModule 글로벌 가드에 제공)
     UsersModule,          // 사용자 모듈: 프로필 CRUD, FCM 토큰 관리
     SpotsModule,          // 서핑 스팟 모듈: 해변 목록, 즐겨찾기, 투표
     ForecastsModule,      // 예보 모듈: Open-Meteo API 기반 파도/날씨 데이터
@@ -83,6 +85,18 @@ import { DashboardModule } from './modules/dashboard/dashboard.module'; // 대�
     DashboardModule,      // 대시보드 모듈: 공개 예보 현황 조회
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    /**
+     * 글로벌 JWT 인증 가드 등록
+     * APP_GUARD로 등록하면 모든 컨트롤러의 모든 엔드포인트에 자동 적용
+     * @Public() 데코레이터가 붙은 엔드포인트만 인증 없이 접근 가능
+     * FirebaseAuthGuard는 이름만 Firebase이고, 실제로는 JWT 검증 수행
+     * (기존 Firebase 인증에서 자체 JWT 인증으로 전환됨)
+     */
+    {
+      provide: APP_GUARD,
+      useClass: FirebaseAuthGuard,
+    },
+  ],
 })
 export class AppModule {}

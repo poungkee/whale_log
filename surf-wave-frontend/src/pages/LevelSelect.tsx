@@ -1,24 +1,43 @@
+/**
+ * @file LevelSelect.tsx
+ * @description 서핑 레벨 선택 화면 - 온보딩 단계
+ *
+ * 회원가입 직후 surfLevel이 null인 경우 표시됩니다.
+ * 사용자가 레벨을 선택하면:
+ * 1. App.tsx의 handleLevelSelect()가 호출됨
+ * 2. localStorage에 surfLevel 저장
+ * 3. PATCH /api/v1/users/me로 서버에 레벨 저장
+ * 4. 메인 화면으로 전환
+ *
+ * "나중에 선택할게요" 클릭 시 BEGINNER로 기본 설정됩니다.
+ */
+
 import type { SurfLevel } from '../types';
 
 interface LevelSelectProps {
+  /** 레벨 선택 완료 시 호출 - App.tsx의 handleLevelSelect(level) */
   onSelect: (level: SurfLevel) => void;
 }
 
+/**
+ * 서핑 레벨 카드 데이터 배열
+ * 각 레벨별 이모지, 한국어 제목/부제/설명, 테마 색상 정의
+ */
 const levels: { level: SurfLevel; emoji: string; title: string; subtitle: string; description: string; color: string }[] = [
   {
     level: 'BEGINNER',
     emoji: '🌊',
     title: '초급',
     subtitle: '처음 시작해요',
-    description: '파도 잡기 연습 중이에요. 안전하고 낮은 파도가 좋아요.',
+    description: '인스트럭터가 밀어주는 파도를 타고 있어요. 안전하고 잔잔한 비치가 좋아요.',
     color: '#32CD32',
   },
   {
     level: 'INTERMEDIATE',
     emoji: '🏄',
     title: '중급',
-    subtitle: '기본기 있어요',
-    description: '테이크오프가 가능하고 기본 라이딩을 할 수 있어요.',
+    subtitle: '혼자 파도를 잡아요',
+    description: '스스로 패들링해서 파도를 잡고 테이크오프할 수 있어요.',
     color: '#008CBA',
   },
   {
@@ -26,7 +45,7 @@ const levels: { level: SurfLevel; emoji: string; title: string; subtitle: string
     emoji: '🏄‍♂️',
     title: '상급',
     subtitle: '자유롭게 타요',
-    description: '다양한 기술을 구사하고 큰 파도도 즐길 수 있어요.',
+    description: '원하는 파도를 골라 탈 수 있고 다양한 기술을 구사해요.',
     color: '#FF8C00',
   },
   {
@@ -34,7 +53,7 @@ const levels: { level: SurfLevel; emoji: string; title: string; subtitle: string
     emoji: '🔥',
     title: '전문가',
     subtitle: '프로 수준이에요',
-    description: '대회 참가 레벨이며 모든 컨디션에서 서핑이 가능해요.',
+    description: '오버헤드 이상 파도도 소화하며 모든 컨디션에서 서핑이 가능해요.',
     color: '#FF4444',
   },
 ];

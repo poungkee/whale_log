@@ -1,7 +1,22 @@
+/**
+ * @file Welcome.tsx
+ * @description 시작 화면 - 앱 소개 + 로그인/회원가입 진입점
+ *
+ * 앱을 처음 실행하거나 로그아웃 후 표시되는 화면입니다.
+ * 주요 기능 소개 (실시간 파도 예보, 서퍼 커뮤니티, 스팟 탐색) +
+ * 로그인/회원가입 버튼을 제공합니다.
+ *
+ * 화면 전환 흐름:
+ * - 로그인 버튼 → Login 화면 (App.tsx에서 screen='login'으로 전환)
+ * - 회원가입 버튼 → Register 화면 (App.tsx에서 screen='register'로 전환)
+ */
+
 import { TrendingUp, Users, MapPin } from 'lucide-react';
 
 interface WelcomeProps {
+  /** 로그인 버튼 클릭 → App.tsx에서 setScreen('login') 호출 */
   onLoginClick: () => void;
+  /** 회원가입 버튼 클릭 → App.tsx에서 setScreen('register') 호출 */
   onRegisterClick: () => void;
 }
 

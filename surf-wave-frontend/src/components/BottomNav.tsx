@@ -1,8 +1,27 @@
+/**
+ * @file BottomNav.tsx
+ * @description 하단 네비게이션 바 - 메인 화면의 탭 전환
+ *
+ * 4개 탭:
+ * - 홈 (home): 대시보드 예보 화면 (Home.tsx)
+ * - 지도 (map): 스팟 지도 화면 (추후 구현)
+ * - 피드 (feed): 커뮤니티 피드 화면 (추후 구현)
+ * - 마이 (mypage): 마이페이지 (MyPage.tsx)
+ *
+ * 현재 활성 탭: primary 색상 + 굵은 아이콘
+ * 비활성 탭: muted 색상
+ *
+ * 고정 위치: 화면 하단 (fixed bottom-0)
+ * safe-bottom: iOS 노치 디바이스 대응
+ */
+
 import { Home, Map, MessageSquare, User } from 'lucide-react';
 import type { MainTab } from '../types';
 
 interface BottomNavProps {
+  /** 현재 활성 탭 - App.tsx의 mainTab 상태 */
   currentTab: MainTab;
+  /** 탭 전환 핸들러 - App.tsx의 setMainTab(tab) 호출 */
   onNavigate: (tab: MainTab) => void;
 }
 

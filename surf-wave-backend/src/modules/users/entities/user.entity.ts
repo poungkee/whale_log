@@ -28,13 +28,17 @@ import { TermsAgreement } from '../../terms/entities/terms-agreement.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
-  /** Firebase 고유 식별자 (UID) - 소셜 로그인 계정과 연결하는 키 */
-  @Column({ name: 'firebase_uid', type: 'varchar', unique: true })
-  firebaseUid: string;
+  /** 소셜 로그인 고유 식별자 (Google/Kakao의 sub/id) - nullable for email signup */
+  @Column({ name: 'firebase_uid', type: 'varchar', unique: true, nullable: true })
+  firebaseUid: string | null;
 
-  /** 사용자 이메일 - Firebase에서 제공하는 이메일 */
+  /** 사용자 이메일 */
   @Column({ type: 'varchar', unique: true })
   email: string;
+
+  /** 비밀번호 해시 - 일반 회원가입 시에만 저장, 소셜 로그인은 null */
+  @Column({ name: 'password_hash', type: 'varchar', nullable: true })
+  passwordHash: string | null;
 
   /** 닉네임 - 서비스 내에서 사용하는 표시 이름 (최대 30자, 고유값) */
   @Column({ type: 'varchar', length: 30, unique: true })

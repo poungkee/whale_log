@@ -1,21 +1,57 @@
+/**
+ * @file Register.tsx
+ * @description 회원가입 화면 - 닉네임/이메일/비밀번호 입력
+ *
+ * API 호출: POST /api/v1/auth/register
+ * 요청 Body: { email: string, password: string, nickname: string }
+ * 응답: { accessToken: JWT토큰, user: 사용자정보 }
+ *
+ * 클라이언트 사이드 유효성 검증:
+ * - 닉네임: 2자 이상
+ * - 이메일: @ 포함
+ * - 비밀번호: 6자 이상
+ * - 비밀번호 확인: 비밀번호와 일치
+ *
+ * 서버 사이드 에러:
+ * - 409 Conflict: 이메일 또는 닉네임 중복 (한국어 메시지)
+ * - 400 Bad Request: 유효성 검증 실패
+ */
+
 import { ArrowLeft, Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
 import { useState } from 'react';
+import type { AuthResponse } from '../types';
 
 interface RegisterProps {
+  /** 뒤로 가기 (welcome 화면으로) */
   onBack: () => void;
-  onRegister: () => void;
+  /** 회원가입 성공 시 호출 - AuthResponse를 App.tsx로 전달 */
+  onAuthSuccess: (data: AuthResponse) => void;
+  /** 로그인 화면으로 이동 */
   onGoLogin: () => void;
 }
 
-export function Register({ onBack, onRegister, onGoLogin }: RegisterProps) {
+export function Register({ onBack, onAuthSuccess, onGoLogin }: RegisterProps) {
+  /** 닉네임 입력값 */
   const [nickname, setNickname] = useState('');
+  /** 이메일 입력값 */
   const [email, setEmail] = useState('');
+  /** 비밀번호 입력값 */
   const [password, setPassword] = useState('');
+  /** 비밀번호 확인 입력값 */
   const [confirmPassword, setConfirmPassword] = useState('');
+  /** 비밀번호 보기/숨기기 토글 */
   const [showPassword, setShowPassword] = useState(false);
+  /** API 호출 중 로딩 상태 */
   const [isLoading, setIsLoading] = useState(false);
+  /** 필드별 에러 메시지 - { nickname: "...", email: "...", password: "...", confirmPassword: "..." } */
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  /**
+   * 클라이언트 사이드 유효성 검증
+   * 서버로 보내기 전에 기본적인 형식 확인
+   *
+   * @returns true면 검증 통과, false면 에러가 있음
+   */
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
     if (nickname.trim().length < 2) {
@@ -34,6 +70,13 @@ export function Register({ onBack, onRegister, onGoLogin }: RegisterProps) {
     return Object.keys(newErrors).length === 0;
   };
 
+  /**
+   * 회원가입 폼 제출 처리
+   * 1. 클라이언트 유효성 검증
+   * 2. POST /api/v1/auth/register로 데이터 전송
+   * 3. 성공 시 AuthResponse를 부모 컴포넌트로 전달
+   * 4. 실패 시 에러 메시지 표시 (중복 닉네임/이메일 등)
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
@@ -42,34 +85,47 @@ export function Register({ onBack, onRegister, onGoLogin }: RegisterProps) {
     setErrors({});
 
     try {
+      /** 회원가입 API 호출 - 이메일, 비밀번호, 닉네임 전송 */
       const res = await fetch('/api/v1/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          firebaseToken: email,
-          nickname,
-        }),
+        body: JSON.stringify({ email, password, nickname }),
       });
 
       if (!res.ok) {
+        /** 서버 에러 응답 처리 */
         const data = await res.json().catch(() => null);
+
         if (res.status === 409) {
+          /**
+           * 409 Conflict - 중복 에러
+           * 백엔드에서 한국어 메시지를 보냄:
+           * - "이미 가입된 이메일입니다"
+           * - "이미 사용 중인 닉네임입니다"
+           */
           const msg = data?.message || '';
-          if (msg.includes('Nickname')) {
-            setErrors({ nickname: '이미 사용 중인 닉네임입니다' });
+          if (msg.includes('닉네임')) {
+            setErrors({ nickname: msg });
           } else {
-            setErrors({ email: '이미 가입된 이메일입니다' });
+            setErrors({ email: msg });
           }
         } else {
-          setErrors({ email: data?.message || '회원가입에 실패했습니다' });
+          /** 기타 에러 (400 등) - 메시지 배열일 수 있음 */
+          const message = Array.isArray(data?.message) ? data.message[0] : (data?.message || '회원가입에 실패했습니다');
+          setErrors({ email: message });
         }
         return;
       }
 
-      const user = await res.json();
-      localStorage.setItem('user', JSON.stringify(user));
-      onRegister();
+      /**
+       * 회원가입 성공 - AuthResponse 수신
+       * { accessToken: "eyJ...", user: { id, email, nickname, surfLevel: null, ... } }
+       * surfLevel은 null → App.tsx에서 레벨 선택 화면으로 이동
+       */
+      const authData: AuthResponse = await res.json();
+      onAuthSuccess(authData);
     } catch {
+      /** 네트워크 에러 */
       setErrors({ email: '서버에 연결할 수 없습니다' });
     } finally {
       setIsLoading(false);
@@ -78,7 +134,7 @@ export function Register({ onBack, onRegister, onGoLogin }: RegisterProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0D1B2A] via-[#1A2332] to-[#0D1B2A]">
-      {/* Header */}
+      {/* 상단 헤더 - 뒤로 가기 */}
       <header className="px-4 py-6">
         <button
           onClick={onBack}
@@ -89,7 +145,7 @@ export function Register({ onBack, onRegister, onGoLogin }: RegisterProps) {
       </header>
 
       <div className="max-w-md mx-auto px-6 py-4 page-transition">
-        {/* Title */}
+        {/* 로고 + 타이틀 */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center shadow-xl">
             <span className="text-4xl">🏄</span>
@@ -98,9 +154,9 @@ export function Register({ onBack, onRegister, onGoLogin }: RegisterProps) {
           <p className="text-muted-foreground">서핑 파도와 함께 시작하세요</p>
         </div>
 
-        {/* Register Form */}
+        {/* 회원가입 폼 */}
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Nickname */}
+          {/* 닉네임 입력 */}
           <div>
             <label htmlFor="nickname" className="block mb-2 text-sm font-medium">
               닉네임
@@ -120,7 +176,7 @@ export function Register({ onBack, onRegister, onGoLogin }: RegisterProps) {
             {errors.nickname && <p className="text-sm text-destructive mt-1">{errors.nickname}</p>}
           </div>
 
-          {/* Email */}
+          {/* 이메일 입력 */}
           <div>
             <label htmlFor="reg-email" className="block mb-2 text-sm font-medium">
               이메일
@@ -140,7 +196,7 @@ export function Register({ onBack, onRegister, onGoLogin }: RegisterProps) {
             {errors.email && <p className="text-sm text-destructive mt-1">{errors.email}</p>}
           </div>
 
-          {/* Password */}
+          {/* 비밀번호 입력 */}
           <div>
             <label htmlFor="reg-password" className="block mb-2 text-sm font-medium">
               비밀번호
@@ -167,7 +223,7 @@ export function Register({ onBack, onRegister, onGoLogin }: RegisterProps) {
             {errors.password && <p className="text-sm text-destructive mt-1">{errors.password}</p>}
           </div>
 
-          {/* Confirm Password */}
+          {/* 비밀번호 확인 입력 */}
           <div>
             <label htmlFor="confirm-password" className="block mb-2 text-sm font-medium">
               비밀번호 확인
@@ -187,7 +243,7 @@ export function Register({ onBack, onRegister, onGoLogin }: RegisterProps) {
             {errors.confirmPassword && <p className="text-sm text-destructive mt-1">{errors.confirmPassword}</p>}
           </div>
 
-          {/* Register Button */}
+          {/* 회원가입 버튼 */}
           <button
             type="submit"
             disabled={isLoading}
@@ -196,7 +252,7 @@ export function Register({ onBack, onRegister, onGoLogin }: RegisterProps) {
             {isLoading ? '가입 중...' : '회원가입'}
           </button>
 
-          {/* Login Link */}
+          {/* 로그인 링크 */}
           <div className="text-center pt-2">
             <span className="text-sm text-muted-foreground">이미 계정이 있으신가요? </span>
             <button
