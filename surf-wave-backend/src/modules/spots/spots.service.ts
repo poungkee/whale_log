@@ -241,6 +241,16 @@ export class SpotsService {
         'spot.difficulty',
         'spot.region',
         'spot.description',
+        // v1.3 계산 로직에 필요한 스팟 고정 속성
+        'spot.breakType',             // 해저 지형 (beach_break, reef_break 등)
+        'spot.bestSwellDirection',    // 최적 스웰 방향 (S, SW 등)
+        'spot.bestSwellSpreadDeg',    // 스웰 허용 범위 (도)
+        'spot.coastFacingDeg',        // 해안이 바라보는 바다 방향 (도)
+        'spot.season',                // 최적 시즌
+        'spot.optimalWaveMin',        // [override] 최적 파고 하한
+        'spot.optimalWaveMax',        // [override] 최적 파고 상한
+        'spot.tolerableWaveMin',      // [override] 허용 파고 하한
+        'spot.tolerableWaveMax',      // [override] 허용 파고 상한
       ])
       .where('spot.isActive = :isActive', { isActive: true });
 

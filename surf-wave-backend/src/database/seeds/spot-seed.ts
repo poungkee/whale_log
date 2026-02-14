@@ -41,47 +41,64 @@ async function seed() {
       );
 
       if (check.rows.length > 0) {
-        // 기존 스팟 업데이트 (좌표, 지역, 설명, 브레이크타입, 스웰방향, 시즌 등 최신 데이터로 갱신)
+        // 기존 스팟 업데이트 (v1.3 계산 로직용 전체 고정 속성 갱신)
+        // 파고 override(optimal/tolerable) 포함
         await client.query(
           `UPDATE spots
            SET description = $1, latitude = $2, longitude = $3,
                address = $4, region = $5, difficulty = $6,
                amenities = $7, break_type = $8, best_swell_direction = $9,
-               season = $10, updated_at = NOW()
-           WHERE name = $11`,
+               season = $10, coast_facing_deg = $11, best_swell_spread_deg = $12,
+               optimal_wave_min = $13, optimal_wave_max = $14,
+               tolerable_wave_min = $15, tolerable_wave_max = $16,
+               updated_at = NOW()
+           WHERE name = $17`,
           [
-            spot.description,
-            spot.latitude,
-            spot.longitude,
-            spot.address,
-            spot.region,
-            spot.difficulty,
-            JSON.stringify(spot.amenities),
-            spot.breakType || null,
-            spot.bestSwellDirection || null,
-            spot.season || null,
-            spot.name,
+            spot.description,                   // $1
+            spot.latitude,                      // $2
+            spot.longitude,                     // $3
+            spot.address,                       // $4
+            spot.region,                        // $5
+            spot.difficulty,                    // $6
+            JSON.stringify(spot.amenities),     // $7
+            spot.breakType || null,             // $8
+            spot.bestSwellDirection || null,    // $9
+            spot.season || null,                // $10
+            spot.coastFacingDeg ?? null,        // $11
+            spot.bestSwellSpreadDeg ?? null,    // $12
+            spot.optimalWaveMin ?? null,        // $13 - 파고 override
+            spot.optimalWaveMax ?? null,        // $14
+            spot.tolerableWaveMin ?? null,      // $15
+            spot.tolerableWaveMax ?? null,      // $16
+            spot.name,                          // $17
           ],
         );
         console.log(`  UPDATE: ${spot.name}`);
         updateCount++;
       } else {
-        // 새 스팟 삽입
+        // 새 스팟 삽입 (v1.3 계산 로직용 전체 컬럼 포함)
+        // $1~$17: name ~ tolerableWaveMax
         await client.query(
-          `INSERT INTO spots (id, name, description, latitude, longitude, address, region, difficulty, amenities, break_type, best_swell_direction, season, is_active, rating, rating_count, created_at, updated_at)
-           VALUES (uuid_generate_v4(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, true, 0, 0, NOW(), NOW())`,
+          `INSERT INTO spots (id, name, description, latitude, longitude, address, region, difficulty, amenities, break_type, best_swell_direction, season, coast_facing_deg, best_swell_spread_deg, optimal_wave_min, optimal_wave_max, tolerable_wave_min, tolerable_wave_max, is_active, rating, rating_count, created_at, updated_at)
+           VALUES (uuid_generate_v4(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, true, 0, 0, NOW(), NOW())`,
           [
-            spot.name,
-            spot.description,
-            spot.latitude,
-            spot.longitude,
-            spot.address,
-            spot.region,
-            spot.difficulty,
-            JSON.stringify(spot.amenities),
-            spot.breakType || null,
-            spot.bestSwellDirection || null,
-            spot.season || null,
+            spot.name,                          // $1
+            spot.description,                   // $2
+            spot.latitude,                      // $3
+            spot.longitude,                     // $4
+            spot.address,                       // $5
+            spot.region,                        // $6
+            spot.difficulty,                    // $7
+            JSON.stringify(spot.amenities),     // $8
+            spot.breakType || null,             // $9
+            spot.bestSwellDirection || null,    // $10
+            spot.season || null,                // $11
+            spot.coastFacingDeg ?? null,        // $12
+            spot.bestSwellSpreadDeg ?? null,    // $13
+            spot.optimalWaveMin ?? null,        // $14 - 파고 override
+            spot.optimalWaveMax ?? null,        // $15
+            spot.tolerableWaveMin ?? null,      // $16
+            spot.tolerableWaveMax ?? null,      // $17
           ],
         );
         console.log(`  INSERT: ${spot.name}`);

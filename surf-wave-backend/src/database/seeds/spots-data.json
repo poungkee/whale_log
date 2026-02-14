@@ -7,10 +7,18 @@
     "address": "강원도 양양군 현남면 인구해변길",
     "region": "양양",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true, "shower": true, "rental": true, "lesson": true, "cafe": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true,
+      "lesson": true,
+      "cafe": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "E",
-    "season": "6월~10월"
+    "season": "6월~10월",
+    "coastFacingDeg": 90,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "양양 죽도해변",
@@ -20,10 +28,20 @@
     "address": "강원도 양양군 현북면 하광정리",
     "region": "양양",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true, "shower": true, "rental": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "E",
-    "season": "6월~10월"
+    "season": "6월~10월",
+    "coastFacingDeg": 85,
+    "bestSwellSpreadDeg": 45,
+    "optimalWaveMin": 1.2,
+    "optimalWaveMax": 2.5,
+    "tolerableWaveMin": 0.8,
+    "tolerableWaveMax": 3.5
   },
   {
     "name": "양양 기사문해변",
@@ -33,36 +51,58 @@
     "address": "강원도 양양군 손양면 기사문리",
     "region": "양양",
     "difficulty": "ADVANCED",
-    "amenities": { "parking": true, "shower": false },
+    "amenities": {
+      "parking": true,
+      "shower": false
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "NE",
-    "season": "6월~10월"
+    "season": "6월~10월",
+    "coastFacingDeg": 80,
+    "bestSwellSpreadDeg": 30,
+    "optimalWaveMin": 0.8,
+    "optimalWaveMax": 2.0,
+    "tolerableWaveMin": 0.5,
+    "tolerableWaveMax": 3.0
   },
   {
     "name": "양양 하조대해변",
     "description": "한국 유일의 서핑 전용 지정 해변. 소나무 숲이 뒤배경으로 펼쳐진 아름다운 포인트. 중급 서퍼에게 안정적인 파도를 제공.",
-    "latitude": 38.1050,
-    "longitude": 128.6150,
+    "latitude": 38.105,
+    "longitude": 128.615,
     "address": "강원도 양양군 현북면 하조대해변길",
     "region": "양양",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true, "shower": true, "rental": true, "lesson": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true,
+      "lesson": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "E",
-    "season": "6월~10월"
+    "season": "6월~10월",
+    "coastFacingDeg": 90,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "양양 38도선해변",
     "description": "하조대 남쪽에 위치한 로컬 서퍼 인기 포인트. 외국인 서퍼들도 많이 찾으며, 조용한 분위기에서 양질의 파도를 즐길 수 있음.",
-    "latitude": 38.0900,
-    "longitude": 128.6200,
+    "latitude": 38.09,
+    "longitude": 128.62,
     "address": "강원도 양양군 현북면",
     "region": "양양",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true, "shower": true, "rental": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "E",
-    "season": "6월~10월"
+    "season": "6월~10월",
+    "coastFacingDeg": 85,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "강릉 사천해변",
@@ -72,36 +112,57 @@
     "address": "강원도 강릉시 사천면 사천해변길",
     "region": "강릉",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true, "shower": true, "rental": true, "lesson": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true,
+      "lesson": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "E",
-    "season": "6월~10월"
+    "season": "6월~10월",
+    "coastFacingDeg": 90,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "강릉 경포해변",
     "description": "강릉 대표 해변. 일출 명소로 유명하며, 여름철 완만한 파도로 초보자 서핑 체험에 적합. 넓은 백사장과 편의시설 완비.",
-    "latitude": 37.7970,
-    "longitude": 128.9100,
+    "latitude": 37.797,
+    "longitude": 128.91,
     "address": "강원도 강릉시 강문동 경포해변로",
     "region": "강릉",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true, "shower": true, "rental": true, "lesson": true, "cafe": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true,
+      "lesson": true,
+      "cafe": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "E",
-    "season": "6월~10월"
+    "season": "6월~10월",
+    "coastFacingDeg": 85,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "속초해변",
     "description": "설악산 국립공원 인근 해변. 동해안 특유의 깨끗한 물과 안정적인 파도. 서핑 후 설악산 관광까지 가능한 장점.",
-    "latitude": 38.2050,
-    "longitude": 128.5950,
+    "latitude": 38.205,
+    "longitude": 128.595,
     "address": "강원도 속초시 해오름로",
     "region": "속초",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true, "shower": true, "rental": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "NE",
-    "season": "6월~10월"
+    "season": "6월~10월",
+    "coastFacingDeg": 80,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "고성 봉포해변",
@@ -111,23 +172,33 @@
     "address": "강원도 고성군 죽왕면 봉포리",
     "region": "고성",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "NE",
-    "season": "6월~10월"
+    "season": "6월~10월",
+    "coastFacingDeg": 75,
+    "bestSwellSpreadDeg": 45,
+    "tolerableWaveMax": 2.5
   },
   {
     "name": "고성 대진해변",
     "description": "한국 최북단 주요 서핑 포인트. 한적하고 깨끗한 환경에서 서핑 가능. 초보자도 접근 가능한 완만한 파도.",
-    "latitude": 38.5000,
-    "longitude": 128.4300,
+    "latitude": 38.5,
+    "longitude": 128.43,
     "address": "강원도 고성군 현내면 대진리",
     "region": "고성",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true, "shower": true },
+    "amenities": {
+      "parking": true,
+      "shower": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "NE",
-    "season": "6월~10월"
+    "season": "6월~10월",
+    "coastFacingDeg": 70,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "부산 송정해변",
@@ -137,36 +208,60 @@
     "address": "부산광역시 해운대구 송정해변로",
     "region": "부산",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true, "shower": true, "rental": true, "lesson": true, "cafe": true, "restaurant": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true,
+      "lesson": true,
+      "cafe": true,
+      "restaurant": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "SE",
-    "season": "6월~11월"
+    "season": "6월~11월",
+    "coastFacingDeg": 130,
+    "bestSwellSpreadDeg": 45,
+    "optimalWaveMin": 0.3,
+    "optimalWaveMax": 0.8,
+    "tolerableWaveMin": 0.2,
+    "tolerableWaveMax": 1.0
   },
   {
     "name": "부산 임랑해변",
     "description": "송정 북쪽에 위치한 해변. 송정보다 사람이 적고 파도가 약간 강해 중급 서퍼에게 인기. 로컬 분위기의 조용한 포인트.",
-    "latitude": 35.2350,
-    "longitude": 129.2300,
+    "latitude": 35.235,
+    "longitude": 129.23,
     "address": "부산광역시 기장군 장안읍 임랑해변길",
     "region": "부산",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true, "shower": true, "rental": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "SE",
-    "season": "6월~11월"
+    "season": "6월~11월",
+    "coastFacingDeg": 120,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "부산 다대포해변",
     "description": "부산 서쪽 끝 다대포 해변. 태풍 스웰 시 강한 파도가 형성되어 중급 이상 서퍼에게 적합. 낙동강 하구 일몰 경치가 장관.",
-    "latitude": 35.0530,
-    "longitude": 128.9660,
+    "latitude": 35.053,
+    "longitude": 128.966,
     "address": "부산광역시 사하구 다대로",
     "region": "부산",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true, "shower": true },
+    "amenities": {
+      "parking": true,
+      "shower": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "S",
-    "season": "6월~11월"
+    "season": "6월~11월",
+    "coastFacingDeg": 180,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "부산 해운대해변",
@@ -176,10 +271,19 @@
     "address": "부산광역시 해운대구 해운대해변로",
     "region": "부산",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true, "shower": true, "rental": true, "lesson": true, "cafe": true, "restaurant": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true,
+      "lesson": true,
+      "cafe": true,
+      "restaurant": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "SE",
-    "season": "6월~11월"
+    "season": "6월~11월",
+    "coastFacingDeg": 135,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "제주 중문해변",
@@ -189,23 +293,45 @@
     "address": "제주특별자치도 서귀포시 중문관광로",
     "region": "제주",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true, "shower": true, "rental": true, "lesson": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true,
+      "lesson": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "S",
-    "season": "연중"
+    "season": "연중",
+    "coastFacingDeg": 190,
+    "bestSwellSpreadDeg": 45,
+    "optimalWaveMin": 0.6,
+    "optimalWaveMax": 1.5,
+    "tolerableWaveMin": 0.4,
+    "tolerableWaveMax": 2.0
   },
   {
     "name": "제주 이호테우해변",
     "description": "제주 시내에서 가장 가까운 서핑 해변. 빨간·하얀 말 등대로 유명하며 초보자도 편하게 서핑할 수 있는 부드러운 파도.",
-    "latitude": 33.5200,
-    "longitude": 126.4530,
+    "latitude": 33.52,
+    "longitude": 126.453,
     "address": "제주특별자치도 제주시 이호일동",
     "region": "제주",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true, "shower": true, "rental": true, "lesson": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true,
+      "lesson": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "N",
-    "season": "연중"
+    "season": "연중",
+    "coastFacingDeg": 350,
+    "bestSwellSpreadDeg": 45,
+    "optimalWaveMin": 0.3,
+    "optimalWaveMax": 0.7,
+    "tolerableWaveMin": 0.2,
+    "tolerableWaveMax": 0.9
   },
   {
     "name": "제주 월정리해변",
@@ -215,90 +341,134 @@
     "address": "제주특별자치도 제주시 구좌읍 월정리",
     "region": "제주",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true, "shower": true, "rental": true, "lesson": true, "cafe": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true,
+      "lesson": true,
+      "cafe": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "N",
-    "season": "연중"
+    "season": "연중",
+    "coastFacingDeg": 15,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "제주 곽지해변",
     "description": "서제주의 여유로운 서핑 해변. 한적한 분위기에서 서핑을 즐기기 좋으며, 근처 과물노천탕(천연 해수탕)이 매력.",
-    "latitude": 33.4550,
-    "longitude": 126.3280,
+    "latitude": 33.455,
+    "longitude": 126.328,
     "address": "제주특별자치도 제주시 애월읍 곽지리",
     "region": "제주",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true, "shower": true, "rental": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "NW",
-    "season": "연중"
+    "season": "연중",
+    "coastFacingDeg": 310,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "제주 표선해변",
     "description": "남제주의 순한 파도 해변. 수심이 얕고 파도가 부드러워 서핑 입문자에게 최적. 넓은 백사장이 특징.",
-    "latitude": 33.3200,
-    "longitude": 126.8400,
+    "latitude": 33.32,
+    "longitude": 126.84,
     "address": "제주특별자치도 서귀포시 표선면 표선리",
     "region": "제주",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true, "shower": true, "rental": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "S",
-    "season": "연중"
+    "season": "연중",
+    "coastFacingDeg": 170,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "제주 함덕해변",
     "description": "북제주 함덕 서우봉 해변. 수심이 얕고 안전하여 초보자에게 인기. 투명한 물빛과 아름다운 경관.",
-    "latitude": 33.5430,
-    "longitude": 126.6690,
+    "latitude": 33.543,
+    "longitude": 126.669,
     "address": "제주특별자치도 제주시 조천읍 함덕리",
     "region": "제주",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true, "shower": true, "rental": true, "lesson": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true,
+      "lesson": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "N",
-    "season": "연중"
+    "season": "연중",
+    "coastFacingDeg": 10,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "태안 만리포해변",
     "description": "서해안 대표 서핑 해변. 서해 특유의 넓은 백사장과 완만한 파도. 초보자 서핑 체험에 좋고, 서해안 일몰이 아름다움.",
-    "latitude": 36.7900,
-    "longitude": 126.1400,
+    "latitude": 36.79,
+    "longitude": 126.14,
     "address": "충청남도 태안군 소원면 만리포해변길",
     "region": "태안",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true, "shower": true, "rental": true, "lesson": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true,
+      "lesson": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "W",
-    "season": "9월~11월"
+    "season": "9월~11월",
+    "coastFacingDeg": 270,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "고흥 남열해변",
     "description": "남해안(전남) 서핑 포인트. 5~10월 시즌에 파도가 들어오며, 남해안 특유의 따뜻한 수온이 장점.",
-    "latitude": 34.5800,
-    "longitude": 127.1000,
+    "latitude": 34.58,
+    "longitude": 127.1,
     "address": "전라남도 고흥군 영남면 남열리",
     "region": "고흥",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true, "shower": true },
+    "amenities": {
+      "parking": true,
+      "shower": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "S",
-    "season": "6월~10월"
+    "season": "6월~10월",
+    "coastFacingDeg": 185,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "포항 칠포해변",
     "description": "동해남부 포항의 서핑 해변. 간조 시 한국에서 가장 빠른 파도가 형성되는 것으로 유명. 겨울 시즌 파도가 좋음.",
-    "latitude": 36.0300,
-    "longitude": 129.3800,
+    "latitude": 36.03,
+    "longitude": 129.38,
     "address": "경상북도 포항시 북구 흥해읍 칠포리",
     "region": "포항",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true, "shower": true, "rental": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "E",
-    "season": "6월~10월"
+    "season": "6월~10월",
+    "coastFacingDeg": 95,
+    "bestSwellSpreadDeg": 45
   },
-
   {
     "name": "Uluwatu",
     "description": "세계적으로 유명한 레프트 핸드 리프 브레이크. 절벽 아래 동굴을 통해 진입. 5개 섹션(Racetrack, Peak, Temples, Outside Corner, Bombie)으로 구성. 상급자 전용.",
@@ -307,10 +477,15 @@
     "address": "Pecatu, South Kuta, Badung Regency, Bali",
     "region": "Bali - Bukit",
     "difficulty": "EXPERT",
-    "amenities": { "parking": true, "cafe": true },
+    "amenities": {
+      "parking": true,
+      "cafe": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "S",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 200,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Padang Padang",
@@ -320,413 +495,551 @@
     "address": "Pecatu, South Kuta, Badung Regency, Bali",
     "region": "Bali - Bukit",
     "difficulty": "ADVANCED",
-    "amenities": { "parking": true, "cafe": true },
+    "amenities": {
+      "parking": true,
+      "cafe": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 210,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Baby Padang",
     "description": "파당파당 바로 옆의 부드러운 리프 브레이크. 파당파당보다 파도가 순해서 중급자도 도전 가능.",
     "latitude": -8.8125,
-    "longitude": 115.0990,
+    "longitude": 115.099,
     "address": "Pecatu, South Kuta, Badung Regency, Bali",
     "region": "Bali - Bukit",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 210,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Impossibles",
     "description": "부킷 반도의 긴 레프트 핸드 리프. 4~6ft에서 최고의 컨디션. 한 파도에서 여러 번의 배럴이 가능한 포인트.",
-    "latitude": -8.8090,
-    "longitude": 115.1030,
+    "latitude": -8.809,
+    "longitude": 115.103,
     "address": "Pecatu, South Kuta, Badung Regency, Bali",
     "region": "Bali - Bukit",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 215,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Bingin",
     "description": "부킷에서 가장 접근하기 쉬운 배럴. 하이타이드에서 중급자도 가능. 절벽 아래 작은 해변에서 진입.",
-    "latitude": -8.8070,
-    "longitude": 115.1060,
+    "latitude": -8.807,
+    "longitude": 115.106,
     "address": "Pecatu, South Kuta, Badung Regency, Bali",
     "region": "Bali - Bukit",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true, "cafe": true },
+    "amenities": {
+      "parking": true,
+      "cafe": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 215,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Dreamland",
     "description": "부킷 서쪽의 넓은 비치/리프 혼합 브레이크. 깊은 수심과 모래 덮인 리프로 비교적 안전. 다양한 레벨 대응 가능.",
-    "latitude": -8.8030,
-    "longitude": 115.1080,
+    "latitude": -8.803,
+    "longitude": 115.108,
     "address": "Pecatu, South Kuta, Badung Regency, Bali",
     "region": "Bali - Bukit",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true, "shower": true, "cafe": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "cafe": true
+    },
     "breakType": "beach_reef_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 220,
+    "bestSwellSpreadDeg": 35
   },
   {
     "name": "Balangan Beach",
     "description": "부킷 반도 서쪽의 아름다운 해변. 일관성 있는 레프트 핸드 리프. 작은 스웰부터 큰 스웰까지 대응 가능. 절벽 위 뷰포인트가 매력적.",
-    "latitude": -8.7950,
-    "longitude": 115.1120,
+    "latitude": -8.795,
+    "longitude": 115.112,
     "address": "Jimbaran, South Kuta, Badung Regency, Bali",
     "region": "Bali - Bukit",
     "difficulty": "ADVANCED",
-    "amenities": { "parking": true, "cafe": true },
+    "amenities": {
+      "parking": true,
+      "cafe": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 210,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Thomas Beach",
     "description": "임파서블스 근처의 한적한 브레이크. 관광객이 적어 여유로운 서핑 가능. 강한 조류에 주의 필요.",
-    "latitude": -8.8100,
-    "longitude": 115.1050,
+    "latitude": -8.81,
+    "longitude": 115.105,
     "address": "Pecatu, South Kuta, Badung Regency, Bali",
     "region": "Bali - Bukit",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 200,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Pandawa",
     "description": "부킷 남쪽 해안 최고의 파도로 평가받는 리프 브레이크. 절벽 사이 숨겨진 해변에서 진입.",
-    "latitude": -8.8440,
-    "longitude": 115.1830,
+    "latitude": -8.844,
+    "longitude": 115.183,
     "address": "Kutuh, South Kuta, Badung Regency, Bali",
     "region": "Bali - South Coast",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true, "cafe": true },
+    "amenities": {
+      "parking": true,
+      "cafe": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "S",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 180,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Green Bowl",
     "description": "2개의 브레이크(강력한 라이트 + 고품질 레프트). 데드 로우타이드(0.0~0.2m)에서만 서핑 가능. 절벽 300계단 내려가야 함.",
-    "latitude": -8.8380,
-    "longitude": 115.1920,
+    "latitude": -8.838,
+    "longitude": 115.192,
     "address": "Ungasan, South Kuta, Badung Regency, Bali",
     "region": "Bali - South Coast",
     "difficulty": "ADVANCED",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "S",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 185,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Nyang Nyang",
     "description": "파워풀한 라이트 핸드 브레이크. 울루와투보다 항상 1ft 더 큰 파도. 해변까지 긴 하이킹 필요.",
-    "latitude": -8.8350,
-    "longitude": 115.0780,
+    "latitude": -8.835,
+    "longitude": 115.078,
     "address": "Pecatu, South Kuta, Badung Regency, Bali",
     "region": "Bali - South Coast",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "S",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 195,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Gunung Payung",
     "description": "강력한 시프팅 라이트 핸드 피크. 파도 위치가 계속 바뀌어 경험 많은 서퍼에게 적합.",
-    "latitude": -8.8460,
-    "longitude": 115.1990,
+    "latitude": -8.846,
+    "longitude": 115.199,
     "address": "Kutuh, South Kuta, Badung Regency, Bali",
     "region": "Bali - South Coast",
     "difficulty": "ADVANCED",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "S",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 175,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Nunggalan",
     "description": "부킷 반도 남서쪽 끝의 외진 리프 브레이크. 접근이 매우 어려워 체력이 필요. 크라우드가 없어 파도 독점 가능.",
-    "latitude": -8.8380,
-    "longitude": 115.0720,
+    "latitude": -8.838,
+    "longitude": 115.072,
     "address": "Pecatu, South Kuta, Badung Regency, Bali",
     "region": "Bali - South Coast",
     "difficulty": "ADVANCED",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "S",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 195,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Melasti",
     "description": "2개의 피크가 있어 다양한 레벨 대응 가능. 비교적 새로 개발된 해변이라 시설이 깨끗.",
-    "latitude": -8.8410,
-    "longitude": 115.1650,
+    "latitude": -8.841,
+    "longitude": 115.165,
     "address": "Ungasan, South Kuta, Badung Regency, Bali",
     "region": "Bali - South Coast",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true, "shower": true, "cafe": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "cafe": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "S",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 185,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Sri Lanka (Nusa Dua)",
     "description": "누사두아 해안선 최고의 파도. 일관성 있는 리프 브레이크. 동쪽~남동쪽 스웰에 잘 반응.",
-    "latitude": -8.8050,
-    "longitude": 115.2310,
+    "latitude": -8.805,
+    "longitude": 115.231,
     "address": "Benoa, South Kuta, Badung Regency, Bali",
     "region": "Bali - Nusa Dua",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SE",
-    "season": "11월~3월"
+    "season": "11월~3월",
+    "coastFacingDeg": 120,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Geger Left",
     "description": "누사두아 남쪽의 경치 좋은 코너 브레이크. 레프트 핸드 리프로 비교적 안정적인 파도.",
-    "latitude": -8.8120,
-    "longitude": 115.2250,
+    "latitude": -8.812,
+    "longitude": 115.225,
     "address": "Benoa, South Kuta, Badung Regency, Bali",
     "region": "Bali - Nusa Dua",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true, "cafe": true },
+    "amenities": {
+      "parking": true,
+      "cafe": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SE",
-    "season": "11월~3월"
+    "season": "11월~3월",
+    "coastFacingDeg": 125,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Geger Right",
     "description": "절대 플랫하지 않은 포인트. 대형 스웰도 받아내는 강력한 라이트 핸드 리프. 상급자 도전용.",
-    "latitude": -8.8100,
-    "longitude": 115.2270,
+    "latitude": -8.81,
+    "longitude": 115.227,
     "address": "Benoa, South Kuta, Badung Regency, Bali",
     "region": "Bali - Nusa Dua",
     "difficulty": "ADVANCED",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SE",
-    "season": "11월~3월"
+    "season": "11월~3월",
+    "coastFacingDeg": 125,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Chicken Wings",
     "description": "누사두아의 긴 퍼포먼스 지향 리프. 빠른 섹션과 컷백 구간이 번갈아 나타남.",
-    "latitude": -8.8000,
-    "longitude": 115.2340,
+    "latitude": -8.8,
+    "longitude": 115.234,
     "address": "Benoa, South Kuta, Badung Regency, Bali",
     "region": "Bali - Nusa Dua",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SE",
-    "season": "11월~3월"
+    "season": "11월~3월",
+    "coastFacingDeg": 115,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Mengiat",
     "description": "빠르고 변화무쌍한 A-프레임 리프. 남동쪽 스웰에 반응. 파도 위치가 자주 바뀌어 적응력 필요.",
-    "latitude": -8.7980,
-    "longitude": 115.2350,
+    "latitude": -8.798,
+    "longitude": 115.235,
     "address": "Benoa, South Kuta, Badung Regency, Bali",
     "region": "Bali - Nusa Dua",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SE",
-    "season": "11월~3월"
+    "season": "11월~3월",
+    "coastFacingDeg": 120,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Black Stone",
     "description": "가파른 웨지 테이크오프가 특징인 리프 브레이크. 빠른 반응속도가 필요.",
-    "latitude": -8.7940,
-    "longitude": 115.2370,
+    "latitude": -8.794,
+    "longitude": 115.237,
     "address": "Benoa, South Kuta, Badung Regency, Bali",
     "region": "Bali - Nusa Dua",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SE",
-    "season": "11월~3월"
+    "season": "11월~3월",
+    "coastFacingDeg": 130,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Mushroom Rock",
     "description": "빠른 라이트 핸드 리프 브레이크. 누사두아 중심부에 위치. 보트 또는 패들로 접근.",
-    "latitude": -8.7900,
-    "longitude": 115.2380,
+    "latitude": -8.79,
+    "longitude": 115.238,
     "address": "Benoa, South Kuta, Badung Regency, Bali",
     "region": "Bali - Nusa Dua",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SE",
-    "season": "11월~3월"
+    "season": "11월~3월",
+    "coastFacingDeg": 110,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Mushroom Secrets",
     "description": "머쉬룸 록 옆의 보호된 리프. 파도가 더 부드러워 초중급자도 도전 가능. 누사두아 입문 포인트.",
-    "latitude": -8.7890,
-    "longitude": 115.2370,
+    "latitude": -8.789,
+    "longitude": 115.237,
     "address": "Benoa, South Kuta, Badung Regency, Bali",
     "region": "Bali - Nusa Dua",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SE",
-    "season": "11월~3월"
+    "season": "11월~3월",
+    "coastFacingDeg": 115,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Benoa",
     "description": "멀티 피크 리프로 누사두아에서 가장 긴 라이드 가능. 여러 테이크오프 포인트가 있어 크라우드 분산.",
-    "latitude": -8.7760,
-    "longitude": 115.2200,
+    "latitude": -8.776,
+    "longitude": 115.22,
     "address": "Tanjung Benoa, South Kuta, Badung Regency, Bali",
     "region": "Bali - Nusa Dua",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SE",
-    "season": "11월~3월"
+    "season": "11월~3월",
+    "coastFacingDeg": 100,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Toro Toro",
     "description": "에어포트 리프에서 가장 인기 있는 포인트. 길고 부드러운 라이트 핸드 월. 보트 접근.",
-    "latitude": -8.7520,
-    "longitude": 115.1650,
+    "latitude": -8.752,
+    "longitude": 115.165,
     "address": "Tuban, Kuta, Badung Regency, Bali",
     "region": "Bali - Airport Reef",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": false },
+    "amenities": {
+      "parking": false
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 135,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Tower",
     "description": "에어포트 리프 중 가장 부드러운 파도. 리폼 웨이브로 초보자 리프 서핑 체험에 적합.",
-    "latitude": -8.7500,
-    "longitude": 115.1630,
+    "latitude": -8.75,
+    "longitude": 115.163,
     "address": "Tuban, Kuta, Badung Regency, Bali",
     "region": "Bali - Airport Reef",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": false },
+    "amenities": {
+      "parking": false
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 130,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Airport Right",
     "description": "장난스러운 파도부터 헤비 배럴까지 다양한 면을 보여주는 라이트 핸드 리프. 보트 접근.",
-    "latitude": -8.7480,
-    "longitude": 115.1700,
+    "latitude": -8.748,
+    "longitude": 115.17,
     "address": "Tuban, Kuta, Badung Regency, Bali",
     "region": "Bali - Airport Reef",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": false },
+    "amenities": {
+      "parking": false
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "S",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 200,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Airport Left",
     "description": "에어포트 리프의 레프트 핸드 옵션. 길고 부드러운 월이 특징. 라이트보다 크라우드가 적음.",
-    "latitude": -8.7470,
-    "longitude": 115.1680,
+    "latitude": -8.747,
+    "longitude": 115.168,
     "address": "Tuban, Kuta, Badung Regency, Bali",
     "region": "Bali - Airport Reef",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": false },
+    "amenities": {
+      "parking": false
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "S",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 195,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Middle Reef",
     "description": "에어포트 리프 중 가장 일관성 있는 포인트. 빠른 월과 섹션이 반복. 상급자 추천.",
-    "latitude": -8.7460,
-    "longitude": 115.1720,
+    "latitude": -8.746,
+    "longitude": 115.172,
     "address": "Tuban, Kuta, Badung Regency, Bali",
     "region": "Bali - Airport Reef",
     "difficulty": "ADVANCED",
-    "amenities": { "parking": false },
+    "amenities": {
+      "parking": false
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 210,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Kuta Reef",
     "description": "오리지널 퍼펙트 웨이브. 기계처럼 정확한 레프트 핸드 리프. 발리 서핑 역사의 시작점. 보트 접근.",
-    "latitude": -8.7440,
-    "longitude": 115.1750,
+    "latitude": -8.744,
+    "longitude": 115.175,
     "address": "Kuta, Badung Regency, Bali",
     "region": "Bali - Airport Reef",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": false },
+    "amenities": {
+      "parking": false
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 220,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Honeymoon",
     "description": "짐바란 만의 포인트 브레이크. 대형 스웰 시에만 작동하지만, 작동하면 강력한 파도 제공.",
-    "latitude": -8.7680,
-    "longitude": 115.1580,
+    "latitude": -8.768,
+    "longitude": 115.158,
     "address": "Jimbaran, South Kuta, Badung Regency, Bali",
     "region": "Bali - Jimbaran",
     "difficulty": "ADVANCED",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "point_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 225,
+    "bestSwellSpreadDeg": 25
   },
   {
     "name": "Muaya",
     "description": "짐바란 해변의 비치 브레이크. 대형 스웰이 있을 때 초보자도 즐길 수 있는 부드러운 파도. 해산물 식당 밀집 지역.",
-    "latitude": -8.7780,
-    "longitude": 115.1570,
+    "latitude": -8.778,
+    "longitude": 115.157,
     "address": "Jimbaran, South Kuta, Badung Regency, Bali",
     "region": "Bali - Jimbaran",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true, "restaurant": true },
+    "amenities": {
+      "parking": true,
+      "restaurant": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 240,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "Ahimsa",
     "description": "짐바란의 변덕스러운 A-프레임 리프. 조건이 맞으면 초보자도 즐길 수 있는 부드러운 파도.",
-    "latitude": -8.7700,
-    "longitude": 115.1560,
+    "latitude": -8.77,
+    "longitude": 115.156,
     "address": "Jimbaran, South Kuta, Badung Regency, Bali",
     "region": "Bali - Jimbaran",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 235,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Lifeguard Hut",
     "description": "짐바란 라이프가드 초소 앞 하이타이드 피크. 밀물 때만 서핑 가능. 초보자 접근 가능.",
-    "latitude": -8.7720,
-    "longitude": 115.1550,
+    "latitude": -8.772,
+    "longitude": 115.155,
     "address": "Jimbaran, South Kuta, Badung Regency, Bali",
     "region": "Bali - Jimbaran",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 250,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "Kuta Beach",
@@ -736,529 +1049,725 @@
     "address": "Kuta, Badung Regency, Bali",
     "region": "Bali - Kuta",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true, "shower": true, "rental": true, "lesson": true, "cafe": true, "restaurant": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true,
+      "lesson": true,
+      "cafe": true,
+      "restaurant": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 265,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "Halfway",
     "description": "쿠타~레기안 사이의 프리미어 피크. 다양한 조건에서 작동하는 만능 비치 브레이크.",
-    "latitude": -8.7100,
-    "longitude": 115.1650,
+    "latitude": -8.71,
+    "longitude": 115.165,
     "address": "Legian, Kuta, Badung Regency, Bali",
     "region": "Bali - Kuta",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true, "rental": true },
+    "amenities": {
+      "parking": true,
+      "rental": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 265,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "Padma",
     "description": "월드클래스 비치 브레이크. 배럴 포텐셜이 있는 강력한 파도. 레기안 지역 최고 퀄리티.",
-    "latitude": -8.7050,
-    "longitude": 115.1630,
+    "latitude": -8.705,
+    "longitude": 115.163,
     "address": "Legian, Kuta, Badung Regency, Bali",
     "region": "Bali - Kuta",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true, "rental": true },
+    "amenities": {
+      "parking": true,
+      "rental": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 270,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "Double Six",
     "description": "하이타이드 스페셜리스트. 밀물 때 부드러운 파도가 형성되어 초중급자에게 적합.",
-    "latitude": -8.6980,
-    "longitude": 115.1590,
+    "latitude": -8.698,
+    "longitude": 115.159,
     "address": "Seminyak, North Kuta, Badung Regency, Bali",
     "region": "Bali - Kuta",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true, "cafe": true, "restaurant": true },
+    "amenities": {
+      "parking": true,
+      "cafe": true,
+      "restaurant": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 270,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "Kul Kul",
     "description": "모래 바닥 비치 브레이크. 타이드에 따라 난이도 변화. 하이타이드에서 초보자, 로우타이드에서 중급 이상.",
-    "latitude": -8.6940,
-    "longitude": 115.1570,
+    "latitude": -8.694,
+    "longitude": 115.157,
     "address": "Seminyak, North Kuta, Badung Regency, Bali",
     "region": "Bali - Kuta",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true, "cafe": true },
+    "amenities": {
+      "parking": true,
+      "cafe": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 270,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "Seminyak Beach",
     "description": "쿠타보다 조용한 세미냑 비치. 완만한 파도로 초중급자에게 적합. 고급 리조트와 부티크가 즐비한 트렌디한 지역.",
     "latitude": -8.6903,
-    "longitude": 115.1550,
+    "longitude": 115.155,
     "address": "Seminyak, North Kuta, Badung Regency, Bali",
     "region": "Bali - Kuta",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true, "shower": true, "rental": true, "lesson": true, "cafe": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true,
+      "lesson": true,
+      "cafe": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 275,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "Berawa",
     "description": "짱구 남쪽 입구의 비치 브레이크. 꾸준하고 재미있는 파도. 서핑 후 근처 비치클럽에서 휴식하기 좋음.",
-    "latitude": -8.6600,
-    "longitude": 115.1420,
+    "latitude": -8.66,
+    "longitude": 115.142,
     "address": "Canggu, North Kuta, Badung Regency, Bali",
     "region": "Bali - Canggu",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true, "shower": true, "rental": true, "cafe": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true,
+      "cafe": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 280,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "Canggu - Batu Bolong",
     "description": "짱구의 대표 서핑 포인트. 일관성 좋은 부드러운 파도로 롱보드의 천국. 힙한 카페와 바가 즐비.",
-    "latitude": -8.6540,
-    "longitude": 115.1360,
+    "latitude": -8.654,
+    "longitude": 115.136,
     "address": "Canggu, North Kuta, Badung Regency, Bali",
     "region": "Bali - Canggu",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true, "shower": true, "rental": true, "lesson": true, "cafe": true, "restaurant": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true,
+      "lesson": true,
+      "cafe": true,
+      "restaurant": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 280,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "Old Man's",
     "description": "바투볼롱 바로 옆의 젠틀한 롱보드 파도. 나이 든 서퍼도 편하게 탈 수 있는 부드러운 파도. 짱구의 쌍둥이 포인트.",
-    "latitude": -8.6530,
-    "longitude": 115.1350,
+    "latitude": -8.653,
+    "longitude": 115.135,
     "address": "Canggu, North Kuta, Badung Regency, Bali",
     "region": "Bali - Canggu",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true, "rental": true, "cafe": true },
+    "amenities": {
+      "parking": true,
+      "rental": true,
+      "cafe": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 280,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "Echo Beach",
     "description": "짱구 에코비치. 빠르고 장난스러운 레프트 핸드 리프. 다양한 파도가 형성. 석양과 함께 서핑하는 분위기 최고.",
-    "latitude": -8.6500,
-    "longitude": 115.1310,
+    "latitude": -8.65,
+    "longitude": 115.131,
     "address": "Canggu, North Kuta, Badung Regency, Bali",
     "region": "Bali - Canggu",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true, "shower": true, "rental": true, "cafe": true },
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true,
+      "cafe": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 285,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Canggu Sandbar",
     "description": "짱구에서 상급 서퍼에게 가장 흥미로운 파도. 모래톱 위에서 형성되는 강력한 비치 브레이크.",
-    "latitude": -8.6480,
-    "longitude": 115.1290,
+    "latitude": -8.648,
+    "longitude": 115.129,
     "address": "Canggu, North Kuta, Badung Regency, Bali",
     "region": "Bali - Canggu",
     "difficulty": "ADVANCED",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 280,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "Canggu Rivermouth",
     "description": "짱구 프리미어 웨이브. 강 하구에서 형성되는 강력한 파도. 발리 최고의 비치 브레이크 중 하나.",
-    "latitude": -8.6460,
-    "longitude": 115.1270,
+    "latitude": -8.646,
+    "longitude": 115.127,
     "address": "Canggu, North Kuta, Badung Regency, Bali",
     "region": "Bali - Canggu",
     "difficulty": "ADVANCED",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 275,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "Pererenan",
     "description": "짱구 북쪽의 리프 브레이크. 펀치있는 라이트와 긴 레프트 제공. 에코비치보다 크라우드가 적음.",
-    "latitude": -8.6420,
-    "longitude": 115.1240,
+    "latitude": -8.642,
+    "longitude": 115.124,
     "address": "Pererenan, North Kuta, Badung Regency, Bali",
     "region": "Bali - Canggu",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true, "cafe": true },
+    "amenities": {
+      "parking": true,
+      "cafe": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 285,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Kedungu",
     "description": "짱구 북쪽의 부드러운 비치 브레이크. 초보자 친화적이며 한적한 포인트.",
-    "latitude": -8.6140,
-    "longitude": 115.0900,
+    "latitude": -8.614,
+    "longitude": 115.09,
     "address": "Belalang, Kediri, Tabanan, Bali",
     "region": "Bali - West Coast",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 280,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "Yeh Gangga",
     "description": "발리 서해안 최고 품질의 비치 브레이크. 파워풀하고 깔끔한 파도. 관광객이 적어 한적.",
-    "latitude": -8.5870,
-    "longitude": 115.0540,
+    "latitude": -8.587,
+    "longitude": 115.054,
     "address": "Tabanan, Bali",
     "region": "Bali - West Coast",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 255,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "Pig Stone",
     "description": "서해안의 크라우드 없는 옵션. 혼합 브레이크로 다양한 파도. 현지인들만 아는 포인트.",
-    "latitude": -8.5750,
-    "longitude": 115.0420,
+    "latitude": -8.575,
+    "longitude": 115.042,
     "address": "Tabanan, Bali",
     "region": "Bali - West Coast",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "beach_reef_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 260,
+    "bestSwellSpreadDeg": 35
   },
   {
     "name": "Truck Stops",
     "description": "부드러운 레프트 파도. 초중급자에게 적합. 근처 도로에 트럭이 자주 정차해서 붙여진 이름.",
-    "latitude": -8.5650,
-    "longitude": 115.0300,
+    "latitude": -8.565,
+    "longitude": 115.03,
     "address": "Tabanan, Bali",
     "region": "Bali - West Coast",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 265,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "Balian",
     "description": "일관성 좋은 스웰 자석. A-프레임/비치 브레이크로 다양한 방향의 파도. 요가+서핑 여행지로 인기.",
-    "latitude": -8.4750,
-    "longitude": 114.9270,
+    "latitude": -8.475,
+    "longitude": 114.927,
     "address": "Lalanglinggah, Selemadeg Barat, Tabanan, Bali",
     "region": "Bali - West Coast",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true, "cafe": true },
+    "amenities": {
+      "parking": true,
+      "cafe": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 260,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "Yeh Sumbul",
     "description": "메데위 동쪽의 부드러운 비치/자갈 브레이크. 메데위보다 파도가 순해 초중급자에게 적합.",
-    "latitude": -8.3980,
-    "longitude": 114.8700,
+    "latitude": -8.398,
+    "longitude": 114.87,
     "address": "Jembrana, Bali",
     "region": "Bali - West Coast",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 260,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "Medewi",
     "description": "발리에서 가장 길고 부드러운 레프트 핸드 포인트 브레이크. 느린 벽을 따라 긴 라이드 가능. 롱보드 서핑에 최적.",
-    "latitude": -8.3680,
-    "longitude": 114.8310,
+    "latitude": -8.368,
+    "longitude": 114.831,
     "address": "Medewi, Pekutatan, Jembrana, Bali",
     "region": "Bali - West Coast",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true, "rental": true, "cafe": true },
+    "amenities": {
+      "parking": true,
+      "rental": true,
+      "cafe": true
+    },
     "breakType": "point_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 250,
+    "bestSwellSpreadDeg": 25
   },
   {
     "name": "Medewi Right",
     "description": "메데위 메인 포인트 맞은편의 펀치있는 라이트. 메인보다 파워풀하고 빠름.",
-    "latitude": -8.3670,
-    "longitude": 114.8320,
+    "latitude": -8.367,
+    "longitude": 114.832,
     "address": "Medewi, Pekutatan, Jembrana, Bali",
     "region": "Bali - West Coast",
     "difficulty": "ADVANCED",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "point_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 250,
+    "bestSwellSpreadDeg": 25
   },
   {
     "name": "Pulukan",
     "description": "메데위 서쪽의 리프/바위 브레이크. A-프레임과 라이트가 혼합. 크라우드 없는 조용한 포인트.",
-    "latitude": -8.3500,
-    "longitude": 114.8000,
+    "latitude": -8.35,
+    "longitude": 114.8,
     "address": "Pulukan, Pekutatan, Jembrana, Bali",
     "region": "Bali - West Coast",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SW",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 255,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Serangan",
     "description": "거북이 섬(Turtle Island) 앞 리프. 우기(11~3월) 스웰 자석. 가장 작은 날에도 파도가 있음. A-프레임으로 레프트/라이트 모두 가능.",
-    "latitude": -8.7350,
-    "longitude": 115.2280,
+    "latitude": -8.735,
+    "longitude": 115.228,
     "address": "Serangan, Denpasar Selatan, Bali",
     "region": "Bali - Sanur",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SE",
-    "season": "11월~3월"
+    "season": "11월~3월",
+    "coastFacingDeg": 140,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Baby Reef",
     "description": "사누르 앞바다의 부드러운 리프. 레프트와 라이트 모두 순한 파도. 롱보드 프렌들리. 발리 리프 서핑 입문에 최적.",
-    "latitude": -8.7050,
-    "longitude": 115.2670,
+    "latitude": -8.705,
+    "longitude": 115.267,
     "address": "Sanur, Denpasar Selatan, Bali",
     "region": "Bali - Sanur",
     "difficulty": "BEGINNER",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SE",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 125,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Hyatt Reef",
     "description": "해안에서 2km 오프쇼어 리프. Outside Peak는 홀로우 배럴, Main Peak는 퍼포먼스 월. Mertasari 해변에서 보트로 접근.",
-    "latitude": -8.6900,
-    "longitude": 115.2720,
+    "latitude": -8.69,
+    "longitude": 115.272,
     "address": "Sanur, Denpasar Selatan, Bali",
     "region": "Bali - Sanur",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": false },
+    "amenities": {
+      "parking": false
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SE",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 120,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Sindhu Right",
     "description": "사누르의 빠른 라이트 핸드 리프. 긴 라인부터 헤비 배럴까지 다양.",
-    "latitude": -8.6830,
-    "longitude": 115.2680,
+    "latitude": -8.683,
+    "longitude": 115.268,
     "address": "Sanur, Denpasar Selatan, Bali",
     "region": "Bali - Sanur",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SE",
-    "season": "11월~3월"
+    "season": "11월~3월",
+    "coastFacingDeg": 100,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Sindhu Left",
     "description": "사누르 신두 해변 앞 레프트 핸드 리프. 탑-헤비(파도 윗부분이 먼저 깨지는) 쉐이프가 특징.",
-    "latitude": -8.6820,
-    "longitude": 115.2670,
+    "latitude": -8.682,
+    "longitude": 115.267,
     "address": "Sanur, Denpasar Selatan, Bali",
     "region": "Bali - Sanur",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SE",
-    "season": "11월~3월"
+    "season": "11월~3월",
+    "coastFacingDeg": 100,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Sanur Reef",
     "description": "사누르 외곽의 드레징 전문가 전용 라이트. 대형 스웰에서만 작동. 홀로우하고 위험한 리프.",
-    "latitude": -8.6750,
-    "longitude": 115.2730,
+    "latitude": -8.675,
+    "longitude": 115.273,
     "address": "Sanur, Denpasar Selatan, Bali",
     "region": "Bali - Sanur",
     "difficulty": "ADVANCED",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SE",
-    "season": "11월~3월"
+    "season": "11월~3월",
+    "coastFacingDeg": 110,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Ketewel",
     "description": "동해안의 빠른 홀로우 라이트 핸드 리프. 케라마스보다 크라우드가 적어 로컬 서퍼가 선호.",
-    "latitude": -8.6100,
-    "longitude": 115.3350,
+    "latitude": -8.61,
+    "longitude": 115.335,
     "address": "Ketewel, Sukawati, Gianyar, Bali",
     "region": "Bali - East Coast",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SE",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 120,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Keramas Beach",
     "description": "WSL 챔피언십 투어 개최지. 월드클래스 라이트 핸드 리프. 파워풀하고 빠른 배럴이 특징. 야간 서핑 조명 있음. 상급자 전용.",
-    "latitude": -8.5750,
-    "longitude": 115.3530,
+    "latitude": -8.575,
+    "longitude": 115.353,
     "address": "Medahan, Blahbatuh, Gianyar, Bali",
     "region": "Bali - East Coast",
     "difficulty": "EXPERT",
-    "amenities": { "parking": true, "cafe": true },
+    "amenities": {
+      "parking": true,
+      "cafe": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SE",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 125,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "KFC",
     "description": "케라마스 지역에서 가장 쉽고 크라우드가 적은 라이트 핸드 리프. 케라마스 입문용으로 중급자에게 추천.",
-    "latitude": -8.5780,
-    "longitude": 115.3500,
+    "latitude": -8.578,
+    "longitude": 115.35,
     "address": "Medahan, Blahbatuh, Gianyar, Bali",
     "region": "Bali - East Coast",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SE",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 130,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Cucukan",
     "description": "깔끔하고 리핑 가능한 라이트 핸드 리프. 케라마스 북쪽에 위치. 중급자 퍼포먼스 서핑에 좋음.",
-    "latitude": -8.5600,
-    "longitude": 115.3600,
+    "latitude": -8.56,
+    "longitude": 115.36,
     "address": "Blahbatuh, Gianyar, Bali",
     "region": "Bali - East Coast",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SE",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 125,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Carparks",
     "description": "케라마스 근처의 펀치있는 오버플로우 스팟. 케라마스 크라우드 대안. 상급자 추천.",
-    "latitude": -8.5550,
-    "longitude": 115.3650,
+    "latitude": -8.555,
+    "longitude": 115.365,
     "address": "Blahbatuh, Gianyar, Bali",
     "region": "Bali - East Coast",
     "difficulty": "ADVANCED",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SE",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 120,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Klotok",
     "description": "동해안에서 중급자에게 가장 친화적인 포인트 브레이크. 동해안 리프 서핑 입문에 적합.",
-    "latitude": -8.5300,
-    "longitude": 115.3800,
+    "latitude": -8.53,
+    "longitude": 115.38,
     "address": "Klungkung, Bali",
     "region": "Bali - East Coast",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "point_break",
     "bestSwellDirection": "SE",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 115,
+    "bestSwellSpreadDeg": 25
   },
   {
     "name": "Biaung",
     "description": "파워풀하고 펀치있는 비치 브레이크. 사누르와 케라마스 사이에 위치. 조건 좋을 때 강한 파도.",
-    "latitude": -8.6300,
-    "longitude": 115.3100,
+    "latitude": -8.63,
+    "longitude": 115.31,
     "address": "Kesiman Kertalangu, Denpasar, Bali",
     "region": "Bali - East Coast",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "beach_break",
     "bestSwellDirection": "SE",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 110,
+    "bestSwellSpreadDeg": 45
   },
   {
     "name": "Jasri",
     "description": "동부 발리(까랑아셈)의 롱 하이 퍼포먼스 포인트 브레이크. 긴 라이드가 가능한 상급 포인트.",
-    "latitude": -8.4700,
-    "longitude": 115.5700,
+    "latitude": -8.47,
+    "longitude": 115.57,
     "address": "Jasri, Karangasem, Bali",
     "region": "Bali - East Coast",
     "difficulty": "ADVANCED",
-    "amenities": { "parking": true },
+    "amenities": {
+      "parking": true
+    },
     "breakType": "point_break",
     "bestSwellDirection": "SE",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 100,
+    "bestSwellSpreadDeg": 25
   },
   {
     "name": "Playgrounds",
     "description": "렘봉안에서 가장 인기 있는 A-프레임 리프. 유저 프렌들리한 파도로 중급자에게 최적. 보트 접근.",
-    "latitude": -8.6800,
-    "longitude": 115.4450,
+    "latitude": -8.68,
+    "longitude": 115.445,
     "address": "Nusa Lembongan, Klungkung, Bali",
     "region": "Bali - Lembongan",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": false },
+    "amenities": {
+      "parking": false
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "S",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 175,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Lacerations",
     "description": "렘봉안의 크라운 주얼. 월드클래스 배럴이 가능한 리프 브레이크. 얕은 리프에 주의.",
-    "latitude": -8.6850,
-    "longitude": 115.4410,
+    "latitude": -8.685,
+    "longitude": 115.441,
     "address": "Nusa Lembongan, Klungkung, Bali",
     "region": "Bali - Lembongan",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": false },
+    "amenities": {
+      "parking": false
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "S",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 180,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Razors",
     "description": "렘봉안의 긴 레프트 핸드 리프. 다양한 레벨에서 즐길 수 있는 범용 포인트.",
-    "latitude": -8.6870,
-    "longitude": 115.4380,
+    "latitude": -8.687,
+    "longitude": 115.438,
     "address": "Nusa Lembongan, Klungkung, Bali",
     "region": "Bali - Lembongan",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": false },
+    "amenities": {
+      "parking": false
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "S",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 180,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Shipwrecks",
     "description": "렘봉안 북쪽의 파워풀한 라이트 핸드 리프. 강한 조류와 큰 파도가 특징.",
-    "latitude": -8.6750,
-    "longitude": 115.4500,
+    "latitude": -8.675,
+    "longitude": 115.45,
     "address": "Nusa Lembongan, Klungkung, Bali",
     "region": "Bali - Lembongan",
     "difficulty": "INTERMEDIATE",
-    "amenities": { "parking": false },
+    "amenities": {
+      "parking": false
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "SE",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 130,
+    "bestSwellSpreadDeg": 30
   },
   {
     "name": "Ceningan",
     "description": "체닝안 섬의 스웰 자석. 항상 다른 곳보다 파도가 큼. 헤비한 조건의 리프 브레이크. 상급자 전용.",
-    "latitude": -8.6950,
-    "longitude": 115.4500,
+    "latitude": -8.695,
+    "longitude": 115.45,
     "address": "Nusa Ceningan, Klungkung, Bali",
     "region": "Bali - Lembongan",
     "difficulty": "ADVANCED",
-    "amenities": { "parking": false },
+    "amenities": {
+      "parking": false
+    },
     "breakType": "reef_break",
     "bestSwellDirection": "S",
-    "season": "4월~10월"
+    "season": "4월~10월",
+    "coastFacingDeg": 170,
+    "bestSwellSpreadDeg": 30
   }
 ]
