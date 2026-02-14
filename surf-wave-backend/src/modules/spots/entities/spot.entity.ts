@@ -56,6 +56,18 @@ export class Spot extends BaseEntity {
   @Column({ type: 'jsonb', nullable: true })
   amenities: Record<string, any> | null;
 
+  /** 스팟 해저/지형 형태 (beach_break, reef_break, point_break) */
+  @Column({ name: 'break_type', type: 'varchar', length: 30, nullable: true })
+  breakType: string | null;
+
+  /** 이 스팟에 최적인 스웰 방향 (S, SW, W, NW 등) */
+  @Column({ name: 'best_swell_direction', type: 'varchar', length: 20, nullable: true })
+  bestSwellDirection: string | null;
+
+  /** 서핑 최적 시즌 (예: "4월~10월", "연중") */
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  season: string | null;
+
   // ---- Relations ----
 
   @OneToMany(() => Forecast, (forecast) => forecast.spot)
