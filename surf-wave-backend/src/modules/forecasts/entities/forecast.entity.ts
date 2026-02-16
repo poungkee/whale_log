@@ -117,7 +117,7 @@ export class Forecast {
   })
   windDirection: number | null;
 
-  // ---- Phase 2+ (현재 데이터 소스 없음) ----
+  // ---- 조석 (Marine API - sea_level_height_msl) ----
 
   @Column({
     name: 'tide_height',

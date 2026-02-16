@@ -22,6 +22,7 @@ import { ForecastData } from './providers/forecast-provider.interface';
 import { OpenMeteoProvider } from './providers/open-meteo.provider';
 import { SpotsService } from '../spots/spots.service';
 import { Difficulty } from '../../common/enums/difficulty.enum';
+import { TideStatus } from '../../common/enums';
 import {
   calculateSurfRating,
   getSimpleCondition,
@@ -174,6 +175,8 @@ export class ForecastsService {
           windSpeed: item.windSpeed ?? null,
           windGusts: item.windGusts ?? null,
           windDirection: item.windDirection ?? null,
+          tideHeight: item.tideHeight ?? null,
+          tideStatus: (item.tideStatus as TideStatus) ?? null,
           fetchedAt: now,
           source: 'open-meteo',
         })
@@ -188,6 +191,8 @@ export class ForecastsService {
             'wind_speed',
             'wind_gusts',
             'wind_direction',
+            'tide_height',
+            'tide_status',
             'fetched_at',
           ],
           ['spot_id', 'forecast_time'],

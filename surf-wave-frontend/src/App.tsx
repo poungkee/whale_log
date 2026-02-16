@@ -32,6 +32,8 @@ export default function App() {
   const [screen, setScreen] = useState<AppScreen>('splash');
   /** 메인 화면의 활성 탭 (하단 네비게이션) */
   const [mainTab, setMainTab] = useState<MainTab>('home');
+  /** 홈 리셋 키 - 홈 탭 재클릭 시 증가하여 Home 컴포넌트를 초기화 */
+  const [homeResetKey, setHomeResetKey] = useState(0);
   /** 사용자 서핑 레벨 - 대시보드 예보 필터에 사용 */
   const [surfLevel, setSurfLevel] = useState<SurfLevel | null>(null);
   /** 로그인된 사용자 정보 */
@@ -325,7 +327,7 @@ export default function App() {
   const renderMainPage = () => {
     switch (mainTab) {
       case 'home':
-        return <Home surfLevel={surfLevel!} />;
+        return <Home key={homeResetKey} surfLevel={surfLevel!} />;
       case 'mypage':
         return (
           <MyPage
@@ -336,7 +338,7 @@ export default function App() {
           />
         );
       default:
-        return <Home surfLevel={surfLevel!} />;
+        return <Home key={homeResetKey} surfLevel={surfLevel!} />;
     }
   };
 
@@ -345,7 +347,14 @@ export default function App() {
       <div className="page-transition">
         {renderMainPage()}
       </div>
-      <BottomNav currentTab={mainTab} onNavigate={setMainTab} />
+      <BottomNav currentTab={mainTab} onNavigate={(tab) => {
+        if (tab === 'home' && mainTab === 'home') {
+          /** 이미 홈 탭인데 다시 누르면 → 홈 화면 초기화 (필터/검색/스크롤 리셋) */
+          setHomeResetKey(k => k + 1);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        setMainTab(tab);
+      }} />
     </div>
   );
 }

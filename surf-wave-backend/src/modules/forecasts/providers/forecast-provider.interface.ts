@@ -35,10 +35,10 @@ export interface ForecastData {
   /** 풍향 (degree, 0-360) */
   windDirection?: number | null;
 
-  // ---- Phase 2+ ----
-  /** 조위 (m) */
+  // ---- 조석 (Marine API) ----
+  /** 조위 - 해수면 높이 MSL 기준 (m) */
   tideHeight?: number | null;
-  /** 조석 상태 */
+  /** 조석 상태 (HIGH/LOW/RISING/FALLING) */
   tideStatus?: string | null;
   /** 수온 (C) */
   waterTemperature?: number | null;

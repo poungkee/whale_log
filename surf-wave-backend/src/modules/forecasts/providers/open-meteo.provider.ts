@@ -12,6 +12,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { ForecastProvider, ForecastData } from './forecast-provider.interface';
+import { TideStatus } from '../../../common/enums';
 
 @Injectable()
 export class OpenMeteoProvider implements ForecastProvider {
@@ -54,7 +55,8 @@ export class OpenMeteoProvider implements ForecastProvider {
   }
 
   /**
-   * Marine API 호출 - 파도/스웰 데이터
+   * Marine API 호출 - 파도/스웰/조석 데이터
+   * sea_level_height_msl: 평균 해수면(MSL) 기준 해수면 높이 (m)
    */
   private async fetchMarineData(
     latitude: number,
@@ -71,6 +73,7 @@ export class OpenMeteoProvider implements ForecastProvider {
         'swell_wave_height',
         'swell_wave_period',
         'swell_wave_direction',
+        'sea_level_height_msl',
       ].join(','),
       timezone: 'auto',
       forecast_days: forecastDays,
@@ -126,6 +129,7 @@ export class OpenMeteoProvider implements ForecastProvider {
    * Marine + Weather 응답을 time 키 기준으로 머지합니다.
    * Marine의 hourly.time을 기준 타임라인으로 사용하고,
    * Weather의 wind 데이터를 Map으로 만들어 같은 time 슬롯에 채웁니다.
+   * 조석 데이터(sea_level_height_msl)도 Marine에서 추출하여 매핑합니다.
    */
   private mergeResponses(
     marineData: any,
@@ -151,6 +155,9 @@ export class OpenMeteoProvider implements ForecastProvider {
       });
     }
 
+    // 해수면 높이 배열 (조석 상태 계산용)
+    const seaLevels: (number | null)[] = marine.sea_level_height_msl ?? [];
+
     // Marine 타임라인 기준으로 순회하며 합침
     const count = Math.min(hours, marine.time?.length || 0);
     const forecasts: ForecastData[] = [];
@@ -158,6 +165,10 @@ export class OpenMeteoProvider implements ForecastProvider {
     for (let i = 0; i < count; i++) {
       const time = marine.time[i];
       const wind = windMap.get(time);
+
+      // 조석 데이터 추출
+      const tideHeight = seaLevels[i] ?? null;
+      const tideStatus = this.calculateTideStatus(seaLevels, i);
 
       forecasts.push({
         forecastTime: new Date(time),
@@ -173,9 +184,71 @@ export class OpenMeteoProvider implements ForecastProvider {
         windSpeed: wind?.speed ?? null,
         windGusts: wind?.gusts ?? null,
         windDirection: wind?.direction ?? null,
+        // 조석 (Marine API sea_level_height_msl)
+        tideHeight,
+        tideStatus,
       });
     }
 
     return forecasts;
+  }
+
+  /**
+   * 조석 상태(TideStatus) 계산
+   *
+   * 현재 시점의 해수면 높이를 전후 시점과 비교하여 판별합니다.
+   * - 전후 6시간(±6) 범위에서 최고점이면 → HIGH (만조)
+   * - 전후 6시간(±6) 범위에서 최저점이면 → LOW (간조)
+   * - 현재 > 이전 → RISING (밀물 진행 중)
+   * - 현재 < 이전 → FALLING (썰물 진행 중)
+   *
+   * @param seaLevels 시간별 해수면 높이 배열
+   * @param index 현재 시점 인덱스
+   */
+  private calculateTideStatus(
+    seaLevels: (number | null)[],
+    index: number,
+  ): TideStatus | null {
+    const current = seaLevels[index];
+    if (current == null) return null;
+
+    // 전후 6시간 범위의 유효한 해수면 높이 수집
+    const windowStart = Math.max(0, index - 6);
+    const windowEnd = Math.min(seaLevels.length - 1, index + 6);
+
+    const windowValues: number[] = [];
+    for (let i = windowStart; i <= windowEnd; i++) {
+      if (seaLevels[i] != null) {
+        windowValues.push(seaLevels[i]!);
+      }
+    }
+
+    // 유효한 데이터가 없으면 null
+    if (windowValues.length === 0) return null;
+
+    const maxInWindow = Math.max(...windowValues);
+    const minInWindow = Math.min(...windowValues);
+
+    // 전후 6시간 내 최고점이면 만조 (HIGH)
+    if (current >= maxInWindow) return TideStatus.HIGH;
+
+    // 전후 6시간 내 최저점이면 간조 (LOW)
+    if (current <= minInWindow) return TideStatus.LOW;
+
+    // 이전 시점과 비교하여 밀물/썰물 판별
+    const prev = index > 0 ? seaLevels[index - 1] : null;
+    if (prev != null) {
+      if (current > prev) return TideStatus.RISING;
+      if (current < prev) return TideStatus.FALLING;
+    }
+
+    // 이전 데이터 없으면 다음 시점과 비교 (역방향 추론)
+    const next = index < seaLevels.length - 1 ? seaLevels[index + 1] : null;
+    if (next != null) {
+      if (next > current) return TideStatus.RISING;
+      if (next < current) return TideStatus.FALLING;
+    }
+
+    return null;
   }
 }

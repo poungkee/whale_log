@@ -17,6 +17,7 @@ import { Public } from '../../common/decorators/public.decorator';
 export class ForecastsController {
   constructor(private readonly forecastsService: ForecastsService) {}
 
+  @Public()
   @Get()
   @ApiOperation({ summary: 'Get hourly forecast for spot' })
   async getHourlyForecast(

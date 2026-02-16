@@ -1,171 +1,194 @@
 /**
  * @file SpotCard.tsx
- * @description 스팟 예보 카드 컴포넌트 - 각 서핑 스팟의 현재 컨디션 표시
+ * @description 스팟 예보 카드 컴포넌트 - 디자인 v3 (웨이브 그라디언트)
  *
- * 실제 API 응답의 각 스팟 데이터 구조:
- * {
- *   "spot": { "id": "uuid", "name": "양양 서피비치", "region": "양양", "difficulty": "BEGINNER" },
- *   "forecast": { "waveHeight": "0.60", "wavePeriod": "7.5", "windSpeed": "17.60", ... },
- *   "surfRating": 5,
- *   "recommendationKo": "완벽한 서핑 컨디션이에요!",
- *   "simpleCondition": { "waveStatus": "적당", "windStatus": "보통", "overall": "좋음" }
- * }
- *
- * 표시 정보:
- * - 스팟 이름 (spot.name), 지역 (spot.region), 난이도 배지 (spot.difficulty)
- * - 서핑 적합도 (surfRating 1~5 + 이모지)
- * - 한국어 추천 문구 (recommendationKo)
- * - 파고(m), 파도 주기(s), 풍속(m/s)
- * - 간단 컨디션 상태 (simpleCondition.overall: 좋음/보통/주의)
- *
- * surfRating별 색상:
- * - 4~5: 녹색 (#32CD32) - 서핑 좋음
- * - 3: 파란색 (#008CBA) - 무난
- * - 2: 주황색 (#FF8C00) - 주의
- * - 1: 빨간색 (#FF4444) - 비추천
- *
- * forecast가 null이면 "데이터 없음" 간소화 카드 표시
+ * 디자인 특징:
+ * - 카드 오른쪽에 파도 형태 그라디언트 배경 (점수별 색상 변화)
+ * - PASS/WARNING/BLOCKED 안전 배지
+ * - surfRating 0~10 + 등급 텍스트
+ * - 파고/주기/풍속/조석 아이콘 한줄 요약
+ * - 클릭 시 상세 모달 열림
  */
 
-import { Wind, Waves } from 'lucide-react';
-import type { SpotForecast } from '../types';
+import { Waves, Wind, Clock, ArrowDown, ArrowUp } from 'lucide-react';
+import type { SpotForecast, LevelFitResult, SurfLevel } from '../types';
 
 interface SpotCardProps {
-  /** 스팟별 예보 데이터 - 대시보드 API 응답의 각 항목 */
+  /** 스팟별 예보 데이터 */
   data: SpotForecast;
-  /** 카드 클릭 핸들러 - 스팟 상세 화면으로 이동 (추후 구현) */
+  /** 현재 사용자 레벨 */
+  currentLevel: SurfLevel;
+  /** 카드 클릭 핸들러 */
   onClick?: () => void;
 }
 
-/** surfRating에 따른 색상 반환 */
+/** surfRating(0~10) 기준 등급 텍스트 */
+function getRatingGrade(rating: number): string {
+  if (rating >= 8) return 'EPIC';
+  if (rating >= 6) return 'GREAT';
+  if (rating >= 4) return 'GOOD';
+  if (rating >= 2) return 'FAIR';
+  return 'POOR';
+}
+
+/** surfRating(0~10) 기준 색상 반환 */
 function getRatingColor(rating: number): string {
-  if (rating >= 4) return '#32CD32';  // 좋음 - 녹색
-  if (rating >= 3) return '#008CBA';  // 보통 - 파란색
-  if (rating >= 2) return '#FF8C00';  // 주의 - 주황색
-  return '#FF4444';                    // 비추 - 빨간색
+  if (rating >= 8) return '#32CD32';
+  if (rating >= 6) return '#00BCD4';
+  if (rating >= 4) return '#008CBA';
+  if (rating >= 2) return '#FF8C00';
+  return '#FF4444';
 }
 
-/** surfRating에 따른 이모지 반환 */
-function getRatingEmoji(rating: number): string {
-  if (rating >= 4) return '🤙';  // 좋음
-  if (rating >= 3) return '👍';  // 보통
-  if (rating >= 2) return '🤔';  // 주의
-  return '😴';                    // 비추
+/** surfRating 기준 그라디언트 색상 (카드 웨이브 배경용) */
+function getWaveGradient(rating: number): string {
+  if (rating >= 7) return 'from-[#00BCD4]/30 via-[#008CBA]/15 to-transparent';
+  if (rating >= 4) return 'from-[#008CBA]/20 via-[#0D1B2A]/10 to-transparent';
+  return 'from-[#FF8C00]/10 via-[#0D1B2A]/5 to-transparent';
 }
 
-/** 난이도별 배지 스타일 (배경색 + 텍스트색) */
-function getDifficultyStyle(difficulty: string): { bg: string; text: string } {
+/** levelFit 결과에 따른 배지 스타일 */
+function getLevelFitBadge(fit: LevelFitResult): { bg: string; text: string; label: string } {
+  switch (fit) {
+    case 'PASS':
+      return { bg: 'bg-[#32CD32]/20', text: 'text-[#32CD32]', label: 'PASS' };
+    case 'WARNING':
+      return { bg: 'bg-[#FF8C00]/20', text: 'text-[#FF8C00]', label: 'WARNING' };
+    case 'BLOCKED':
+      return { bg: 'bg-[#FF4444]/20', text: 'text-[#FF4444]', label: 'BLOCKED' };
+  }
+}
+
+/** 난이도 한국어 약칭 */
+function getDifficultyShort(difficulty: string): string {
   const d = difficulty?.toUpperCase() || '';
-  if (d === 'BEGINNER') return { bg: 'bg-[#32CD32]/20', text: 'text-[#32CD32]' };
-  if (d === 'INTERMEDIATE') return { bg: 'bg-[#008CBA]/20', text: 'text-[#008CBA]' };
-  if (d === 'ADVANCED') return { bg: 'bg-[#FF8C00]/20', text: 'text-[#FF8C00]' };
-  return { bg: 'bg-[#FF4444]/20', text: 'text-[#FF4444]' };
-}
-
-/** 난이도별 한국어 라벨 */
-function getDifficultyLabel(difficulty: string): string {
-  const d = difficulty?.toUpperCase() || '';
-  if (d === 'BEGINNER') return '초보자 적합';
-  if (d === 'INTERMEDIATE') return '중급자 추천';
-  if (d === 'ADVANCED') return '상급자 추천';
-  if (d === 'EXPERT') return '전문가 전용';
+  if (d === 'BEGINNER') return '초급';
+  if (d === 'INTERMEDIATE') return '중급';
+  if (d === 'ADVANCED') return '상급';
+  if (d === 'EXPERT') return '전문가';
   return difficulty;
 }
 
-export function SpotCard({ data, onClick }: SpotCardProps) {
-  const { spot, forecast, surfRating, recommendationKo, simpleCondition } = data;
-  const diffStyle = getDifficultyStyle(spot.difficulty);
+/** 조석 상태 한국어 + 방향 */
+function getTideLabel(status: string | null): { label: string; rising: boolean } {
+  switch (status) {
+    case 'RISING': return { label: '밀물', rising: true };
+    case 'FALLING': return { label: '썰물', rising: false };
+    case 'HIGH': return { label: '만조', rising: true };
+    case 'LOW': return { label: '간조', rising: false };
+    default: return { label: '', rising: false };
+  }
+}
 
-  /** 예보 데이터 없음 - 간소화 카드 표시 */
+export function SpotCard({ data, currentLevel, onClick }: SpotCardProps) {
+  const { spot, forecast, surfRating, levelFit, recommendationKo } = data;
+
+  /** 현재 레벨의 적합도 판정 */
+  const fitResult = levelFit?.[currentLevel] || 'PASS';
+  const fitBadge = getLevelFitBadge(fitResult);
+
+  /** 예보 데이터 없음 - 간소화 카드 */
   if (!forecast) {
     return (
       <div
         onClick={onClick}
-        className="bg-card rounded-xl border border-border p-4 cursor-pointer hover:border-primary transition-colors"
+        className="bg-card rounded-xl border border-border p-4 cursor-pointer hover:border-primary/50 transition-colors"
       >
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-center">
           <div>
-            <h3 className="font-semibold mb-1">{spot.name}</h3>
-            <span className={`text-xs px-3 py-1 rounded-full ${diffStyle.bg} ${diffStyle.text}`}>
-              {getDifficultyLabel(spot.difficulty)}
-            </span>
+            <h3 className="font-semibold text-sm">{spot.name}</h3>
+            <span className="text-xs text-muted-foreground">{spot.region} {getDifficultyShort(spot.difficulty)}</span>
           </div>
-          <span className="text-sm text-muted-foreground">데이터 없음</span>
+          <span className="text-xs text-muted-foreground">데이터 없음</span>
         </div>
       </div>
     );
   }
 
   const ratingColor = getRatingColor(surfRating);
-  const ratingEmoji = getRatingEmoji(surfRating);
+  const ratingGrade = getRatingGrade(surfRating);
+  const waveGradient = getWaveGradient(surfRating);
+  const tideInfo = getTideLabel(forecast.tideStatus);
 
   return (
     <div
       onClick={onClick}
-      className="bg-card rounded-xl border border-border overflow-hidden cursor-pointer hover:border-primary transition-all active:scale-[0.99]"
+      className="relative bg-card rounded-xl border border-border overflow-hidden cursor-pointer hover:border-primary/40 transition-all active:scale-[0.99]"
     >
-      {/* surfRating 색상 바 - 카드 상단 */}
-      <div className="h-1" style={{ backgroundColor: ratingColor }} />
+      {/* 웨이브 그라디언트 배경 - 카드 오른쪽에서 왼쪽으로 */}
+      <div className={`absolute inset-0 bg-gradient-to-l ${waveGradient} pointer-events-none`} />
+      {/* SVG 파도 곡선 장식 */}
+      <svg
+        className="absolute right-0 top-0 h-full w-1/3 pointer-events-none opacity-20"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+      >
+        <path
+          d="M100,0 L100,100 L60,100 C70,80 50,70 60,50 C70,30 50,20 60,0 Z"
+          fill={ratingColor}
+        />
+      </svg>
 
-      <div className="p-4">
-        {/* 상단: 스팟 이름 + 난이도 배지 + surfRating 점수 */}
-        <div className="flex justify-between items-start mb-3">
-          <div className="flex-1">
-            <h3 className="font-semibold text-base mb-1">{spot.name}</h3>
-            <div className="flex items-center gap-2">
-              <span className={`text-xs px-2 py-0.5 rounded-full ${diffStyle.bg} ${diffStyle.text}`}>
-                {getDifficultyLabel(spot.difficulty)}
+      <div className="relative p-4">
+        {/* 상단: 안전배지 + 스팟명 + 점수 */}
+        <div className="flex justify-between items-start mb-1.5">
+          <div className="flex-1 min-w-0">
+            {/* PASS/WARNING 배지 + 스팟 이름 */}
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${fitBadge.bg} ${fitBadge.text}`}>
+                {fitBadge.label}
               </span>
-              {/* 지역 표시 */}
-              {spot.region && (
-                <span className="text-xs text-muted-foreground">{spot.region}</span>
-              )}
+              <h3 className="font-bold text-sm truncate">{spot.name}</h3>
             </div>
+            {/* 지역 + 난이도 */}
+            <p className="text-[11px] text-muted-foreground pl-0.5">
+              {spot.region} · {getDifficultyShort(spot.difficulty)}
+            </p>
           </div>
-          <div className="text-right">
-            <div className="flex items-center gap-1">
-              <span className="text-2xl">{ratingEmoji}</span>
-              <span className="text-2xl font-bold" style={{ color: ratingColor }}>
-                {surfRating}
-              </span>
-            </div>
+          {/* surfRating 점수 + 등급 */}
+          <div className="text-right flex-shrink-0 ml-2">
+            <span className="text-2xl font-black leading-none" style={{ color: ratingColor }}>
+              {surfRating.toFixed(1)}
+            </span>
+            <span className="text-[10px] font-bold ml-0.5" style={{ color: ratingColor }}>
+              {ratingGrade}
+            </span>
           </div>
         </div>
 
         {/* 한국어 추천 문구 */}
-        {recommendationKo && (
-          <div className="mb-3 px-3 py-2 rounded-lg" style={{ backgroundColor: `${ratingColor}15` }}>
-            <p className="text-sm font-medium" style={{ color: ratingColor }}>
-              {recommendationKo}
-            </p>
-          </div>
-        )}
+        <p className="text-xs text-muted-foreground mb-2.5 pl-0.5 leading-relaxed">
+          {recommendationKo}
+        </p>
 
-        {/* 하단: 파고 + 풍속 + 전체 컨디션 배지 */}
-        <div className="flex gap-4 text-sm">
-          {/* 파고 (m) + 파도 주기 (s) */}
-          <div className="flex items-center gap-1.5">
-            <Waves className="w-4 h-4 text-primary" />
-            <span className="font-medium">{forecast.waveHeight}m</span>
-            <span className="text-xs text-muted-foreground">{forecast.wavePeriod}s</span>
+        {/* 하단: 파고/주기/풍속/조석 아이콘 요약 */}
+        <div className="flex items-center gap-2.5 text-[11px]">
+          {/* 파고 */}
+          <div className="flex items-center gap-1">
+            <Waves className="w-3 h-3 text-[#00BCD4]" />
+            <span className="font-semibold">{Number(forecast.waveHeight).toFixed(1)}m</span>
           </div>
-          {/* 풍속 (m/s) - null이 아닌 경우만 표시 */}
+          {/* 주기 */}
+          <div className="flex items-center gap-1">
+            <Clock className="w-3 h-3 text-[#008CBA]" />
+            <span className="font-semibold">{Number(forecast.wavePeriod).toFixed(0)}s</span>
+          </div>
+          {/* 풍속 */}
           {forecast.windSpeed && (
-            <div className="flex items-center gap-1.5">
-              <Wind className="w-4 h-4 text-accent" />
-              <span className="font-medium">{forecast.windSpeed}m/s</span>
+            <div className="flex items-center gap-1">
+              <Wind className="w-3 h-3 text-[#FF8C00]" />
+              <span className="font-semibold">{Number(forecast.windSpeed).toFixed(0)}km/h</span>
             </div>
           )}
-          {/* 전체 컨디션 상태 배지 (좋음/보통/주의) */}
-          {simpleCondition && (
-            <div className="flex items-center gap-1.5 ml-auto">
-              <span className={`text-xs px-2 py-0.5 rounded-full ${
-                simpleCondition.overall === '좋음' ? 'bg-[#32CD32]/20 text-[#32CD32]' :
-                simpleCondition.overall === '보통' ? 'bg-[#008CBA]/20 text-[#008CBA]' :
-                'bg-[#FF8C00]/20 text-[#FF8C00]'
-              }`}>
-                {simpleCondition.overall}
-              </span>
+          {/* 조석 */}
+          {forecast.tideHeight && (
+            <div className="flex items-center gap-1">
+              {tideInfo.rising
+                ? <ArrowUp className="w-3 h-3 text-[#32CD32]" />
+                : <ArrowDown className="w-3 h-3 text-[#FF8C00]" />
+              }
+              <span className="font-semibold">{Number(forecast.tideHeight).toFixed(1)}m</span>
+              <span className="text-muted-foreground">{tideInfo.label}</span>
             </div>
           )}
         </div>
