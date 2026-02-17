@@ -1,6 +1,6 @@
 /**
  * @file surf-rating.util.spec.ts
- * @description 서핑 적합도 계산 유틸리티 단위 테스트 (v1.3)
+ * @description 서핑 적합도 계산 유틸리티 단위 테스트 (v1.4.2)
  *
  * 테스트 항목:
  * 1. 풍향 FROM → TO 변환 회귀 테스트 (가장 치명적인 버그)
@@ -45,6 +45,9 @@ function makeForecast(overrides: Partial<ForecastForRating> = {}): ForecastForRa
     wavePeriod: 10,
     waveDirection: 45,
     swellDirection: 45,       // NE 스웰
+    swellHeight: 0.6,         // v1.4: 스웰 높이
+    swellPeriod: 10,          // v1.4: 스웰 주기
+    waterTemperature: 22,     // v1.4: 수온 (안전한 기본값)
     windSpeed: 8,
     windGusts: 12,
     windDirection: 270,       // FROM 서쪽 → TO 동쪽(90°) → 오프쇼어
@@ -145,7 +148,8 @@ describe('gust(돌풍) 반영', () => {
     expect(result.levelFit.BEGINNER).toBe('BLOCKED');
     expect(result.levelFit.INTERMEDIATE).toBe('BLOCKED');
     expect(result.levelFit.ADVANCED).toBe('BLOCKED');
-    expect(result.safetyReasons).toContain('강풍으로 서핑이 위험합니다');
+    // v1.4: 강풍 문구에 실제 숫자 포함 형식으로 변경됨
+    expect(result.safetyReasons.some(r => r.includes('강풍 위험'))).toBe(true);
   });
 
   /** gust가 windSpeed보다 낮으면 effectiveWind = windSpeed */
@@ -432,5 +436,755 @@ describe('periodFit 구간', () => {
     const forecast = makeForecast({ wavePeriod: 4 });
     const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
     expect(result.detail.periodFit).toBe(0);
+  });
+});
+
+// =============================================================
+// 9. v1.4 거짓양성(False Positive) 테스트
+//    PASS인데 실제로 위험한 edge case를 탐지
+// =============================================================
+
+describe('거짓양성 시나리오 - PASS인데 위험할 수 있는 복합 조건', () => {
+  /**
+   * 시나리오 1: "모든 임계값 바로 아래" (v1.4.1 보정 대상)
+   *
+   * 수온 14.5°C (14°C 미만 아님), gust 34km/h (35 미만),
+   * 파고 1.15m (1.2 미만), 풍속 24km/h
+   * → 개별로는 모두 임계값 아래라 하드블록 통과
+   * → v1.4.1 복합 위험 감점으로 surfRating ≤ 4.0 + WARNING
+   */
+  test('복합 위험: 수온 14.5°C + gust 34km/h + 파고 1.15m → 보정 후 ≤ 4.0 + WARNING', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+    const forecast = makeForecast({
+      waveHeight: 1.15,
+      wavePeriod: 6,
+      windSpeed: 24,
+      windGusts: 34,
+      waterTemperature: 14.5,
+      swellHeight: 0.3,
+      swellPeriod: 6,
+    });
+
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    // v1.4.1: 복합 위험 보정 → WARNING + 낮은 점수
+    expect(result.levelFit.BEGINNER).toBe('WARNING');
+    expect(result.surfRating).toBeLessThanOrEqual(4.0);
+    // windSpeedFit이 낮아야 함 (gust 34 → effectiveWind=max(24, 23.8)=24)
+    expect(result.detail.windSpeedFit).toBeLessThanOrEqual(2);
+    // 복합 위험 사유 포함
+    expect(result.safetyReasons.some(r => r.includes('복합 위험'))).toBe(true);
+  });
+
+  /**
+   * 시나리오 2: "파고 1.2m 정확히 경계"
+   *
+   * beach_break BEGINNER: 파고 1.2m = hardblock 임계값 (> 1.2이면 BLOCKED)
+   * 1.2m 정확히면 PASS → 이때 waveFit 경계값 수정이 올바른지 확인
+   */
+  test('경계값: 파고 정확히 1.2m → PASS이고 waveFit 3점 (tolerable 경계)', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+    const forecast = makeForecast({ waveHeight: 1.2 });
+
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    // 1.2m = 정확히 임계값 → PASS (>1.2만 BLOCKED)
+    expect(result.levelFit.BEGINNER).toBe('PASS');
+    // tolerable 상한(1.2) 경계이므로 waveFit=3 (v1.4 수정됨, v1.3에선 0이었음)
+    expect(result.detail.waveFit).toBe(3);
+  });
+
+  /**
+   * 시나리오 3: "온쇼어 강풍 + 짧은 주기" (v1.4.1 품질 게이트 대상)
+   *
+   * 풍속 자체는 OK(18km/h), gust 29km/h → effectiveWind 20.3
+   * 하지만 온쇼어(바다→육지)이고 주기 5초 → 파도 품질 최악
+   * → v1.4.1 품질 게이트로 surfRating ≤ 4.0 + BEGINNER WARNING
+   */
+  test('품질 게이트: 온쇼어 + 짧은 주기 → 보정 후 ≤ 4.0 + BEGINNER WARNING', () => {
+    const spot = makeSpot({
+      breakType: 'beach_break',
+      difficulty: Difficulty.BEGINNER,
+      coastFacingDeg: 90, // 동해안
+    });
+    const forecast = makeForecast({
+      waveHeight: 0.7,
+      wavePeriod: 5,
+      windSpeed: 18,
+      windGusts: 29,
+      windDirection: 90, // FROM 동쪽 → TO 서쪽(270°) → 온쇼어
+      swellHeight: 0.2,
+      swellPeriod: 5,
+    });
+
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    // v1.4.1: 품질 게이트 → BEGINNER WARNING + 상한 4.0
+    expect(result.levelFit.BEGINNER).toBe('WARNING');
+    // 온쇼어 → windDirFit 1점, 짧은 주기 → periodFit 1점
+    expect(result.detail.windDirFit).toBeLessThanOrEqual(1);
+    expect(result.detail.periodFit).toBeLessThanOrEqual(1);
+    // 품질 게이트에 의해 상한 4.0
+    expect(result.surfRating).toBeLessThanOrEqual(4.0);
+    // 품질 게이트 사유 포함
+    expect(result.safetyReasons.some(r => r.includes('온쇼어'))).toBe(true);
+  });
+
+  /**
+   * 시나리오 4: "수온 10.1°C + gust 34km/h"
+   *
+   * 수온 10.1°C → 14°C 미만이라 WARNING (P2 장비 필수)
+   * gust 34km/h → 35 미만이라 돌풍 WARNING 안 걸림
+   * → WARNING이 걸리는지 확인 (수온 기준)
+   */
+  test('수온 10.1°C → BEGINNER WARNING (웻슈트 필수)', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+    const forecast = makeForecast({
+      waveHeight: 0.5,
+      windSpeed: 8,
+      windGusts: 12,
+      waterTemperature: 10.1,
+    });
+
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    // 수온 <14°C → BEGINNER WARNING
+    expect(result.levelFit.BEGINNER).toBe('WARNING');
+    expect(result.safetyReasons.some(r => r.includes('웻슈트'))).toBe(true);
+  });
+
+  /**
+   * 시나리오 5: "수온 9.9°C → BEGINNER BLOCKED"
+   *
+   * 수온 <10°C → 극저온 → BEGINNER BLOCKED
+   */
+  test('수온 9.9°C → BEGINNER BLOCKED (저체온증 위험)', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+    const forecast = makeForecast({
+      waveHeight: 0.5,
+      windSpeed: 5,
+      windGusts: 8,
+      waterTemperature: 9.9,
+    });
+
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    expect(result.levelFit.BEGINNER).toBe('BLOCKED');
+    expect(result.safetyReasons.some(r => r.includes('저체온증'))).toBe(true);
+    // INTERMEDIATE는 WARNING
+    expect(result.levelFit.INTERMEDIATE).toBe('WARNING');
+  });
+
+  /**
+   * 시나리오 6: "gust 정확히 35km/h → BEGINNER WARNING"
+   */
+  test('gust 정확히 35km/h → BEGINNER WARNING', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+    const forecast = makeForecast({
+      waveHeight: 0.5,
+      windSpeed: 10,
+      windGusts: 35,
+    });
+
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    expect(result.levelFit.BEGINNER).toBe('WARNING');
+    expect(result.safetyReasons.some(r => r.includes('돌풍'))).toBe(true);
+  });
+
+  /**
+   * 시나리오 7: "gust 44km/h → BEGINNER WARNING, gust 45km/h → BEGINNER BLOCKED"
+   * 경계값 정확도 확인
+   */
+  test('gust 44km/h → WARNING, 45km/h → BLOCKED 경계', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+
+    // 44km/h → effectiveWind = max(10, 30.8) = 30.8 < 35 → gust 판정으로
+    const warn = calculateSurfRating(
+      spot,
+      makeForecast({ waveHeight: 0.5, windSpeed: 10, windGusts: 44 }),
+      Difficulty.BEGINNER,
+    );
+    expect(warn.levelFit.BEGINNER).toBe('WARNING');
+
+    // 45km/h → effectiveWind = max(10, 31.5) = 31.5 < 35 → gust≥45 BLOCKED
+    const block = calculateSurfRating(
+      spot,
+      makeForecast({ waveHeight: 0.5, windSpeed: 10, windGusts: 45 }),
+      Difficulty.BEGINNER,
+    );
+    expect(block.levelFit.BEGINNER).toBe('BLOCKED');
+  });
+
+  /**
+   * 시나리오 8: "안전한 조건에서 높은 점수 확인" (거짓음성 방지)
+   *
+   * 완벽한 조건: optimal 파고, 오프쇼어, 긴 주기, 약한 바람, 따뜻한 수온
+   * → PASS이고 7점 이상이어야 함
+   */
+  test('완벽한 조건: 높은 surfRating + PASS', () => {
+    const spot = makeSpot({
+      breakType: 'beach_break',
+      difficulty: Difficulty.BEGINNER,
+      coastFacingDeg: 90,
+      bestSwellDirection: 'NE',
+    });
+    const forecast = makeForecast({
+      waveHeight: 0.7,         // optimal 범위 내
+      wavePeriod: 12,          // 좋은 ground swell
+      windSpeed: 3,            // 글래시
+      windGusts: 5,            // 약한 돌풍
+      windDirection: 270,      // FROM 서쪽 → TO 동쪽 → 오프쇼어
+      swellDirection: 45,      // NE → bestSwellDirection과 일치
+      swellHeight: 0.8,        // 충분한 스웰
+      swellPeriod: 12,         // 긴 주기
+      waterTemperature: 24,    // 따뜻한 수온
+    });
+
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    expect(result.levelFit.BEGINNER).toBe('PASS');
+    expect(result.surfRating).toBeGreaterThanOrEqual(7);
+    expect(result.detail.waveFit).toBe(10);
+    expect(result.detail.windDirFit).toBeGreaterThanOrEqual(8);
+    expect(result.safetyReasons).toEqual([]);
+  });
+});
+
+// =============================================================
+// 10. v1.4 safetyReasons 우선순위 정렬 검증
+// =============================================================
+
+describe('safetyReasons 우선순위 정렬', () => {
+  /**
+   * 강풍(P1) + 웻슈트(P2) + 리프(P3) → P1이 먼저
+   */
+  test('강풍 + 저수온 + 리프 → 생존 위험이 먼저 표시', () => {
+    const spot = makeSpot({
+      breakType: 'reef_break',
+      difficulty: Difficulty.INTERMEDIATE,
+    });
+    const forecast = makeForecast({
+      waveHeight: 0.5,
+      windSpeed: 40,           // effectiveWind > 35
+      windGusts: 55,
+      waterTemperature: 8,     // 극저온
+    });
+
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    // 첫 번째 사유가 생존 위험(P1)이어야 함
+    expect(result.safetyReasons[0]).toMatch(/풍속.*강풍/);
+    // 저체온증(P1)이 리프(P3)보다 먼저
+    const tempIdx = result.safetyReasons.findIndex(r => r.includes('저체온증'));
+    const reefIdx = result.safetyReasons.findIndex(r => r.includes('리프'));
+    expect(tempIdx).toBeLessThan(reefIdx);
+  });
+
+  /**
+   * 웻슈트(P2)만 있을 때 정상 동작
+   */
+  test('수온 13°C만 해당 → 웻슈트 필수만 표시', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+    const forecast = makeForecast({
+      waveHeight: 0.5,
+      windSpeed: 5,
+      windGusts: 8,
+      waterTemperature: 13,
+    });
+
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    expect(result.safetyReasons).toHaveLength(1);
+    expect(result.safetyReasons[0]).toContain('웻슈트 필수');
+    expect(result.levelFit.BEGINNER).toBe('WARNING');
+  });
+
+  /**
+   * 파고 문구에 실제 수치 포함 확인
+   */
+  test('파고 차단 문구에 실제 파고 수치 포함', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+    const forecast = makeForecast({ waveHeight: 1.5 });
+
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    expect(result.safetyReasons.some(r => r.includes('1.5m'))).toBe(true);
+  });
+
+  /**
+   * 강풍 문구에 돌풍 숫자 포함 확인
+   */
+  test('강풍 문구에 실제 풍속/돌풍 숫자 포함', () => {
+    const spot = makeSpot();
+    const forecast = makeForecast({
+      waveHeight: 0.5,
+      windSpeed: 10,
+      windGusts: 55,  // effectiveWind = max(10, 38.5) = 38.5 > 35
+    });
+
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    // "풍속 10km/h (돌풍 55km/h) - 강풍 위험" 형태
+    expect(result.safetyReasons.some(r => r.includes('풍속') && r.includes('55'))).toBe(true);
+  });
+});
+
+// =============================================================
+// 11. v1.4.1 보정 필터 (Compound Risk + Quality Gate) 테스트
+// =============================================================
+
+describe('v1.4.1 복합 위험 감점 (Compound Risk)', () => {
+  /**
+   * 근접 항목 1개만 해당 → 감점 없음 (보정이 과하지 않은지 확인)
+   *
+   * gust 34km/h만 근접, 수온 22°C(안전), 파고 0.7m(optimal 내)
+   * gustNear = (34-30)/15 = 0.267 × 1.0 = 0.267
+   * waveNear = 0 (optimal 내), waterTempNear = 0
+   * riskIndex = 0.267 < 1.0 → 감점 없음
+   */
+  test('근접 항목 1개만 → 감점 없음 (과잉 보정 방지)', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+    const forecast = makeForecast({
+      waveHeight: 0.7,
+      wavePeriod: 10,
+      windSpeed: 8,
+      windGusts: 34,
+      waterTemperature: 22,
+      swellHeight: 0.6,
+      swellPeriod: 10,
+      windDirection: 270, // 오프쇼어
+    });
+
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    // 좋은 컨디션 + gust 하나만 근접 → PASS 유지, 높은 점수
+    expect(result.levelFit.BEGINNER).toBe('PASS');
+    expect(result.surfRating).toBeGreaterThanOrEqual(6);
+    // 복합 위험 사유 없음
+    expect(result.safetyReasons.some(r => r.includes('복합 위험'))).toBe(false);
+  });
+
+  /**
+   * INTERMEDIATE는 compound risk 미적용 확인
+   *
+   * 동일한 복합 위험 조건이지만 userLevel=INTERMEDIATE → 감점 없음
+   */
+  test('INTERMEDIATE는 compound risk 미적용', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.INTERMEDIATE });
+    const forecast = makeForecast({
+      waveHeight: 1.9,     // tolerableMax(2.0) 근접
+      wavePeriod: 6,
+      windSpeed: 24,
+      windGusts: 40,       // gust 근접
+      waterTemperature: 14.5,  // 수온 근접
+      swellHeight: 0.3,
+      swellPeriod: 6,
+    });
+
+    const resultBeginner = calculateSurfRating(
+      makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER }),
+      { ...forecast, waveHeight: 1.15 },
+      Difficulty.BEGINNER,
+    );
+    const resultIntermediate = calculateSurfRating(spot, forecast, Difficulty.INTERMEDIATE);
+
+    // INTERMEDIATE는 compound risk에 의한 복합 위험 사유 없음
+    expect(resultIntermediate.safetyReasons.some(r => r.includes('복합 위험'))).toBe(false);
+  });
+
+  /**
+   * riskIndex 경계값 테스트: 정확히 1.0 이상 → ×0.70 + WARNING 적용
+   *
+   * gust 40 + 수온 15°C → 하드블록 안 걸리면서 riskIndex > 1.0
+   * gustNear = (40-30)/15 = 0.667 × 1.0 = 0.667
+   * waterTempNear = (16-15)/2 = 0.5 × 0.7 = 0.35
+   * waveNear = 0 (optimal 내)
+   * riskIndex = 0.667 + 0 + 0.35 = 1.017 → ×0.70 + WARNING
+   */
+  test('riskIndex ≈ 1.0 경계 → ×0.70 + WARNING 적용', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+    const forecast = makeForecast({
+      waveHeight: 0.7,      // optimal 내 (waveNear=0)
+      wavePeriod: 10,
+      windSpeed: 8,
+      windGusts: 40,        // gustNear = (40-30)/15 = 0.667
+      waterTemperature: 15,  // waterTempNear = (16-15)/2 = 0.5
+      swellHeight: 0.6,
+      swellPeriod: 10,
+      windDirection: 270,
+    });
+
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    // riskIndex ≈ 1.017 ≥ 1.0 → compound risk 적용
+    // 하드블록: gust≥35 → BEGINNER WARNING (별도로 걸림)
+    // compound: WARNING 추가 시도 → 이미 WARNING이므로 중복 방지
+    expect(result.levelFit.BEGINNER).toBe('WARNING');
+    expect(result.safetyReasons.some(r => r.includes('복합 위험'))).toBe(true);
+  });
+});
+
+describe('v1.4.1 품질 게이트 (Quality Gate)', () => {
+  /**
+   * 품질 게이트 비해당: periodFit > 2이면 상한 미적용
+   *
+   * 온쇼어(windDirFit ≤ 2)이지만 주기 10초(periodFit = 8)
+   * → 품질 게이트 조건 불충족 → 상한 미적용
+   */
+  test('온쇼어지만 긴 주기 → 품질 게이트 미적용', () => {
+    const spot = makeSpot({
+      breakType: 'beach_break',
+      difficulty: Difficulty.BEGINNER,
+      coastFacingDeg: 90,
+    });
+    const forecast = makeForecast({
+      waveHeight: 0.7,
+      wavePeriod: 10,       // periodFit = 8 (> 2) → 게이트 조건 불충족
+      windSpeed: 8,
+      windGusts: 12,
+      windDirection: 90,    // FROM 동쪽 → 온쇼어
+      swellHeight: 0.6,
+      swellPeriod: 10,
+    });
+
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    // 온쇼어로 windDirFit은 낮지만, 주기가 길어 품질 게이트 미적용
+    expect(result.detail.windDirFit).toBeLessThanOrEqual(2);
+    expect(result.detail.periodFit).toBeGreaterThan(2);
+    // 품질 게이트 사유 없음
+    expect(result.safetyReasons.some(r => r.includes('온쇼어'))).toBe(false);
+  });
+
+  /**
+   * INTERMEDIATE에서 품질 게이트 해당 → 상한만 적용, WARNING 없음
+   *
+   * 온쇼어 + 짧은 주기이지만 INTERMEDIATE → rating cap만, status PASS
+   */
+  test('INTERMEDIATE: 품질 게이트 → 상한만, WARNING 없음', () => {
+    const spot = makeSpot({
+      breakType: 'beach_break',
+      difficulty: Difficulty.INTERMEDIATE,
+      coastFacingDeg: 90,
+    });
+    const forecast = makeForecast({
+      waveHeight: 1.0,
+      wavePeriod: 5,        // periodFit = 1
+      windSpeed: 8,
+      windGusts: 12,
+      windDirection: 90,    // 온쇼어
+      swellHeight: 0.2,
+      swellPeriod: 5,
+    });
+
+    const result = calculateSurfRating(spot, forecast, Difficulty.INTERMEDIATE);
+
+    // 품질 게이트에 의해 상한 적용
+    expect(result.surfRating).toBeLessThanOrEqual(4.0);
+    // INTERMEDIATE는 WARNING 안 올림 (PASS 유지)
+    expect(result.levelFit.INTERMEDIATE).toBe('PASS');
+  });
+
+  /**
+   * 보정 두 개 동시 해당: compound risk + quality gate 모두 적용
+   *
+   * 온쇼어 + 짧은 주기(품질 게이트) + gust 근접 + 수온 근접(compound)
+   * → 두 보정 모두 적용되어 점수 더 낮아짐
+   */
+  test('compound risk + quality gate 동시 적용', () => {
+    const spot = makeSpot({
+      breakType: 'beach_break',
+      difficulty: Difficulty.BEGINNER,
+      coastFacingDeg: 90,
+    });
+    const forecast = makeForecast({
+      waveHeight: 1.15,     // tolMax(1.2) 근접 → waveNear 높음
+      wavePeriod: 5,        // periodFit = 1 → 품질 게이트 해당
+      windSpeed: 18,
+      windGusts: 40,        // gustNear = (40-30)/15 = 0.667
+      windDirection: 90,    // 온쇼어 → windDirFit ≤ 2 → 품질 게이트 해당
+      waterTemperature: 15, // waterTempNear = (16-15)/2 = 0.5
+      swellHeight: 0.2,
+      swellPeriod: 5,
+    });
+
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    // 두 보정 모두 적용 → 매우 낮은 점수 + WARNING
+    expect(result.surfRating).toBeLessThanOrEqual(4.0);
+    expect(result.levelFit.BEGINNER).toBe('WARNING');
+    // 두 가지 사유 모두 포함
+    expect(result.safetyReasons.some(r => r.includes('복합 위험') || r.includes('온쇼어'))).toBe(true);
+  });
+});
+
+// =============================================================
+// 12. v1.4.2 거짓 음성 보정 (False Negative Correction)
+// =============================================================
+
+describe('v1.4.2 FN-4: waveFit grace margin', () => {
+  /**
+   * 파고 0.28m → tolMin(0.3)보다 2cm 아래
+   * grace zone: 0.25 ~ 0.30 범위 → waveFit 1~2점 (기존: 0점)
+   */
+  test('파고 0.28m → grace zone 내 → waveFit 1~2점 (기존 0점)', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+    const forecast = makeForecast({ waveHeight: 0.28 });
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    // grace zone 내이므로 0점이 아닌 1~2점
+    expect(result.detail.waveFit).toBeGreaterThanOrEqual(1);
+    expect(result.detail.waveFit).toBeLessThanOrEqual(2);
+  });
+
+  /**
+   * 파고 0.25m → grace 하한 경계 (tolMin - 0.05 = 0.25)
+   * grace zone 시작점이므로 waveFit = 1점
+   */
+  test('파고 0.25m → grace 하한 경계 → waveFit ≈ 1점', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+    const forecast = makeForecast({ waveHeight: 0.25 });
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    expect(result.detail.waveFit).toBeGreaterThanOrEqual(1);
+    expect(result.detail.waveFit).toBeLessThanOrEqual(1.5);
+  });
+
+  /**
+   * 파고 1.22m → tolMax(1.2) 위, grace zone 내 (1.2~1.25)
+   * waveFit 1~2점 (기존: 0점)
+   */
+  test('파고 1.22m → 상한 grace zone → waveFit 1~2점', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+    const forecast = makeForecast({ waveHeight: 1.22 });
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    expect(result.detail.waveFit).toBeGreaterThanOrEqual(1);
+    expect(result.detail.waveFit).toBeLessThanOrEqual(2);
+  });
+
+  /**
+   * 파고 0.20m → grace 밖 (tolMin-0.05=0.25보다 작음)
+   * 기존대로 0점
+   */
+  test('파고 0.20m → grace 밖 → waveFit 0점', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+    const forecast = makeForecast({ waveHeight: 0.20 });
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    expect(result.detail.waveFit).toBe(0);
+  });
+
+  /**
+   * 파고 1.30m → 상한 grace 밖 (tolMax+0.05=1.25 초과)
+   * 기존대로 0점
+   */
+  test('파고 1.30m → 상한 grace 밖 → waveFit 0점', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+    const forecast = makeForecast({ waveHeight: 1.30 });
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    expect(result.detail.waveFit).toBe(0);
+  });
+});
+
+describe('v1.4.2 FN-2: 약풍 시 windDirFit 보정', () => {
+  /**
+   * 글래시(3km/h) + 온쇼어 → windDirFit ≥ 7 (기존: 1점)
+   * 바람이 거의 없으므로 풍향은 무의미
+   */
+  test('글래시(3km/h) + 온쇼어 → windDirFit ≥ 7', () => {
+    const spot = makeSpot({
+      breakType: 'beach_break',
+      difficulty: Difficulty.BEGINNER,
+      coastFacingDeg: 90,
+    });
+    const forecast = makeForecast({
+      waveHeight: 0.7,
+      windSpeed: 3,
+      windGusts: 4,       // effectiveWind = max(3, 2.8) = 3 < 5
+      windDirection: 90,   // FROM 동쪽 → TO 서쪽 → 온쇼어 → 기존 1점
+    });
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    // 글래시이므로 풍향 무의미 → windDirFit ≥ 7
+    expect(result.detail.windDirFit).toBeGreaterThanOrEqual(7);
+  });
+
+  /**
+   * 매우 약한 바람(6km/h) + 온쇼어 → windDirFit 부분 보정
+   * 기존 1점 → (1+7)/2 = 4점으로 보정
+   */
+  test('약한 바람(6km/h) + 온쇼어 → windDirFit 부분 보정', () => {
+    const spot = makeSpot({
+      breakType: 'beach_break',
+      difficulty: Difficulty.BEGINNER,
+      coastFacingDeg: 90,
+    });
+    const forecast = makeForecast({
+      waveHeight: 0.7,
+      windSpeed: 6,
+      windGusts: 8,       // effectiveWind = max(6, 5.6) = 6, 5~8 범위
+      windDirection: 90,   // 온쇼어 → 기존 1점
+    });
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    // 부분 보정: (1+7)/2 = 4점
+    expect(result.detail.windDirFit).toBeGreaterThanOrEqual(3);
+    expect(result.detail.windDirFit).toBeLessThanOrEqual(5);
+  });
+
+  /**
+   * 보통 바람(15km/h) + 온쇼어 → 보정 없음 (기존 1점)
+   */
+  test('보통 바람(15km/h) + 온쇼어 → 보정 없음', () => {
+    const spot = makeSpot({
+      breakType: 'beach_break',
+      difficulty: Difficulty.BEGINNER,
+      coastFacingDeg: 90,
+    });
+    const forecast = makeForecast({
+      waveHeight: 0.7,
+      windSpeed: 15,
+      windGusts: 18,
+      windDirection: 90,   // 온쇼어
+    });
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    // 바람 있으므로 보정 없음 → 온쇼어 1점 유지
+    expect(result.detail.windDirFit).toBeLessThanOrEqual(1);
+  });
+
+  /**
+   * 글래시 + 오프쇼어 → 이미 높은 점수, 보정 불필요
+   * windDirFit = 10 (오프쇼어) → max(10, 7) = 10 (변동 없음)
+   */
+  test('글래시 + 오프쇼어 → 보정 불필요 (이미 높음)', () => {
+    const spot = makeSpot({
+      breakType: 'beach_break',
+      difficulty: Difficulty.BEGINNER,
+      coastFacingDeg: 90,
+    });
+    const forecast = makeForecast({
+      waveHeight: 0.7,
+      windSpeed: 3,
+      windGusts: 4,
+      windDirection: 270,  // FROM 서쪽 → TO 동쪽 → 오프쇼어 → 10점
+    });
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    // 이미 10점이므로 보정 불필요
+    expect(result.detail.windDirFit).toBe(10);
+  });
+});
+
+describe('v1.4.2 FN-1: 하드블록 grace zone', () => {
+  /**
+   * 파고 1.25m + beach_break + 나머지 완벽 → WARNING (기존: BLOCKED)
+   */
+  test('파고 1.25m + beach_break + 좋은 조건 → WARNING', () => {
+    const spot = makeSpot({
+      breakType: 'beach_break',
+      difficulty: Difficulty.BEGINNER,
+      coastFacingDeg: 90,
+      bestSwellDirection: 'NE',
+    });
+    const forecast = makeForecast({
+      waveHeight: 1.25,
+      wavePeriod: 12,        // periodFit = 9
+      windSpeed: 3,          // windSpeedFit = 10
+      windGusts: 5,
+      windDirection: 270,    // 오프쇼어 → windDirFit = 10
+      swellDirection: 45,    // NE 스웰 → swellFit 높음
+      swellHeight: 0.8,
+      swellPeriod: 12,
+      waterTemperature: 24,
+    });
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    // grace zone: 1.2~1.4 + beach_break + fit 평균 ≥ 7.0 → WARNING
+    expect(result.levelFit.BEGINNER).toBe('WARNING');
+    // 안전 사유에 "경험자 동행 필수" 메시지 포함
+    expect(result.safetyReasons.some(r => r.includes('경험자 동행 필수'))).toBe(true);
+  });
+
+  /**
+   * 파고 1.25m + reef_break → BLOCKED 유지 (reef은 절대 완화 안 함)
+   */
+  test('파고 1.25m + reef_break → BLOCKED 유지', () => {
+    const spot = makeSpot({
+      breakType: 'reef_break',
+      difficulty: Difficulty.INTERMEDIATE,
+      coastFacingDeg: 90,
+    });
+    const forecast = makeForecast({
+      waveHeight: 1.25,
+      wavePeriod: 12,
+      windSpeed: 3,
+      windGusts: 5,
+      windDirection: 270,
+      swellDirection: 45,
+      swellHeight: 0.8,
+      swellPeriod: 12,
+      waterTemperature: 24,
+    });
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    // reef_break → 절대 완화 안 함
+    expect(result.levelFit.BEGINNER).toBe('BLOCKED');
+  });
+
+  /**
+   * 파고 1.45m + beach_break + 좋은 조건 → BLOCKED 유지 (grace 초과)
+   */
+  test('파고 1.45m → grace zone 초과 → BLOCKED 유지', () => {
+    const spot = makeSpot({
+      breakType: 'beach_break',
+      difficulty: Difficulty.BEGINNER,
+      coastFacingDeg: 90,
+    });
+    const forecast = makeForecast({
+      waveHeight: 1.45,
+      wavePeriod: 12,
+      windSpeed: 3,
+      windGusts: 5,
+      windDirection: 270,
+      swellDirection: 45,
+      swellHeight: 0.8,
+      swellPeriod: 12,
+      waterTemperature: 24,
+    });
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    // 1.45m > 1.4 → grace zone 밖 → BLOCKED 유지
+    expect(result.levelFit.BEGINNER).toBe('BLOCKED');
+  });
+
+  /**
+   * 파고 1.25m + 나머지 fit 평균 낮음 → BLOCKED 유지
+   * 바람 강하고 주기 짧으면 나머지 fit 평균이 7.0 미만
+   */
+  test('파고 1.25m + 나머지 조건 나쁨 → BLOCKED 유지', () => {
+    const spot = makeSpot({
+      breakType: 'beach_break',
+      difficulty: Difficulty.BEGINNER,
+      coastFacingDeg: 90,
+    });
+    const forecast = makeForecast({
+      waveHeight: 1.25,
+      wavePeriod: 5,         // periodFit = 1
+      windSpeed: 20,         // windSpeedFit = 4
+      windGusts: 25,
+      windDirection: 90,     // 온쇼어 → windDirFit = 1
+      swellDirection: 180,   // 스웰 방향 안 맞음
+      swellHeight: 0.2,
+      swellPeriod: 5,
+      waterTemperature: 24,
+    });
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    // 나머지 fit 평균 낮음 → grace zone 미적용 → BLOCKED 유지
+    expect(result.levelFit.BEGINNER).toBe('BLOCKED');
   });
 });

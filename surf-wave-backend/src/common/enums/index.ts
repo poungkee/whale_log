@@ -12,6 +12,7 @@ export * from './vote-type.enum';
 export * from './wind-direction.enum';
 export * from './tide-status.enum';
 export * from './board-type.enum';
+export * from './user-board-type.enum';
 export * from './visibility.enum';
 export * from './report-reason.enum';
 export * from './report-status.enum';

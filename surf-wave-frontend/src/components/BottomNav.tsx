@@ -1,21 +1,18 @@
 /**
  * @file BottomNav.tsx
- * @description 하단 네비게이션 바 - 메인 화면의 탭 전환
+ * @description 하단 네비게이션 바 - Surfline 스타일 4탭 구조
  *
  * 4개 탭:
  * - 홈 (home): 대시보드 예보 화면 (Home.tsx)
- * - 지도 (map): 스팟 지도 화면 (추후 구현)
- * - 피드 (feed): 커뮤니티 피드 화면 (추후 구현)
- * - 마이 (mypage): 마이페이지 (MyPage.tsx)
+ * - 탐색 (explore): 스팟 탐색 (준비중)
+ * - 즐겨찾기 (favorites): 즐겨찾기 목록 (준비중)
+ * - 내정보 (profile): 마이페이지 (MyPage.tsx)
  *
  * 현재 활성 탭: primary 색상 + 굵은 아이콘
  * 비활성 탭: muted 색상
- *
- * 고정 위치: 화면 하단 (fixed bottom-0)
- * safe-bottom: iOS 노치 디바이스 대응
  */
 
-import { Home, Map, MessageSquare, User } from 'lucide-react';
+import { Home, Compass, Star, User } from 'lucide-react';
 import type { MainTab } from '../types';
 
 interface BottomNavProps {
@@ -25,11 +22,12 @@ interface BottomNavProps {
   onNavigate: (tab: MainTab) => void;
 }
 
+/** 네비게이션 탭 정의 - 아이콘, 라벨, ID */
 const navItems: { id: MainTab; label: string; icon: typeof Home }[] = [
   { id: 'home', label: '홈', icon: Home },
-  { id: 'map', label: '지도', icon: Map },
-  { id: 'feed', label: '피드', icon: MessageSquare },
-  { id: 'mypage', label: '마이', icon: User },
+  { id: 'explore', label: '탐색', icon: Compass },
+  { id: 'favorites', label: '즐겨찾기', icon: Star },
+  { id: 'profile', label: '내정보', icon: User },
 ];
 
 export function BottomNav({ currentTab, onNavigate }: BottomNavProps) {

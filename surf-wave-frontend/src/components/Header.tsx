@@ -1,25 +1,20 @@
 /**
  * @file Header.tsx
- * @description 메인 화면 상단 헤더 컴포넌트
+ * @description 메인 화면 상단 헤더 컴포넌트 - 심플화 버전
  *
  * 포함 기능:
- * - 타이틀 + 레벨 배지
+ * - 타이틀 ("서핑 파도")
  * - 검색 토글 + 검색 입력창
- * - 2단계 드롭다운 지역 필터 (전체/국내/발리 → 세부 지역)
+ * - 새로고침 버튼
  * - 업데이트 시각 표시
+ *
+ * 지역 필터는 Home.tsx의 탭 바로 이동됨
+ * matchRegionFilter, DOMESTIC_GROUPS, BALI_GROUPS는 export 유지 (Home에서 import)
  */
 
-import { useState, useRef, useEffect } from 'react';
-import { RefreshCw, Search, X, ChevronDown } from 'lucide-react';
-import type { SurfLevel, SpotForecast, RegionFilter, RegionGroup } from '../types';
-
-/** 레벨 한국어 라벨 */
-const LEVEL_KO: Record<SurfLevel, string> = {
-  BEGINNER: '초급',
-  INTERMEDIATE: '중급',
-  ADVANCED: '상급',
-  EXPERT: '전문가',
-};
+import { useState } from 'react';
+import { RefreshCw, Search, X } from 'lucide-react';
+import type { RegionFilter, RegionGroup } from '../types';
 
 /**
  * 국내 세부 지역 그룹 정의
@@ -50,9 +45,6 @@ export const BALI_GROUPS: RegionGroup[] = [
   { key: 'south', label: '남부 해안', regions: ['Bali - South Coast'] },
   { key: 'lembongan', label: '렘봉안/체닝안', regions: ['Bali - Lembongan'] },
 ];
-
-/** 모든 국내 지역 region 값 통합 (국내 전체 필터용) */
-const ALL_DOMESTIC_REGIONS = DOMESTIC_GROUPS.flatMap(g => g.regions);
 
 /**
  * RegionFilter 조건으로 스팟 매칭 여부 판별
@@ -89,36 +81,11 @@ export function matchRegionFilter(spotRegion: string, filter: RegionFilter): boo
   return true;
 }
 
-/** 현재 필터 상태를 화면에 표시할 텍스트로 변환 */
-function getFilterLabel(filter: RegionFilter): string {
-  if (filter.major === '전체') return '전체';
-
-  /** 세부 지역 선택된 경우 */
-  if (filter.sub) {
-    const groups = filter.major === '국내' ? DOMESTIC_GROUPS : BALI_GROUPS;
-    const group = groups.find(g => g.key === filter.sub);
-    return group ? `${filter.major} > ${group.label}` : filter.major;
-  }
-
-  /** 대분류만 선택된 경우 */
-  return `${filter.major} 전체`;
-}
-
 interface HeaderProps {
-  /** 사용자 서핑 레벨 */
-  surfLevel: SurfLevel;
-  /** 현재 선택된 지역 필터 */
-  regionFilter: RegionFilter;
-  /** 지역 필터 변경 핸들러 */
-  onRegionFilterChange: (filter: RegionFilter) => void;
   /** 검색어 */
   searchQuery: string;
   /** 검색어 변경 핸들러 */
   onSearchQueryChange: (query: string) => void;
-  /** 전체 스팟 목록 (카운트 계산용) */
-  spots: SpotForecast[];
-  /** 필터+검색 적용 후 스팟 수 */
-  filteredCount: number;
   /** 마지막 업데이트 시각 */
   lastUpdated: Date | null;
   /** 새로고침 핸들러 */
@@ -128,70 +95,28 @@ interface HeaderProps {
 }
 
 export function Header({
-  surfLevel,
-  regionFilter,
-  onRegionFilterChange,
   searchQuery,
   onSearchQueryChange,
-  spots,
-  filteredCount,
   lastUpdated,
   onRefresh,
   isLoading,
 }: HeaderProps) {
   /** 검색창 열림/닫힘 */
   const [showSearch, setShowSearch] = useState(false);
-  /** 드롭다운 열림/닫힘 */
-  const [isOpen, setIsOpen] = useState(false);
-  /** 드롭다운 ref (바깥 클릭 감지용) */
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  /** 드롭다운 바깥 클릭 시 닫기 */
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen]);
-
-  /** 스팟 수 계산 - 대분류별 */
-  const totalCount = spots.length;
-  const domesticCount = spots.filter(s => !s.spot.region.startsWith('Bali')).length;
-  const baliCount = spots.filter(s => s.spot.region.startsWith('Bali')).length;
-
-  /** 세부 지역별 스팟 수 계산 */
-  function getGroupCount(group: RegionGroup): number {
-    return spots.filter(s => group.regions.includes(s.spot.region)).length;
-  }
-
-  /** 필터 선택 핸들러 - 선택 후 드롭다운 닫기 */
-  function selectFilter(filter: RegionFilter) {
-    onRegionFilterChange(filter);
-    setIsOpen(false);
-  }
-
-  /** 선택된 필터인지 확인 */
-  function isSelected(major: string, sub: string | null): boolean {
-    return regionFilter.major === major && regionFilter.sub === sub;
-  }
 
   return (
     <header className="bg-card/95 backdrop-blur-sm border-b border-border sticky top-0 z-40">
       <div className="max-w-md mx-auto px-4 py-3">
-        {/* 첫 줄: 타이틀 + 레벨 배지 + 버튼 */}
+        {/* 첫 줄: 타이틀 + 버튼 */}
         <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg font-bold">서핑 스팟</h1>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/20 text-primary">
-              {LEVEL_KO[surfLevel]}
-            </span>
-          </div>
-          <div className="flex gap-1">
+          <h1 className="text-lg font-bold">서핑 파도</h1>
+          <div className="flex items-center gap-1">
+            {/* 업데이트 시각 */}
+            {lastUpdated && (
+              <span className="text-[10px] text-muted-foreground mr-2">
+                {lastUpdated.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} 업데이트
+              </span>
+            )}
             {/* 검색 토글 버튼 */}
             <button
               onClick={() => { setShowSearch(!showSearch); if (showSearch) onSearchQueryChange(''); }}
@@ -231,109 +156,6 @@ export function Header({
               </button>
             )}
           </div>
-        )}
-
-        {/* 지역 필터 드롭다운 */}
-        <div className="mt-2 relative" ref={dropdownRef}>
-          {/* 드롭다운 트리거 버튼 */}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
-          >
-            <span>{getFilterLabel(regionFilter)}</span>
-            <span className="text-xs text-muted-foreground">({filteredCount})</span>
-            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-          </button>
-
-          {/* 드롭다운 메뉴 */}
-          {isOpen && (
-            <div className="absolute top-full left-0 mt-1 w-64 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden">
-              <div className="max-h-80 overflow-y-auto py-1">
-                {/* === 전체 === */}
-                <button
-                  onClick={() => selectFilter({ major: '전체', sub: null })}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-secondary/60 transition-colors flex justify-between items-center ${
-                    isSelected('전체', null) ? 'bg-primary/10 text-primary font-semibold' : ''
-                  }`}
-                >
-                  <span>전체</span>
-                  <span className="text-xs text-muted-foreground">{totalCount}</span>
-                </button>
-
-                {/* === 구분선 === */}
-                <div className="border-t border-border my-1" />
-
-                {/* === 국내 대분류 === */}
-                <button
-                  onClick={() => selectFilter({ major: '국내', sub: null })}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-secondary/60 transition-colors flex justify-between items-center font-medium ${
-                    isSelected('국내', null) ? 'bg-primary/10 text-primary font-semibold' : ''
-                  }`}
-                >
-                  <span>🇰🇷 국내 전체</span>
-                  <span className="text-xs text-muted-foreground">{domesticCount}</span>
-                </button>
-
-                {/* 국내 세부 지역 */}
-                {DOMESTIC_GROUPS.map(group => {
-                  const count = getGroupCount(group);
-                  if (count === 0) return null;
-                  return (
-                    <button
-                      key={group.key}
-                      onClick={() => selectFilter({ major: '국내', sub: group.key })}
-                      className={`w-full text-left pl-8 pr-4 py-1.5 text-sm hover:bg-secondary/60 transition-colors flex justify-between items-center ${
-                        isSelected('국내', group.key) ? 'bg-primary/10 text-primary font-semibold' : 'text-muted-foreground'
-                      }`}
-                    >
-                      <span>{group.label}</span>
-                      <span className="text-xs">{count}</span>
-                    </button>
-                  );
-                })}
-
-                {/* === 구분선 === */}
-                <div className="border-t border-border my-1" />
-
-                {/* === 발리 대분류 === */}
-                <button
-                  onClick={() => selectFilter({ major: '발리', sub: null })}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-secondary/60 transition-colors flex justify-between items-center font-medium ${
-                    isSelected('발리', null) ? 'bg-primary/10 text-primary font-semibold' : ''
-                  }`}
-                >
-                  <span>🇮🇩 발리 전체</span>
-                  <span className="text-xs text-muted-foreground">{baliCount}</span>
-                </button>
-
-                {/* 발리 세부 지역 */}
-                {BALI_GROUPS.map(group => {
-                  const count = getGroupCount(group);
-                  if (count === 0) return null;
-                  return (
-                    <button
-                      key={group.key}
-                      onClick={() => selectFilter({ major: '발리', sub: group.key })}
-                      className={`w-full text-left pl-8 pr-4 py-1.5 text-sm hover:bg-secondary/60 transition-colors flex justify-between items-center ${
-                        isSelected('발리', group.key) ? 'bg-primary/10 text-primary font-semibold' : 'text-muted-foreground'
-                      }`}
-                    >
-                      <span>{group.label}</span>
-                      <span className="text-xs">{count}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* 업데이트 시각 */}
-        {lastUpdated && (
-          <p className="text-[10px] text-muted-foreground mt-1.5">
-            {lastUpdated.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} 업데이트
-            {' · '}{filteredCount}개 스팟
-          </p>
         )}
       </div>
     </header>

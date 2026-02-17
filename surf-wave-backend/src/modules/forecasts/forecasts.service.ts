@@ -14,7 +14,7 @@
  */
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, LessThanOrEqual } from 'typeorm';
+import { Repository, Between, LessThanOrEqual, LessThan } from 'typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Forecast } from './entities/forecast.entity';
 import { ForecastQueryDto } from './dto/forecast-query.dto';
@@ -29,10 +29,14 @@ import {
   SpotForRating,
   ForecastForRating,
 } from './utils/surf-rating.util';
+import { generatePublicHints, generateHints, type Hints } from './utils/hints.util';
+import { UserBoardType } from '../../common/enums/user-board-type.enum';
 
 @Injectable()
 export class ForecastsService {
   private readonly logger = new Logger(ForecastsService.name);
+  /** 크론 실행 중 여부 - 중복 실행 방지용 */
+  private isRunning = false;
 
   constructor(
     @InjectRepository(Forecast)
@@ -107,8 +111,16 @@ export class ForecastsService {
 
   @Cron(CronExpression.EVERY_30_MINUTES)
   async fetchAllForecasts() {
+    /** 이전 크론이 아직 실행 중이면 스킵 */
+    if (this.isRunning) {
+      this.logger.warn('이전 예보 수집이 아직 진행 중입니다. 이번 크론 실행을 건너뜁니다.');
+      return;
+    }
+
+    this.isRunning = true;
     this.logger.log('Starting scheduled forecast fetch...');
 
+    try {
     const activeSpots = await this.spotsService.findAllActive();
 
     if (activeSpots.length === 0) {
@@ -119,33 +131,71 @@ export class ForecastsService {
     let successCount = 0;
     let failCount = 0;
 
-    for (const spot of activeSpots) {
-      try {
-        // 7일(168시간) 예보 수집
-        const forecastData = await this.openMeteoProvider.fetchForecast(
-          Number(spot.latitude),
-          Number(spot.longitude),
-          168,
-        );
+    /** Rate Limit(429) 감지 시 배치 중단 플래그 */
+    let rateLimited = false;
 
-        await this.upsertForecasts(spot.id, forecastData);
-        successCount++;
+    /**
+     * 배치 병렬 처리: 동시에 BATCH_SIZE개 스팟을 처리
+     *
+     * 순차 처리(97개 × 3~5초 = 5~8분) → 배치 병렬(97/5 × 3~5초 = 1~2분)
+     * Open-Meteo 무료 API는 초당 ~10 요청 허용하므로 5개 동시 처리가 안전
+     */
+    const BATCH_SIZE = 5;
 
-        this.logger.log(
-          `Upserted ${forecastData.length} forecasts for spot: ${spot.name} (${spot.id})`,
-        );
-      } catch (error) {
-        failCount++;
-        this.logger.error(
-          `Failed to fetch forecast for spot: ${spot.name} (${spot.id}) - ${(error as Error).message}`,
-        );
-        // spot 단위 실패 → 다음 스팟으로 계속 진행
+    for (let i = 0; i < activeSpots.length; i += BATCH_SIZE) {
+      /** 429 감지된 경우 남은 배치 전부 스킵 */
+      if (rateLimited) {
+        failCount += Math.min(BATCH_SIZE, activeSpots.length - i);
+        continue;
+      }
+
+      const batch = activeSpots.slice(i, i + BATCH_SIZE);
+
+      /** 배치 내 스팟들을 병렬 처리 (Promise.allSettled로 개별 실패 허용) */
+      const results = await Promise.allSettled(
+        batch.map(async (spot) => {
+          const forecastData = await this.openMeteoProvider.fetchForecast(
+            Number(spot.latitude),
+            Number(spot.longitude),
+            168,
+          );
+          await this.upsertForecasts(spot.id, forecastData);
+          return { spotName: spot.name, spotId: spot.id, count: forecastData.length };
+        }),
+      );
+
+      /** 배치 결과 처리: 성공/실패 카운트 + 429 감지 */
+      for (const result of results) {
+        if (result.status === 'fulfilled') {
+          successCount++;
+          this.logger.log(
+            `Upserted ${result.value.count} forecasts for spot: ${result.value.spotName} (${result.value.spotId})`,
+          );
+        } else {
+          failCount++;
+          const err = result.reason as any;
+
+          /** HTTP 429 감지 → 이후 배치 전부 중단 */
+          if (err?.response?.status === 429 || err?.status === 429) {
+            this.logger.error(
+              `Rate limit(429) 감지 - 남은 ${activeSpots.length - successCount - failCount}개 스팟 스킵`,
+            );
+            rateLimited = true;
+          } else {
+            this.logger.error(
+              `Failed to fetch forecast: ${err?.message || err}`,
+            );
+          }
+        }
       }
     }
 
     this.logger.log(
       `Forecast fetch completed: ${successCount}/${activeSpots.length} success, ${failCount} failed`,
     );
+    } finally {
+      this.isRunning = false;
+    }
   }
 
   // ============================================================
@@ -177,6 +227,9 @@ export class ForecastsService {
           windDirection: item.windDirection ?? null,
           tideHeight: item.tideHeight ?? null,
           tideStatus: (item.tideStatus as TideStatus) ?? null,
+          waterTemperature: item.waterTemperature ?? null,
+          airTemperature: item.airTemperature ?? null,
+          weatherCondition: item.weatherCondition ?? null,
           fetchedAt: now,
           source: 'open-meteo',
         })
@@ -193,6 +246,9 @@ export class ForecastsService {
             'wind_direction',
             'tide_height',
             'tide_status',
+            'water_temperature',
+            'air_temperature',
+            'weather_condition',
             'fetched_at',
           ],
           ['spot_id', 'forecast_time'],
@@ -215,84 +271,134 @@ export class ForecastsService {
    * - safetyReasons: 안전 경고 사유 배열 (하드블록 시 여러 이유 축적)
    * - simpleCondition: 파도/바람/전체 상태 요약
    */
-  async getDashboardData(level?: Difficulty) {
+  async getDashboardData(level?: Difficulty, boardType?: UserBoardType) {
     const spots = await this.spotsService.findAllActiveForDashboard(level);
     const now = new Date();
 
-    const results = await Promise.all(
-      spots.map(async (spot) => {
-        /** 현재 시각 기준 최신 예보 조회 */
-        const forecast = await this.forecastRepository.findOne({
-          where: {
-            spotId: spot.id,
-            forecastTime: LessThanOrEqual(now),
-          },
-          order: { forecastTime: 'DESC' },
-        });
+    /** 예보 데이터 최대 유효 시간 (1시간) - 이 이상 오래되면 stale로 표시 */
+    const MAX_FORECAST_AGE_MS = 60 * 60 * 1000;
 
-        /** 예보 데이터 없는 스팟: 기본값 반환 */
-        if (!forecast) {
-          return {
-            spot,
-            forecast: null,
-            surfRating: 0,
-            levelFit: { BEGINNER: 'PASS', INTERMEDIATE: 'PASS', ADVANCED: 'PASS' },
-            detail: null,
-            recommendationKo: '데이터 없음',
-            safetyReasons: [],
-            simpleCondition: null,
-          };
-        }
+    /**
+     * 단일 쿼리로 모든 스팟의 최신 예보 조회 (N+1 → 1 최적화)
+     *
+     * DISTINCT ON (spot_id) + ORDER BY forecast_time DESC로
+     * 각 스팟별 현재 시각 이전 가장 최근 예보 1건만 가져옴.
+     * 기존: 97개 스팟 × 개별 findOne 쿼리 = 97회 DB 호출
+     * 변경: 1회 쿼리로 전부 조회
+     */
+    const spotIds = spots.map((s) => s.id);
+    let forecastMap = new Map<string, Forecast>();
 
-        /**
-         * 스팟 데이터를 계산 유틸 입력 형태로 변환
-         * TypeORM decimal 컬럼은 문자열로 반환되므로 Number() 변환 필요
-         */
-        const spotData: SpotForRating = {
-          breakType: spot.breakType,
-          difficulty: spot.difficulty,
-          coastFacingDeg: spot.coastFacingDeg,
-          bestSwellDirection: spot.bestSwellDirection,
-          bestSwellSpreadDeg: spot.bestSwellSpreadDeg,
-          optimalWaveMin: spot.optimalWaveMin,
-          optimalWaveMax: spot.optimalWaveMax,
-          tolerableWaveMin: spot.tolerableWaveMin,
-          tolerableWaveMax: spot.tolerableWaveMax,
-        };
+    if (spotIds.length > 0) {
+      const latestForecasts = await this.forecastRepository
+        .createQueryBuilder('f')
+        .distinctOn(['f.spotId'])
+        .where('f.spotId IN (:...spotIds)', { spotIds })
+        .andWhere('f.forecastTime <= :now', { now })
+        .orderBy('f.spotId', 'ASC')
+        .addOrderBy('f.forecastTime', 'DESC')
+        .getMany();
 
-        /**
-         * 예보 데이터를 계산 유틸 입력 형태로 변환
-         * ⚠️ windDirection은 "FROM" 방향 (기상 데이터 표준)
-         * → surf-rating.util.ts 내부에서 TO 방향으로 변환 후 사용
-         */
-        const forecastData: ForecastForRating = {
-          waveHeight: Number(forecast.waveHeight),
-          wavePeriod: Number(forecast.wavePeriod),
-          waveDirection: Number(forecast.waveDirection),
-          swellDirection: forecast.swellDirection != null ? Number(forecast.swellDirection) : null,
-          windSpeed: forecast.windSpeed != null ? Number(forecast.windSpeed) : null,
-          windGusts: forecast.windGusts != null ? Number(forecast.windGusts) : null,
-          windDirection: forecast.windDirection != null ? Number(forecast.windDirection) : null,
-        };
+      /** spotId → Forecast 매핑 (계산 루프에서 O(1) 접근) */
+      forecastMap = new Map(
+        latestForecasts.map((f) => [f.spotId, f]),
+      );
+    }
 
-        /** v1.3 계산 실행: 하드블록 → fit점수 → 가중합 → 메시지 */
-        const ratingResult = calculateSurfRating(spotData, forecastData, level);
+    /** 각 스팟별 서핑 적합도 계산 (DB 호출 없이 순수 계산만) */
+    const results = spots.map((spot) => {
+      const forecast = forecastMap.get(spot.id) || null;
 
-        /** 간단한 컨디션 요약 (파도/바람/전체 상태) */
-        const simpleCondition = getSimpleCondition(forecastData);
-
+      /** 예보 데이터 없는 스팟: 기본값 반환 */
+      if (!forecast) {
         return {
           spot,
-          forecast,
-          surfRating: ratingResult.surfRating,
-          levelFit: ratingResult.levelFit,
-          detail: ratingResult.detail,
-          recommendationKo: ratingResult.recommendationKo,
-          safetyReasons: ratingResult.safetyReasons,
-          simpleCondition,
+          forecast: null,
+          surfRating: 0,
+          levelFit: { BEGINNER: 'PASS', INTERMEDIATE: 'PASS', ADVANCED: 'PASS' },
+          detail: null,
+          recommendationKo: '데이터 없음',
+          safetyReasons: [],
+          simpleCondition: null,
+          hints: { tags: [], message: '예보 데이터가 없습니다.' } as Hints,
         };
-      }),
-    );
+      }
+
+      /** 데이터 오래됨(stale) 판별 - fetchedAt 기준 */
+      const forecastAge = now.getTime() - forecast.fetchedAt.getTime();
+      const isStale = forecastAge > MAX_FORECAST_AGE_MS;
+
+      /**
+       * 스팟 데이터를 계산 유틸 입력 형태로 변환
+       * TypeORM decimal 컬럼은 문자열로 반환되므로 Number() 변환 필요
+       */
+      const spotData: SpotForRating = {
+        breakType: spot.breakType,
+        difficulty: spot.difficulty,
+        coastFacingDeg: spot.coastFacingDeg,
+        bestSwellDirection: spot.bestSwellDirection,
+        bestSwellSpreadDeg: spot.bestSwellSpreadDeg,
+        optimalWaveMin: spot.optimalWaveMin,
+        optimalWaveMax: spot.optimalWaveMax,
+        tolerableWaveMin: spot.tolerableWaveMin,
+        tolerableWaveMax: spot.tolerableWaveMax,
+      };
+
+      /**
+       * 예보 데이터를 계산 유틸 입력 형태로 변환
+       * ⚠️ windDirection은 "FROM" 방향 (기상 데이터 표준)
+       * → surf-rating.util.ts 내부에서 TO 방향으로 변환 후 사용
+       */
+      const forecastData: ForecastForRating = {
+        waveHeight: Number(forecast.waveHeight),
+        wavePeriod: Number(forecast.wavePeriod),
+        waveDirection: Number(forecast.waveDirection),
+        swellDirection: forecast.swellDirection != null ? Number(forecast.swellDirection) : null,
+        swellHeight: forecast.swellHeight != null ? Number(forecast.swellHeight) : null,
+        swellPeriod: forecast.swellPeriod != null ? Number(forecast.swellPeriod) : null,
+        waterTemperature: forecast.waterTemperature != null ? Number(forecast.waterTemperature) : null,
+        windSpeed: forecast.windSpeed != null ? Number(forecast.windSpeed) : null,
+        windGusts: forecast.windGusts != null ? Number(forecast.windGusts) : null,
+        windDirection: forecast.windDirection != null ? Number(forecast.windDirection) : null,
+      };
+
+      /** v1.3 계산 실행: 하드블록 → fit점수 → 가중합 → 메시지 */
+      const ratingResult = calculateSurfRating(spotData, forecastData, level);
+
+      /** 간단한 컨디션 요약 (파도/바람/전체 상태) */
+      const simpleCondition = getSimpleCondition(forecastData);
+
+      /** stale 데이터일 때 추천 문구에 경고 추가 */
+      const recommendation = isStale
+        ? `(오래된 데이터) ${ratingResult.recommendationKo}`
+        : ratingResult.recommendationKo;
+
+      /** C-7 hints 생성 - boardType이 있으면 보드별 팁 포함, 없으면 공통 메시지만 */
+      const hintsInput = {
+        detail: ratingResult.detail,
+        surfRating: ratingResult.surfRating,
+        safetyReasons: ratingResult.safetyReasons,
+        waveHeight: forecastData.waveHeight,
+        windSpeed: forecastData.windSpeed,
+        wavePeriod: forecastData.wavePeriod,
+      };
+
+      const hints: Hints = boardType && boardType !== UserBoardType.UNSET
+        ? generateHints({ ...hintsInput, boardType })
+        : generatePublicHints(hintsInput);
+
+      return {
+        spot,
+        forecast,
+        surfRating: ratingResult.surfRating,
+        levelFit: ratingResult.levelFit,
+        detail: ratingResult.detail,
+        recommendationKo: recommendation,
+        safetyReasons: ratingResult.safetyReasons,
+        simpleCondition,
+        hints,
+      };
+    });
 
     return {
       fetchedAt: now.toISOString(),
@@ -333,5 +439,36 @@ export class ForecastsService {
         dayForecasts.reduce((sum, f) => sum + Number(f.waveHeight), 0) /
         dayForecasts.length,
     }));
+  }
+
+  // ============================================================
+  // 크론: 매일 자정 오래된 예보 데이터 정리
+  // ============================================================
+
+  /**
+   * 7일 이상 지난 과거 예보 데이터를 삭제합니다.
+   *
+   * upsert 방식이라 대부분 UPDATE지만, 시간이 지나면서
+   * 과거 forecast_time 행들이 조회에 사용되지 않고 누적됨.
+   * - 증가량: ~2,300행/일 (97스팟 × 24시간)
+   * - 7일 이전 데이터: 어떤 조회에서도 사용하지 않음
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async cleanupOldForecasts() {
+    const cutoffDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    try {
+      const result = await this.forecastRepository.delete({
+        forecastTime: LessThan(cutoffDate),
+      });
+
+      this.logger.log(
+        `오래된 예보 정리 완료: ${result.affected ?? 0}건 삭제 (기준: ${cutoffDate.toISOString()})`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `오래된 예보 정리 실패: ${(error as Error).message}`,
+      );
+    }
   }
 }

@@ -74,6 +74,7 @@ export class OpenMeteoProvider implements ForecastProvider {
         'swell_wave_period',
         'swell_wave_direction',
         'sea_level_height_msl',
+        'sea_surface_temperature', // 수온 (°C)
       ].join(','),
       timezone: 'auto',
       forecast_days: forecastDays,
@@ -107,6 +108,8 @@ export class OpenMeteoProvider implements ForecastProvider {
         'wind_speed_10m',
         'wind_direction_10m',
         'wind_gusts_10m',
+        'temperature_2m',    // 기온 (°C)
+        'weather_code',      // 날씨 상태 코드 (WMO)
       ].join(','),
       timezone: 'auto',
       forecast_days: forecastDays,
@@ -138,10 +141,16 @@ export class OpenMeteoProvider implements ForecastProvider {
   ): ForecastData[] {
     const marine = marineData.hourly;
 
-    // Weather 데이터를 time -> wind 맵으로 변환
+    // Weather 데이터를 time -> wind/기온/날씨 맵으로 변환
     const windMap = new Map<
       string,
-      { speed: number | null; gusts: number | null; direction: number | null }
+      {
+        speed: number | null;
+        gusts: number | null;
+        direction: number | null;
+        airTemperature: number | null;
+        weatherCode: number | null;
+      }
     >();
 
     if (weatherData?.hourly) {
@@ -151,12 +160,16 @@ export class OpenMeteoProvider implements ForecastProvider {
           speed: weather.wind_speed_10m?.[i] ?? null,
           gusts: weather.wind_gusts_10m?.[i] ?? null,
           direction: weather.wind_direction_10m?.[i] ?? null,
+          airTemperature: weather.temperature_2m?.[i] ?? null,
+          weatherCode: weather.weather_code?.[i] ?? null,
         });
       });
     }
 
     // 해수면 높이 배열 (조석 상태 계산용)
     const seaLevels: (number | null)[] = marine.sea_level_height_msl ?? [];
+    // 수온 배열 (Marine API sea_surface_temperature)
+    const seaTemps: (number | null)[] = marine.sea_surface_temperature ?? [];
 
     // Marine 타임라인 기준으로 순회하며 합침
     const count = Math.min(hours, marine.time?.length || 0);
@@ -187,10 +200,35 @@ export class OpenMeteoProvider implements ForecastProvider {
         // 조석 (Marine API sea_level_height_msl)
         tideHeight,
         tideStatus,
+        // 수온 (Marine API sea_surface_temperature)
+        waterTemperature: seaTemps[i] ?? null,
+        // 기온 (Weather API temperature_2m)
+        airTemperature: wind?.airTemperature ?? null,
+        // 날씨 상태 (Weather API weather_code → WMO 코드 → 한국어)
+        weatherCondition: wind?.weatherCode != null
+          ? this.wmoCodeToCondition(wind.weatherCode)
+          : null,
       });
     }
 
     return forecasts;
+  }
+
+  /**
+   * WMO 날씨 코드를 한국어 날씨 상태로 변환
+   * Open-Meteo Weather API의 weather_code (WMO 4677 표준)
+   */
+  private wmoCodeToCondition(code: number): string {
+    if (code === 0) return '맑음';
+    if (code <= 3) return '구름 조금';
+    if (code <= 48) return '안개';
+    if (code <= 57) return '이슬비';
+    if (code <= 67) return '비';
+    if (code <= 77) return '눈';
+    if (code <= 82) return '소나기';
+    if (code <= 86) return '눈보라';
+    if (code >= 95) return '뇌우';
+    return '흐림';
   }
 
   /**
@@ -229,6 +267,13 @@ export class OpenMeteoProvider implements ForecastProvider {
     const maxInWindow = Math.max(...windowValues);
     const minInWindow = Math.min(...windowValues);
 
+    // 모든 값이 동일하면 판별 불가 → null
+    if (maxInWindow === minInWindow) return null;
+
+    // 이전/다음 시점 값 추출
+    const prev = index > 0 ? seaLevels[index - 1] : null;
+    const next = index < seaLevels.length - 1 ? seaLevels[index + 1] : null;
+
     // 전후 6시간 내 최고점이면 만조 (HIGH)
     if (current >= maxInWindow) return TideStatus.HIGH;
 
@@ -236,14 +281,12 @@ export class OpenMeteoProvider implements ForecastProvider {
     if (current <= minInWindow) return TideStatus.LOW;
 
     // 이전 시점과 비교하여 밀물/썰물 판별
-    const prev = index > 0 ? seaLevels[index - 1] : null;
     if (prev != null) {
       if (current > prev) return TideStatus.RISING;
       if (current < prev) return TideStatus.FALLING;
     }
 
     // 이전 데이터 없으면 다음 시점과 비교 (역방향 추론)
-    const next = index < seaLevels.length - 1 ? seaLevels[index + 1] : null;
     if (next != null) {
       if (next > current) return TideStatus.RISING;
       if (next < current) return TideStatus.FALLING;

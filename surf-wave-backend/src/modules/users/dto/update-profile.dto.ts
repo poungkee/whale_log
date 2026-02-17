@@ -16,6 +16,7 @@
 import { IsString, IsOptional, IsBoolean, IsEnum, MinLength, MaxLength } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Difficulty } from '../../../common/enums/difficulty.enum';
+import { UserBoardType } from '../../../common/enums/user-board-type.enum';
 
 export class UpdateProfileDto {
   /** 닉네임 변경 - 서비스 내 표시 이름 (2~30자, 고유값) */
@@ -57,6 +58,22 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsEnum(Difficulty, { message: '서핑 레벨은 BEGINNER, INTERMEDIATE, ADVANCED, EXPERT 중 하나여야 합니다' })
   surfLevel?: string;
+
+  /**
+   * 보드 타입 변경 - 주로 사용하는 서핑 보드 종류
+   * - LONGBOARD: 롱보드 (안정적, 작은 파도에도 적합)
+   * - MIDLENGTH: 미드렝스 (중간 크기, 범용적)
+   * - SHORTBOARD: 숏보드 (기동성, 큰 파도에서 유리)
+   * - UNSET: 미설정
+   */
+  @ApiPropertyOptional({
+    description: '보드 타입',
+    enum: UserBoardType,
+    example: UserBoardType.LONGBOARD,
+  })
+  @IsOptional()
+  @IsEnum(UserBoardType, { message: '보드 타입은 LONGBOARD, MIDLENGTH, SHORTBOARD, UNSET 중 하나여야 합니다' })
+  boardType?: UserBoardType;
 
   /** 알림 수신 여부 변경 - false로 설정하면 푸시 알림을 받지 않음 */
   @ApiPropertyOptional({ description: '푸시 알림 수신 여부', example: true })

@@ -1,11 +1,11 @@
 /**
  * @file MyPage.tsx
- * @description 마이페이지 화면 - 프로필 조회, 서핑 레벨 변경, 알림 설정, 로그아웃
+ * @description 마이페이지 화면 - 프로필 조회, 서핑 레벨/보드 변경, 알림 설정, 로그아웃
  *
  * 표시 정보:
  * - 사용자 닉네임 (userInfo에서 가져옴)
- * - 현재 서핑 레벨 (색상 배지로 표시)
- * - 서핑 레벨 변경 기능 (PATCH /api/v1/users/me)
+ * - 현재 서핑 레벨 + 보드 타입 (색상 배지로 표시)
+ * - 서핑 레벨 / 보드 타입 변경 기능 (PATCH /api/v1/users/me)
  * - 알림 설정 토글
  * - 앱 버전 정보
  * - 로그아웃 버튼
@@ -13,17 +13,19 @@
 
 import { Settings, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
-import type { SurfLevel, UserInfo } from '../types';
+import type { SurfLevel, BoardType, UserInfo } from '../types';
 
 interface MyPageProps {
   /** 현재 서핑 레벨 */
   surfLevel: SurfLevel;
-  /** 로그인된 사용자 정보 (닉네임, 이메일 등) */
+  /** 로그인된 사용자 정보 (닉네임, 이메일, 보드 타입 등) */
   userInfo: UserInfo | null;
   /** 로그아웃 핸들러 - localStorage 초기화 + welcome 화면 이동 */
   onLogout: () => void;
   /** 레벨 변경 핸들러 - 서버 API 호출 + 로컬 상태 업데이트 */
   onLevelChange: (level: SurfLevel) => void;
+  /** 보드 타입 변경 핸들러 - 서버 API 호출 + 로컬 상태 업데이트 */
+  onBoardTypeChange: (boardType: BoardType) => void;
 }
 
 /** 레벨별 한국어 라벨 */
@@ -45,9 +47,33 @@ const LEVEL_COLORS: Record<SurfLevel, string> = {
 /** 전체 레벨 목록 - 레벨 변경 드롭다운에 사용 */
 const ALL_LEVELS: SurfLevel[] = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT'];
 
-export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange }: MyPageProps) {
+/** 보드 타입별 한국어 라벨 */
+const BOARD_LABELS: Record<BoardType, string> = {
+  LONGBOARD: '롱보드',
+  MIDLENGTH: '미드렝스',
+  SHORTBOARD: '숏보드',
+  UNSET: '미설정',
+};
+
+/** 보드 타입별 테마 색상 */
+const BOARD_COLORS: Record<BoardType, string> = {
+  LONGBOARD: '#32CD32',
+  MIDLENGTH: '#008CBA',
+  SHORTBOARD: '#FF8C00',
+  UNSET: '#888888',
+};
+
+/** 선택 가능한 보드 타입 목록 (UNSET 제외) */
+const ALL_BOARDS: BoardType[] = ['LONGBOARD', 'MIDLENGTH', 'SHORTBOARD'];
+
+export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange, onBoardTypeChange }: MyPageProps) {
   /** 레벨 변경 드롭다운 열림/닫힘 상태 */
   const [showLevelPicker, setShowLevelPicker] = useState(false);
+  /** 보드 타입 변경 드롭다운 열림/닫힘 상태 */
+  const [showBoardPicker, setShowBoardPicker] = useState(false);
+
+  /** 현재 보드 타입 - userInfo에서 가져오거나 기본값 UNSET */
+  const currentBoard: BoardType = userInfo?.boardType ?? 'UNSET';
 
   return (
     <div className="min-h-screen pb-20">
@@ -64,7 +90,7 @@ export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange }: MyPageP
       </header>
 
       <div className="max-w-md mx-auto px-4 py-6 page-transition">
-        {/* 프로필 카드 - 아바타 + 닉네임 + 레벨 배지 */}
+        {/* 프로필 카드 - 아바타 + 닉네임 + 레벨/보드 배지 */}
         <div className="bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl p-6 border border-primary/30 mb-6">
           <div className="flex items-center gap-4">
             {/* 프로필 아바타 - 이미지가 없으면 기본 이모지 표시 */}
@@ -72,7 +98,7 @@ export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange }: MyPageP
               🏄‍♂️
             </div>
             <div className="flex-1">
-              {/* 닉네임 - userInfo에서 가져옴, 없으면 '서퍼' 표시 */}
+              {/* 닉네임 */}
               <h2 className="text-xl font-bold mb-1">
                 {userInfo?.nickname || '서퍼'}
               </h2>
@@ -80,15 +106,26 @@ export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange }: MyPageP
               {userInfo?.email && (
                 <p className="text-sm text-muted-foreground mb-2">{userInfo.email}</p>
               )}
-              {/* 서핑 레벨 배지 - 레벨별 색상 적용 */}
-              <div
-                className="inline-block px-3 py-1 text-sm rounded-full font-medium"
-                style={{
-                  backgroundColor: `${LEVEL_COLORS[surfLevel]}20`,
-                  color: LEVEL_COLORS[surfLevel],
-                }}
-              >
-                {LEVEL_LABELS[surfLevel]}
+              {/* 서핑 레벨 + 보드 타입 배지 */}
+              <div className="flex gap-2 flex-wrap">
+                <div
+                  className="inline-block px-3 py-1 text-sm rounded-full font-medium"
+                  style={{
+                    backgroundColor: `${LEVEL_COLORS[surfLevel]}20`,
+                    color: LEVEL_COLORS[surfLevel],
+                  }}
+                >
+                  {LEVEL_LABELS[surfLevel]}
+                </div>
+                <div
+                  className="inline-block px-3 py-1 text-sm rounded-full font-medium"
+                  style={{
+                    backgroundColor: `${BOARD_COLORS[currentBoard]}20`,
+                    color: BOARD_COLORS[currentBoard],
+                  }}
+                >
+                  {BOARD_LABELS[currentBoard]}
+                </div>
               </div>
             </div>
           </div>
@@ -98,7 +135,10 @@ export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange }: MyPageP
         <div className="bg-card border border-border rounded-xl divide-y divide-border">
           {/* 서핑 레벨 변경 버튼 */}
           <button
-            onClick={() => setShowLevelPicker(!showLevelPicker)}
+            onClick={() => {
+              setShowLevelPicker(!showLevelPicker);
+              setShowBoardPicker(false); // 다른 피커 닫기
+            }}
             className="w-full flex items-center justify-between p-4 hover:bg-secondary transition-colors"
           >
             <span>서핑 레벨 변경</span>
@@ -110,14 +150,14 @@ export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange }: MyPageP
             </div>
           </button>
 
-          {/* 레벨 선택 드롭다운 - 버튼 클릭 시 토글 */}
+          {/* 레벨 선택 드롭다운 */}
           {showLevelPicker && (
             <div className="p-4 bg-secondary/50 space-y-2">
               {ALL_LEVELS.map((level) => (
                 <button
                   key={level}
                   onClick={() => {
-                    onLevelChange(level); // App.tsx의 handleLevelChange → 서버 API 호출
+                    onLevelChange(level);
                     setShowLevelPicker(false);
                   }}
                   className={`w-full flex items-center justify-between p-3 rounded-lg border transition-colors ${
@@ -137,6 +177,50 @@ export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange }: MyPageP
             </div>
           )}
 
+          {/* 보드 타입 변경 버튼 */}
+          <button
+            onClick={() => {
+              setShowBoardPicker(!showBoardPicker);
+              setShowLevelPicker(false); // 다른 피커 닫기
+            }}
+            className="w-full flex items-center justify-between p-4 hover:bg-secondary transition-colors"
+          >
+            <span>보드 타입 변경</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm" style={{ color: BOARD_COLORS[currentBoard] }}>
+                {BOARD_LABELS[currentBoard]}
+              </span>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </div>
+          </button>
+
+          {/* 보드 타입 선택 드롭다운 */}
+          {showBoardPicker && (
+            <div className="p-4 bg-secondary/50 space-y-2">
+              {ALL_BOARDS.map((board) => (
+                <button
+                  key={board}
+                  onClick={() => {
+                    onBoardTypeChange(board);
+                    setShowBoardPicker(false);
+                  }}
+                  className={`w-full flex items-center justify-between p-3 rounded-lg border transition-colors ${
+                    currentBoard === board
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <span className="font-medium" style={{ color: BOARD_COLORS[board] }}>
+                    {BOARD_LABELS[board]}
+                  </span>
+                  {currentBoard === board && (
+                    <span className="text-primary text-sm">현재</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* 알림 설정 토글 */}
           <div className="flex items-center justify-between p-4">
             <span>알림 설정</span>
@@ -149,7 +233,7 @@ export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange }: MyPageP
           {/* 앱 정보 */}
           <button className="w-full text-left p-4 hover:bg-secondary transition-colors flex items-center justify-between">
             <span>앱 정보</span>
-            <span className="text-sm text-muted-foreground">v1.0.0</span>
+            <span className="text-sm text-muted-foreground">v1.4.2</span>
           </button>
 
           {/* 로그아웃 버튼 */}

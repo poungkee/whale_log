@@ -45,3 +45,77 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* 스크롤바 완전 숨김 (수평 캐러셀용) */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* MapLibre 팝업 스타일 오버라이드 */
+.maplibregl-popup-content {
+  border-radius: 12px !important;
+  padding: 0 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+  background: #fff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+.maplibregl-popup-tip {
+  border-top-color: #fff !important;
+}
+
+.maplibregl-popup-close-button {
+  font-size: 18px !important;
+  padding: 4px 8px !important;
+  color: #999 !important;
+}
+
+.maplibregl-popup-close-button:hover {
+  color: #333 !important;
+  background: transparent !important;
+}
+
+/* MapLibre 기본 로고/워터마크 숨김 */
+.maplibregl-ctrl-logo,
+.maplibregl-ctrl-attrib,
+.maplibregl-ctrl-bottom-left,
+.maplibregl-ctrl-bottom-right {
+  display: none !important;
+}
+
+/* 하단 슬라이드 카드 등장 애니메이션 */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* 고점수 마커 펄스 애니메이션 (느린 핑) */
+@keyframes pingSlow {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.animate-ping-slow {
+  animation: pingSlow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}

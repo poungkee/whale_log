@@ -6,24 +6,26 @@
  * 1. splash (2초) → welcome (시작 화면)
  * 2. welcome → login 또는 register
  * 3. login/register → 성공 시:
- *    - surfLevel이 있으면 → main (메인 화면)
- *    - surfLevel이 없으면 → level-select (레벨 선택)
+ *    - surfLevel + boardType 모두 있으면 → main (메인 화면)
+ *    - surfLevel 없으면 → level-select (레벨 + 보드 선택)
+ *    - surfLevel 있고 boardType이 'UNSET'이면 → level-select (보드만 선택)
  * 4. level-select → main
  * 5. main → mypage에서 로그아웃 → welcome
  *
  * 인증 데이터 관리 (localStorage):
  * - 'accessToken': JWT 토큰 (API 인증에 사용)
- * - 'user': 사용자 정보 JSON (닉네임, 이메일, 레벨 등)
+ * - 'user': 사용자 정보 JSON (닉네임, 이메일, 레벨, 보드 타입 등)
  * - 'surfLevel': 서핑 레벨 (대시보드 필터에 사용)
  */
 
 import { useState, useEffect } from 'react';
-import type { AppScreen, MainTab, SurfLevel, AuthResponse, UserInfo } from './types';
+import type { AppScreen, MainTab, SurfLevel, BoardType, AuthResponse, UserInfo } from './types';
 import { Welcome } from './pages/Welcome';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { LevelSelect } from './pages/LevelSelect';
 import { Home } from './pages/Home';
+import { Explore } from './pages/Explore';
 import { MyPage } from './pages/MyPage';
 import { BottomNav } from './components/BottomNav';
 
@@ -53,6 +55,11 @@ export default function App() {
       /** 저장된 토큰과 사용자 정보가 있으면 로그인 상태 복원 */
       try {
         const user = JSON.parse(savedUser) as UserInfo;
+        /** 기존 사용자 데이터에 boardType 없으면 기본값 보정 */
+        if (!user.boardType) {
+          user.boardType = 'UNSET';
+          localStorage.setItem('user', JSON.stringify(user));
+        }
         setUserInfo(user);
         if (savedLevel) {
           setSurfLevel(savedLevel);
@@ -72,8 +79,6 @@ export default function App() {
    * Kakao 로그인 후 리다이렉트 URI로 돌아오면 URL에 ?code=xxx 파라미터가 포함됨.
    * 이 코드를 감지하여 백엔드 POST /api/v1/auth/kakao/callback API를 호출하고,
    * 성공 시 handleAuthSuccess()로 로그인 처리.
-   *
-   * URL 경로 확인: /auth/kakao/callback?code=xxx 형태
    */
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -126,12 +131,14 @@ export default function App() {
       const timer = setTimeout(() => {
         const savedToken = localStorage.getItem('accessToken');
         const savedLevel = localStorage.getItem('surfLevel') as SurfLevel | null;
+        const savedUser = localStorage.getItem('user');
 
         if (savedToken && savedLevel) {
-          /** 토큰 + 레벨 모두 있으면 → 메인 화면으로 바로 이동 */
+          /** 토큰 + 레벨 모두 있으면 → 메인 화면으로 이동 */
+          /** boardType은 UNSET이어도 메인 진입 허용 (마이페이지에서 나중에 설정) */
           setScreen('main');
         } else if (savedToken) {
-          /** 토큰만 있고 레벨 없으면 → 레벨 선택 화면 */
+          /** 토큰만 있고 레벨 없으면 → 레벨 + 보드 선택 화면 */
           setScreen('level-select');
         } else {
           /** 토큰 없으면 → 시작 화면 */
@@ -154,31 +161,33 @@ export default function App() {
     localStorage.setItem('user', JSON.stringify(authData.user));
     setUserInfo(authData.user);
 
-    /** surfLevel 유무에 따라 화면 전환 결정 */
+    /** surfLevel + boardType 유무에 따라 화면 전환 결정 */
     if (authData.user.surfLevel) {
-      /** 이미 레벨을 선택한 사용자 → 메인 화면으로 이동 */
       const level = authData.user.surfLevel as SurfLevel;
       localStorage.setItem('surfLevel', level);
       setSurfLevel(level);
+
+      /** 레벨이 있으면 메인으로 (boardType UNSET도 허용 - 마이페이지에서 설정) */
       setScreen('main');
     } else {
-      /** 레벨 미선택 → 레벨 선택 화면으로 이동 (온보딩) */
+      /** 레벨 미선택 → 레벨 + 보드 선택 화면으로 이동 (온보딩) */
       setScreen('level-select');
     }
   };
 
   /**
-   * 레벨 선택 완료 후 호출
-   * 선택한 레벨을 서버 API로 저장하고 메인 화면으로 전환
+   * 온보딩 완료 후 호출 (레벨 + 보드 타입 선택 완료)
+   * 선택한 레벨과 보드 타입을 서버 API로 저장하고 메인 화면으로 전환
    *
-   * @param level - 선택한 서핑 레벨 (BEGINNER | INTERMEDIATE | ADVANCED | EXPERT)
+   * @param level - 선택한 서핑 레벨
+   * @param boardType - 선택한 보드 타입
    */
-  const handleLevelSelect = async (level: SurfLevel) => {
+  const handleOnboardingComplete = async (level: SurfLevel, boardType: BoardType) => {
     /** localStorage에 레벨 저장 (오프라인 대비) */
     localStorage.setItem('surfLevel', level);
     setSurfLevel(level);
 
-    /** 서버 API로 레벨 저장 - PATCH /api/v1/users/me */
+    /** 서버 API로 레벨 + 보드 타입 저장 - PATCH /api/v1/users/me */
     const token = localStorage.getItem('accessToken');
     if (token) {
       try {
@@ -188,18 +197,18 @@ export default function App() {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
           },
-          body: JSON.stringify({ surfLevel: level }),
+          body: JSON.stringify({ surfLevel: level, boardType }),
         });
 
-        /** 사용자 정보에 레벨 반영 */
+        /** 사용자 정보에 레벨 + 보드 타입 반영 */
         if (userInfo) {
-          const updated = { ...userInfo, surfLevel: level };
+          const updated = { ...userInfo, surfLevel: level, boardType };
           setUserInfo(updated);
           localStorage.setItem('user', JSON.stringify(updated));
         }
       } catch {
         /** API 실패해도 로컬 저장은 유지 - 다음 로그인 시 서버와 동기화 */
-        console.warn('서버에 레벨 저장 실패 - 로컬에만 저장됨');
+        console.warn('서버에 온보딩 데이터 저장 실패 - 로컬에만 저장됨');
       }
     }
 
@@ -210,8 +219,6 @@ export default function App() {
   /**
    * 레벨 변경 (마이페이지 설정에서 호출)
    * 서버 API로 레벨 업데이트하고 로컬 상태 반영
-   *
-   * @param level - 변경할 서핑 레벨
    */
   const handleLevelChange = async (level: SurfLevel) => {
     localStorage.setItem('surfLevel', level);
@@ -237,6 +244,36 @@ export default function App() {
     /** 사용자 정보 로컬 업데이트 */
     if (userInfo) {
       const updated = { ...userInfo, surfLevel: level };
+      setUserInfo(updated);
+      localStorage.setItem('user', JSON.stringify(updated));
+    }
+  };
+
+  /**
+   * 보드 타입 변경 (마이페이지 설정에서 호출)
+   * 서버 API로 보드 타입 업데이트하고 로컬 상태 반영
+   */
+  const handleBoardTypeChange = async (boardType: BoardType) => {
+    /** 서버에 보드 타입 변경 저장 */
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      try {
+        await fetch('/api/v1/users/me', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ boardType }),
+        });
+      } catch {
+        console.warn('서버에 보드 타입 변경 저장 실패');
+      }
+    }
+
+    /** 사용자 정보 로컬 업데이트 */
+    if (userInfo) {
+      const updated = { ...userInfo, boardType };
       setUserInfo(updated);
       localStorage.setItem('user', JSON.stringify(updated));
     }
@@ -314,11 +351,17 @@ export default function App() {
     );
   }
 
-  /** 레벨 선택 화면 - 초급/중급/상급/전문가 카드 */
+  /** 온보딩 화면 - 레벨 + 보드 타입 선택 (2단계) */
   if (screen === 'level-select') {
+    /** 이미 레벨이 있으면 보드 선택만 표시 */
+    const existingLevel = userInfo?.surfLevel as SurfLevel | null;
+
     return (
       <div className="dark min-h-screen bg-background text-foreground">
-        <LevelSelect onSelect={handleLevelSelect} />
+        <LevelSelect
+          existingLevel={existingLevel}
+          onComplete={handleOnboardingComplete}
+        />
       </div>
     );
   }
@@ -327,18 +370,32 @@ export default function App() {
   const renderMainPage = () => {
     switch (mainTab) {
       case 'home':
-        return <Home key={homeResetKey} surfLevel={surfLevel!} />;
-      case 'mypage':
+        return <Home key={homeResetKey} surfLevel={surfLevel!} boardType={userInfo?.boardType} />;
+      case 'profile':
         return (
           <MyPage
             surfLevel={surfLevel!}
             userInfo={userInfo}
             onLogout={handleLogout}
             onLevelChange={handleLevelChange}
+            onBoardTypeChange={handleBoardTypeChange}
           />
         );
+      case 'explore':
+        return <Explore surfLevel={surfLevel!} />;
+      case 'favorites':
+        /** 준비중 플레이스홀더 */
+        return (
+          <div className="min-h-screen flex items-center justify-center pb-20">
+            <div className="text-center">
+              <div className="text-5xl mb-4">⭐</div>
+              <h2 className="text-lg font-bold mb-2">즐겨찾기</h2>
+              <p className="text-sm text-muted-foreground">준비중입니다</p>
+            </div>
+          </div>
+        );
       default:
-        return <Home key={homeResetKey} surfLevel={surfLevel!} />;
+        return <Home key={homeResetKey} surfLevel={surfLevel!} boardType={userInfo?.boardType} />;
     }
   };
 

@@ -9,11 +9,14 @@
 /** 서핑 레벨 - 사용자가 선택하는 서핑 실력 레벨 (백엔드 Difficulty enum과 동일) */
 export type SurfLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT';
 
+/** 보드 타입 - 사용자가 주로 사용하는 서핑 보드 종류 */
+export type BoardType = 'LONGBOARD' | 'MIDLENGTH' | 'SHORTBOARD' | 'UNSET';
+
 /** 앱 화면 상태 - 현재 표시 중인 화면 */
 export type AppScreen = 'splash' | 'welcome' | 'login' | 'register' | 'level-select' | 'main';
 
 /** 메인 탭 - 하단 네비게이션의 탭 종류 */
-export type MainTab = 'home' | 'map' | 'feed' | 'mypage';
+export type MainTab = 'home' | 'explore' | 'favorites' | 'profile';
 
 /** 조석 상태 - 밀물/썰물/만조/간조 */
 export type TideStatus = 'HIGH' | 'LOW' | 'RISING' | 'FALLING';
@@ -43,6 +46,7 @@ export interface UserInfo {
   avatarUrl: string | null;      // 프로필 사진 URL (null이면 기본 아바타)
   role: string;                  // 역할 ('USER' | 'ADMIN')
   surfLevel: string | null;      // 서핑 레벨 (null이면 아직 선택 안 함)
+  boardType: BoardType;          // 보드 타입 (LONGBOARD | MIDLENGTH | SHORTBOARD | UNSET)
   provider: string | null;       // 소셜 로그인 제공자 ('GOOGLE' | 'KAKAO' | null)
   notificationsEnabled: boolean; // 알림 수신 여부
 }
@@ -128,6 +132,19 @@ export interface SimpleCondition {
   overall: string;      // "좋음" | "보통" | "주의"
 }
 
+/** 힌트 태그 - 배지 색상/아이콘 결정용 */
+export type HintTag =
+  | 'SAFETY_WARNING' | 'WAVE_TOO_SMALL' | 'WAVE_TOO_BIG'
+  | 'STRONG_WIND' | 'ONSHORE_WIND' | 'OFFSHORE_WIND'
+  | 'GOOD_SWELL' | 'BAD_SWELL' | 'SHORT_PERIOD' | 'LONG_PERIOD'
+  | 'LONGBOARD_TIP' | 'SHORTBOARD_TIP' | 'GREAT_CONDITION';
+
+/** C-7 hints 구조 - 서핑 적합도에 대한 보조 설명 */
+export interface Hints {
+  tags: HintTag[];   // 배지 태그 (최대 3개)
+  message: string;   // 한국어 힌트 메시지
+}
+
 /**
  * 스팟별 예보 데이터 - 대시보드 API 응답의 spots[] 배열 내 각 항목
  *
@@ -184,4 +201,6 @@ export interface SpotForecast {
   safetyReasons: string[];
   /** 초보자용 간단 상태 표시 - 예보 없으면 null */
   simpleCondition: SimpleCondition | null;
+  /** C-7 hints - 점수 보조 설명 메시지 + 배지 태그 */
+  hints?: Hints;
 }

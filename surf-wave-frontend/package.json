@@ -9,11 +9,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/supercluster": "^7.1.3",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.487.0",
+    "maplibre-gl": "^5.18.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "lucide-react": "^0.487.0",
+    "react-map-gl": "^8.1.0",
     "recharts": "^2.15.2",
-    "clsx": "^2.1.1",
+    "supercluster": "^8.0.1",
     "tailwind-merge": "^3.2.0",
     "tw-animate-css": "^1.3.8"
   },

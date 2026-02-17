@@ -14,7 +14,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { BaseEntity } from '../../../common/entities/base.entity';
-import { Role, SocialProvider } from '../../../common/enums';
+import { Role, SocialProvider, UserBoardType } from '../../../common/enums';
 import { SpotFavorite } from '../../spots/entities/spot-favorite.entity';
 import { SpotVote } from '../../spots/entities/spot-vote.entity';
 import { SurfDiary } from '../../diary/entities/surf-diary.entity';
@@ -59,6 +59,15 @@ export class User extends BaseEntity {
   /** 서핑 실력 레벨 - 사용자가 직접 설정 (예: 초급, 중급, 고급) */
   @Column({ name: 'surf_level', type: 'varchar', nullable: true })
   surfLevel: string | null;
+
+  /** 주로 사용하는 보드 타입 - 서핑 추천 시 보드 특성 반영 */
+  @Column({
+    name: 'board_type',
+    type: 'varchar',
+    length: 20,
+    default: UserBoardType.UNSET,
+  })
+  boardType: UserBoardType;
 
   /** 소셜 로그인 제공자 - GOOGLE, APPLE, KAKAO */
   @Column({ type: 'enum', enum: SocialProvider, nullable: true })

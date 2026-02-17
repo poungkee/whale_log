@@ -440,6 +440,7 @@ export class AuthService {
       avatarUrl: user.avatarUrl,
       role: user.role,
       surfLevel: user.surfLevel,
+      boardType: user.boardType ?? 'UNSET',
       provider: user.provider,
       notificationsEnabled: user.notificationsEnabled,
     };

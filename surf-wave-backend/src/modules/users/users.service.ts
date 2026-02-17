@@ -117,6 +117,7 @@ export class UsersService {
     avatarUrl: string | null;
     role: string;
     surfLevel: string | null;
+    boardType: string;
     provider: string | null;
     notificationsEnabled: boolean;
     createdAt: Date;
@@ -130,6 +131,7 @@ export class UsersService {
       avatarUrl: user.avatarUrl,
       role: user.role,
       surfLevel: user.surfLevel,
+      boardType: user.boardType ?? 'UNSET',
       provider: user.provider,
       notificationsEnabled: user.notificationsEnabled,
       createdAt: user.createdAt,
