@@ -1,19 +1,20 @@
 /**
  * @file hints.util.ts
- * @description C-7 메시지 방어 hints 생성 유틸리티
+ * @description C-7 메시지 방어 hints 생성 유틸리티 (v1.5)
  *
  * surf-rating.util.ts = "점수 엔진" (고정)
  * hints.util.ts = "프레젠테이션" (변동)
  *
- * detail(5개 fit점수) + boardType + safetyReasons를 분석하여
- * 사용자에게 보여줄 힌트 메시지와 태그를 생성합니다.
+ * 입력: detail(5개 fit점수) + boardType + safetyReasons + waveHeight + windSpeed + wavePeriod
+ * 출력: 태그 배열(최대 3개) + 메시지(최대 2문장을 공백으로 합친 1줄)
  *
- * 규칙 우선순위: 5(안전) → 1(파고) → 2(바람) → 4(스웰) → 3(주기)
+ * 규칙 우선순위: 5(안전) → 1(파고) → 2(바람) → 4(스웰) → 3(주기) → 보드팁 → 전체 컨디션
  *
  * C-7 방어 전략:
  * - 점수 cap 안 건드림 (엔진 영역)
  * - 메시지 + 배지(tags)로 "왜 이 점수인지" 설명
  * - 비로그인 사용자는 공통 메시지만 표시
+ * - 안전 경고가 있으면 보드 팁 생략 (safetyReasons.length > 0 체크)
  */
 
 import { UserBoardType } from '../../../common/enums/user-board-type.enum';
@@ -31,6 +32,7 @@ export type HintTag =
   | 'SHORT_PERIOD'     // 주기 짧음
   | 'LONG_PERIOD'      // 주기 김 (좋음)
   | 'LONGBOARD_TIP'    // 롱보드 팁
+  | 'MIDLENGTH_TIP'    // 미드렝스 팁
   | 'SHORTBOARD_TIP'   // 숏보드 팁
   | 'GREAT_CONDITION';  // 전반적 좋은 컨디션
 
@@ -38,7 +40,7 @@ export type HintTag =
 export interface Hints {
   /** 태그 배열 - 프론트엔드에서 배지로 표시 */
   tags: HintTag[];
-  /** 한국어 힌트 메시지 - 최대 2줄 */
+  /** 한국어 힌트 메시지 - 최대 2문장을 공백으로 합친 1줄 */
   message: string;
 }
 
@@ -94,6 +96,10 @@ export function generateHints(input: HintsInput): Hints {
     if (waveHeight < 0.3) {
       tags.push('WAVE_TOO_SMALL');
       messages.push('파도가 너무 작아요.');
+    } else if (waveHeight <= 0.5) {
+      // 0.3~0.5m: 매우 잔잔 — 태그는 WAVE_TOO_SMALL이지만 메시지는 부드럽게
+      tags.push('WAVE_TOO_SMALL');
+      messages.push('파도가 많이 잔잔해요.');
     } else if (waveHeight > 2.5) {
       tags.push('WAVE_TOO_BIG');
       messages.push('파도가 매우 높아요. 주의하세요.');
@@ -132,29 +138,103 @@ export function generateHints(input: HintsInput): Hints {
   }
 
   // ===== 보드 타입별 추가 팁 =====
-  if (boardType !== UserBoardType.UNSET && safetyReasons.length === 0) {
+  // 각 보드 타입에 맞는 파고 구간별 메시지를 제공
+  // 안전 경고가 있을 때는 보드 팁 생략 (안전 메시지 우선)
+  if (boardType !== UserBoardType.UNSET && safetyReasons.length === 0 && waveHeight !== null) {
     if (boardType === UserBoardType.LONGBOARD) {
-      if (waveHeight !== null && waveHeight <= 1.0 && surfRating >= 4) {
+      if (waveHeight <= 0.5 && surfRating >= 3) {
+        // 매우 잔잔: 롱보드만 가능한 작은 파도
         tags.push('LONGBOARD_TIP');
         if (messages.length < 2) {
-          messages.push('롱보드로 즐기기 좋은 잔잔한 파도예요!');
+          messages.push('롱보드로 여유롭게 즐기기 좋은 파도예요!');
         }
-      } else if (waveHeight !== null && waveHeight > 2.0) {
+      } else if (waveHeight <= 1.0 && surfRating >= 4) {
+        // 잔잔~적당: 롱보드 최적 구간
         tags.push('LONGBOARD_TIP');
         if (messages.length < 2) {
-          messages.push('롱보드에는 파도가 좀 높을 수 있어요.');
+          messages.push('롱보드에 딱 맞는 컨디션이에요!');
+        }
+      } else if (waveHeight <= 1.5) {
+        // 적당~약간 높음: 롱보드 가능하지만 주의
+        tags.push('LONGBOARD_TIP');
+        if (messages.length < 2) {
+          messages.push('롱보드로 탈 수 있지만 파도가 좀 있어요.');
+        }
+      } else if (waveHeight > 1.5) {
+        // 높음: 롱보드에 부담 → 미드렝스 추천 (숏보드보다 전환이 자연스러움)
+        tags.push('LONGBOARD_TIP');
+        if (messages.length < 2) {
+          messages.push('롱보드에는 파도가 높아요. 미드렝스나 숏보드를 추천해요.');
+        }
+      }
+    } else if (boardType === UserBoardType.MIDLENGTH) {
+      if (waveHeight < 0.3) {
+        // 너무 작음: 미드렝스도 어려움
+        tags.push('MIDLENGTH_TIP');
+        if (messages.length < 2) {
+          messages.push('미드렝스에도 파도가 좀 부족해요.');
+        }
+      } else if (waveHeight <= 0.8 && surfRating >= 3) {
+        // 잔잔: 미드렝스 안정적
+        tags.push('MIDLENGTH_TIP');
+        if (messages.length < 2) {
+          messages.push('미드렝스로 안정적으로 즐길 수 있어요!');
+        }
+      } else if (waveHeight <= 1.8 && surfRating >= 5) {
+        // 적당~높음: 미드렝스 최적
+        tags.push('MIDLENGTH_TIP');
+        if (messages.length < 2) {
+          messages.push('미드렝스에 딱 좋은 파도예요!');
+        }
+      } else if (waveHeight <= 2.5) {
+        // 1.8~2.5m: 미드렝스 가능하지만 파도가 큰 구간
+        tags.push('MIDLENGTH_TIP');
+        if (messages.length < 2) {
+          messages.push('미드렝스로 가능하지만 파도가 좀 커요.');
+        }
+      } else if (waveHeight > 2.5) {
+        // 매우 높음: 미드렝스 주의
+        tags.push('MIDLENGTH_TIP');
+        if (messages.length < 2) {
+          messages.push('파도가 높아요. 숏보드가 더 유리할 수 있어요.');
         }
       }
     } else if (boardType === UserBoardType.SHORTBOARD) {
-      if (waveHeight !== null && waveHeight < 0.5) {
+      if (waveHeight < 0.5) {
+        // 너무 작음: 숏보드 불가
         tags.push('SHORTBOARD_TIP');
         if (messages.length < 2) {
           messages.push('숏보드에는 파도가 너무 작아요.');
         }
-      } else if (waveHeight !== null && waveHeight >= 1.5 && surfRating >= 6) {
+      } else if (waveHeight < 0.8) {
+        // 작음: 숏보드 어려움
+        tags.push('SHORTBOARD_TIP');
+        if (messages.length < 2) {
+          messages.push('숏보드에는 파도가 좀 약해요. 롱보드를 추천해요.');
+        }
+      } else if (waveHeight < 1.0) {
+        // 0.8~1.0m: 숏보드 가능하지만 아슬아슬한 구간
+        tags.push('SHORTBOARD_TIP');
+        if (messages.length < 2) {
+          messages.push('숏보드로 탈 수 있지만 파도가 좀 약해요.');
+        }
+      } else if (waveHeight <= 2.5 && surfRating >= 5) {
+        // 1.0~2.5m + 좋은 컨디션: 숏보드 최적
         tags.push('SHORTBOARD_TIP');
         if (messages.length < 2) {
           messages.push('숏보드로 신나게 탈 수 있는 컨디션!');
+        }
+      } else if (waveHeight <= 2.5) {
+        // 1.0~2.5m + 컨디션 보통: 숏보드 가능
+        tags.push('SHORTBOARD_TIP');
+        if (messages.length < 2) {
+          messages.push('숏보드로 탈 수 있지만 컨디션을 확인하세요.');
+        }
+      } else if (waveHeight > 2.5 && surfRating >= 4) {
+        // 매우 높음: 숏보드 고급
+        tags.push('SHORTBOARD_TIP');
+        if (messages.length < 2) {
+          messages.push('큰 파도! 숏보드로 도전해보세요.');
         }
       }
     }

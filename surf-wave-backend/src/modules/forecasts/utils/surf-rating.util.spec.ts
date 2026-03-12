@@ -1,6 +1,6 @@
 /**
  * @file surf-rating.util.spec.ts
- * @description 서핑 적합도 계산 유틸리티 단위 테스트 (v1.4.2)
+ * @description 서핑 적합도 계산 유틸리티 단위 테스트 (v1.5)
  *
  * 테스트 항목:
  * 1. 풍향 FROM → TO 변환 회귀 테스트 (가장 치명적인 버그)
@@ -17,6 +17,7 @@ import {
   ForecastForRating,
 } from './surf-rating.util';
 import { Difficulty } from '../../../common/enums/difficulty.enum';
+import { UserBoardType } from '../../../common/enums/user-board-type.enum';
 
 // =============================================================
 // 테스트용 기본 데이터 팩토리
@@ -409,6 +410,28 @@ describe('getSimpleCondition', () => {
 
     expect(condition.waveStatus).toBe('적당');
     expect(condition.overall).toBe('좋음');
+  });
+
+  /** v1.5: 숏보드 유저에게 파고 0.5m은 "보통"이어야 함 (기본은 "좋음") */
+  test('숏보드 + 파고 0.5m → overall 보통 (기본은 좋음)', () => {
+    const forecast = makeForecast({ waveHeight: 0.5, windSpeed: 5, windGusts: 8 });
+
+    const condDefault = getSimpleCondition(forecast);
+    const condShort = getSimpleCondition(forecast, UserBoardType.SHORTBOARD);
+
+    expect(condDefault.overall).toBe('좋음');
+    expect(condShort.overall).toBe('보통'); // 숏보드: 0.8m 이상이어야 "좋음"
+  });
+
+  /** v1.5: 롱보드 유저에게 파고 0.3m도 "좋음" */
+  test('롱보드 + 파고 0.3m → overall 좋음 (기본은 보통)', () => {
+    const forecast = makeForecast({ waveHeight: 0.3, windSpeed: 5, windGusts: 8 });
+
+    const condDefault = getSimpleCondition(forecast);
+    const condLong = getSimpleCondition(forecast, UserBoardType.LONGBOARD);
+
+    expect(condDefault.overall).toBe('보통'); // 기본: 0.5m 미만은 "보통"
+    expect(condLong.overall).toBe('좋음');    // 롱보드: 0.3m도 OK
   });
 });
 
@@ -1185,6 +1208,212 @@ describe('v1.4.2 FN-1: 하드블록 grace zone', () => {
     const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
 
     // 나머지 fit 평균 낮음 → grace zone 미적용 → BLOCKED 유지
+    expect(result.levelFit.BEGINNER).toBe('BLOCKED');
+  });
+});
+
+// =============================================================
+// 13. v1.5 보드 타입별 파고 보정 테스트
+// =============================================================
+
+describe('v1.5 보드 타입별 waveFit 보정', () => {
+  /**
+   * 롱보드: 작은 파도(0.4m)에서 높은 waveFit
+   * 기본 BEGINNER beach_break: optimal [0.5, 1.0]
+   * 롱보드 보정: optimal [0.35, 0.85] → 0.4m이 optimal 안에 들어감
+   */
+  test('롱보드 + 파고 0.4m → waveFit 높음 (기본보다 유리)', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+    const forecast = makeForecast({ waveHeight: 0.4 });
+
+    const resultDefault = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+    const resultLongboard = calculateSurfRating(spot, forecast, Difficulty.BEGINNER, UserBoardType.LONGBOARD);
+
+    // 기본: 0.4m은 tolerable 구간 (optimal 0.5 미만) → waveFit < 10
+    expect(resultDefault.detail.waveFit).toBeLessThan(10);
+    // 롱보드: 0.4m이 optimal 안에 들어감 → waveFit = 10
+    expect(resultLongboard.detail.waveFit).toBe(10);
+  });
+
+  /**
+   * 숏보드: 작은 파도(0.5m)에서 낮은 waveFit
+   * 기본 BEGINNER beach_break: optimal [0.5, 1.0]
+   * 숏보드 보정: optimal [0.65, 1.2] → 0.5m이 optimal 밖
+   */
+  test('숏보드 + 파고 0.5m → waveFit 낮음 (기본보다 불리)', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+    const forecast = makeForecast({ waveHeight: 0.5 });
+
+    const resultDefault = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+    const resultShortboard = calculateSurfRating(spot, forecast, Difficulty.BEGINNER, UserBoardType.SHORTBOARD);
+
+    // 기본: 0.5m = optimal 하한 → waveFit = 10
+    expect(resultDefault.detail.waveFit).toBe(10);
+    // 숏보드: 0.5m < optimal 하한(0.65) → waveFit < 10
+    expect(resultShortboard.detail.waveFit).toBeLessThan(10);
+  });
+
+  /**
+   * 숏보드: 큰 파도(1.5m)에서 기본보다 유리
+   * 기본 INTERMEDIATE beach_break: optimal [0.8, 1.5]
+   * 숏보드 보정: optimal [1.04, 1.8] → 1.5m이 여전히 optimal
+   */
+  test('숏보드 + INTERMEDIATE + 파고 1.8m → waveFit 높음', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.INTERMEDIATE });
+    const forecast = makeForecast({ waveHeight: 1.8 });
+
+    const resultDefault = calculateSurfRating(spot, forecast, Difficulty.INTERMEDIATE);
+    const resultShortboard = calculateSurfRating(spot, forecast, Difficulty.INTERMEDIATE, UserBoardType.SHORTBOARD);
+
+    // 숏보드에서 1.8m은 optimal 안에 있으므로 waveFit가 기본보다 높아야 함
+    expect(resultShortboard.detail.waveFit).toBeGreaterThan(resultDefault.detail.waveFit);
+  });
+
+  /**
+   * UNSET 보드: 보정 없음 (기본과 동일)
+   */
+  test('UNSET 보드 → 기본과 동일한 점수', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+    const forecast = makeForecast({ waveHeight: 0.7 });
+
+    const resultDefault = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+    const resultUnset = calculateSurfRating(spot, forecast, Difficulty.BEGINNER, UserBoardType.UNSET);
+
+    expect(resultUnset.surfRating).toBe(resultDefault.surfRating);
+    expect(resultUnset.detail.waveFit).toBe(resultDefault.detail.waveFit);
+  });
+
+  /**
+   * boardType 미전달: 기존 동작과 동일 (하위 호환성)
+   */
+  test('boardType 미전달 → 기존과 동일 (하위 호환)', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+    const forecast = makeForecast({ waveHeight: 0.7 });
+
+    const resultOld = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+    const resultNew = calculateSurfRating(spot, forecast, Difficulty.BEGINNER, undefined);
+
+    expect(resultNew.surfRating).toBe(resultOld.surfRating);
+  });
+
+  /**
+   * 롱보드 vs 숏보드: 같은 조건에서 점수 차이 발생
+   * 파고 0.5m 조건에서 롱보드가 숏보드보다 높은 점수를 받아야 함
+   */
+  test('파고 0.5m: 롱보드 > 숏보드 점수', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+    const forecast = makeForecast({ waveHeight: 0.5 });
+
+    const resultLong = calculateSurfRating(spot, forecast, Difficulty.BEGINNER, UserBoardType.LONGBOARD);
+    const resultShort = calculateSurfRating(spot, forecast, Difficulty.BEGINNER, UserBoardType.SHORTBOARD);
+
+    expect(resultLong.surfRating).toBeGreaterThan(resultShort.surfRating);
+  });
+});
+
+// =============================================================
+// 14. v1.5 플랫 파고 페널티 강화 테스트
+// =============================================================
+
+describe('v1.5 플랫 파고 페널티 강화', () => {
+  /**
+   * 파고 0.05m (완전 플랫) + 나머지 완벽 → surfRating ≤ 1.0
+   * 기존: waveFit=0 × 0.2 = 최대 ~1.5점
+   * v1.5: waveFit=0이면 최대 1.0점으로 강제
+   */
+  test('완전 플랫(0.05m) + 완벽한 조건 → surfRating ≤ 1.0', () => {
+    const spot = makeSpot({
+      breakType: 'beach_break',
+      difficulty: Difficulty.BEGINNER,
+      coastFacingDeg: 90,
+    });
+    const forecast = makeForecast({
+      waveHeight: 0.05,       // 완전 플랫
+      wavePeriod: 14,          // 최상급 주기
+      windSpeed: 2,            // 글래시
+      windGusts: 3,
+      windDirection: 270,      // 오프쇼어
+      swellDirection: 45,
+      swellHeight: 0.8,
+      swellPeriod: 14,
+      waterTemperature: 25,
+    });
+
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    expect(result.detail.waveFit).toBe(0);
+    expect(result.surfRating).toBeLessThanOrEqual(1.0);
+    expect(result.recommendationKo).toContain('쉬는 게 좋겠어요');
+  });
+
+  /**
+   * 파고 0.0m (완전 제로) → surfRating ≤ 1.0
+   */
+  test('파고 0m → surfRating ≤ 1.0', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+    const forecast = makeForecast({ waveHeight: 0 });
+
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    expect(result.detail.waveFit).toBe(0);
+    expect(result.surfRating).toBeLessThanOrEqual(1.0);
+  });
+});
+
+// =============================================================
+// 16. EXPERT 레벨 안전 필터 적용 확인
+// =============================================================
+describe('EXPERT 레벨 안전 필터', () => {
+  /**
+   * EXPERT 유저도 위험 조건에서 안전 경고를 받아야 함
+   * (ADVANCED와 동일한 안전 필터 적용)
+   */
+  test('EXPERT 유저도 강풍(40km/h) 시 안전 경고 받음', () => {
+    const spot = makeSpot({ breakType: 'reef', difficulty: Difficulty.ADVANCED });
+    const forecast = makeForecast({ windSpeed: 40, windGusts: 50 });
+
+    const result = calculateSurfRating(spot, forecast, Difficulty.EXPERT);
+
+    // EXPERT도 ADVANCED처럼 안전 경고를 받아야 함 (PASS가 아닌 WARNING 또는 BLOCKED)
+    expect(result.safetyReasons.length).toBeGreaterThan(0);
+    expect(result.recommendationKo).not.toContain('좋은');
+  });
+
+  test('EXPERT 유저도 극단적 파고(5m) 시 안전 경고 받음', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+    const forecast = makeForecast({ waveHeight: 5.0 });
+
+    const result = calculateSurfRating(spot, forecast, Difficulty.EXPERT);
+
+    // 5m 파고는 모든 레벨에서 경고 대상
+    expect(result.safetyReasons.length).toBeGreaterThan(0);
+  });
+});
+
+// =============================================================
+// 17. grace zone 안전 방어 - 강풍 BLOCKED는 완화 불가
+// =============================================================
+describe('grace zone 안전 방어', () => {
+  /**
+   * 강풍으로 BLOCKED된 초보자는 파고 grace zone 조건을 만족해도
+   * WARNING으로 완화되면 안 됨 (안전 문제)
+   */
+  test('강풍 BLOCKED + 파고 grace zone → BLOCKED 유지 (완화 안 됨)', () => {
+    const spot = makeSpot({ breakType: 'beach_break', difficulty: Difficulty.BEGINNER });
+    // 파고 1.3m (grace zone 범위) + 강풍 36km/h (ADVANCED BLOCKED 수준)
+    const forecast = makeForecast({
+      waveHeight: 1.3,
+      windSpeed: 36,
+      windGusts: 46,
+      // 나머지 조건은 좋게 설정 (grace zone 다른 조건 충족)
+      wavePeriod: 12,
+      swellHeight: 1.3,
+      swellDirection: 90,
+    });
+
+    const result = calculateSurfRating(spot, forecast, Difficulty.BEGINNER);
+
+    // 강풍이 있으면 grace zone이 발동하면 안 됨
     expect(result.levelFit.BEGINNER).toBe('BLOCKED');
   });
 });

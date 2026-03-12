@@ -1,16 +1,17 @@
 /**
  * @file forecasts.service.ts
- * @description 예보 서비스 (v1.3 계산 로직 적용)
+ * @description 예보 서비스 (v1.5 계산 로직 적용)
  *
  * 예보 데이터의 핵심 비즈니스 로직을 담당합니다.
  * - 30분 크론: active spots 루프 → Open-Meteo API 호출 → DB upsert
  * - 조회: 시간별/현재/주간 예보 + 서핑 적합도 계산
  *
- * v1.3 변경사항:
- * - 기존 v0 단순 감점 방식(1~5점) → 5개 항목 fit 기반 가중합(0~10점)
- * - 하드블록 안전 필터 추가 (reef+BEGINNER 차단 등)
- * - 스팟 특성(breakType, coastFacingDeg) 반영
- * - gust(돌풍) 반영, 풍향 from→to 변환
+ * 계산 로직 변경 이력:
+ * v1.3 - 5개 항목 fit 가중합(0~10점), 하드블록 안전 필터, 스팟 특성 반영, gust/풍향 from→to
+ * v1.4 - swellFit에 높이+주기 종합, 수온 안전 필터 추가
+ * v1.4.1 - 복합 위험 감점(compound risk), 품질 패턴 게이트(quality gate)
+ * v1.4.2 - 약풍 시 풍향 보정(FN-2), 하드블록 grace zone(FN-1), grace margin(FN-4)
+ * v1.5 - boardType별 파고 구간 보정, 플랫(waveFit=0) 페널티 강화, hints 보드별 생성
  */
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -258,18 +259,19 @@ export class ForecastsService {
   }
 
   // ============================================================
-  // 서핑 적합도 계산 (v1.3 - surf-rating.util.ts 사용)
+  // 서핑 적합도 계산 (v1.5 - surf-rating.util.ts 사용)
   // ============================================================
 
   /**
-   * 대시보드용: 전체 스팟의 현재 예보 + v1.3 서핑 적합도 반환
+   * 대시보드용: 전체 스팟의 현재 예보 + v1.5 서핑 적합도 반환
    *
-   * v1.3 변경사항:
-   * - surfRating: 0~10점 (기존 1~5점에서 변경)
+   * 응답 필드:
+   * - surfRating: 0~10점 (5개 항목 fit 가중합)
    * - levelFit: BEGINNER/INTERMEDIATE/ADVANCED별 PASS/WARNING/BLOCKED
    * - detail: 5개 항목별 상세 점수 (waveFit, periodFit, windSpeedFit, swellFit, windDirFit)
    * - safetyReasons: 안전 경고 사유 배열 (하드블록 시 여러 이유 축적)
-   * - simpleCondition: 파도/바람/전체 상태 요약
+   * - simpleCondition: 파도/바람/전체 상태 요약 (보드별 "좋음" 기준 분리)
+   * - hints: 보드별 팁 + 안전 경고 태그/메시지 (v1.5)
    */
   async getDashboardData(level?: Difficulty, boardType?: UserBoardType) {
     const spots = await this.spotsService.findAllActiveForDashboard(level);
@@ -362,11 +364,11 @@ export class ForecastsService {
         windDirection: forecast.windDirection != null ? Number(forecast.windDirection) : null,
       };
 
-      /** v1.3 계산 실행: 하드블록 → fit점수 → 가중합 → 메시지 */
-      const ratingResult = calculateSurfRating(spotData, forecastData, level);
+      /** v1.5 계산 실행: 하드블록 → fit점수(보드 보정) → 가중합 → 메시지 */
+      const ratingResult = calculateSurfRating(spotData, forecastData, level, boardType);
 
-      /** 간단한 컨디션 요약 (파도/바람/전체 상태) */
-      const simpleCondition = getSimpleCondition(forecastData);
+      /** 간단한 컨디션 요약 (파도/바람/전체 상태) - v1.5: 보드별 "좋음" 기준 */
+      const simpleCondition = getSimpleCondition(forecastData, boardType);
 
       /** stale 데이터일 때 추천 문구에 경고 추가 */
       const recommendation = isStale

@@ -27,6 +27,7 @@ import { HttpModule } from '@nestjs/axios';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UsersModule } from '../users/users.module';
+import { DEFAULT_JWT_SECRET } from '../../config/defaults';
 
 @Module({
   imports: [
@@ -50,7 +51,7 @@ import { UsersModule } from '../users/users.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET', 'surfwave-jwt-secret-dev-2026'),
+        secret: configService.get<string>('JWT_SECRET', DEFAULT_JWT_SECRET),
         signOptions: { expiresIn: '7d' },
       }),
     }),

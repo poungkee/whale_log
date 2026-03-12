@@ -29,6 +29,7 @@ import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import { DEFAULT_JWT_SECRET } from '../../config/defaults';
 
 @Injectable()
 export class FirebaseAuthGuard implements CanActivate {
@@ -85,7 +86,7 @@ export class FirebaseAuthGuard implements CanActivate {
        * - 만료되었거나 시그니처가 잘못되면 에러 발생
        */
       const payload = await this.jwtService.verifyAsync(token, {
-        secret: this.configService.get<string>('JWT_SECRET', 'surfwave-jwt-secret-dev-2026'),
+        secret: this.configService.get<string>('JWT_SECRET', DEFAULT_JWT_SECRET),
       });
 
       /**

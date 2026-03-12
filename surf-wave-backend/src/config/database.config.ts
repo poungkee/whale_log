@@ -19,6 +19,13 @@
 
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import {
+  DEFAULT_DB_HOST,
+  DEFAULT_DB_PORT,
+  DEFAULT_DB_USERNAME,
+  DEFAULT_DB_PASSWORD,
+  DEFAULT_DB_DATABASE,
+} from './defaults';
 
 /**
  * getDatabaseConfig - TypeORM 데이터베이스 연결 설정을 반환하는 팩토리 함수
@@ -31,11 +38,11 @@ export const getDatabaseConfig = (
 
   return {
     type: 'postgres',
-    host: configService.get<string>('DB_HOST', 'localhost'),
-    port: configService.get<number>('DB_PORT', 5432),
-    username: configService.get<string>('DB_USERNAME', 'surfwave'),
-    password: configService.get<string>('DB_PASSWORD', 'surfwave123'),
-    database: configService.get<string>('DB_DATABASE', 'surfwave'),
+    host: configService.get<string>('DB_HOST', DEFAULT_DB_HOST),
+    port: configService.get<number>('DB_PORT', DEFAULT_DB_PORT),
+    username: configService.get<string>('DB_USERNAME', DEFAULT_DB_USERNAME),
+    password: configService.get<string>('DB_PASSWORD', DEFAULT_DB_PASSWORD),
+    database: configService.get<string>('DB_DATABASE', DEFAULT_DB_DATABASE),
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
     migrations: [__dirname + '/../migrations/*{.ts,.js}'],
     synchronize: !isProduction,

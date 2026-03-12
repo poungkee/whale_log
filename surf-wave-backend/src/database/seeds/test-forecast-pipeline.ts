@@ -10,6 +10,13 @@
 import { Client } from 'pg';
 import axios from 'axios';
 import * as dotenv from 'dotenv';
+import {
+  DEFAULT_DB_HOST,
+  DEFAULT_DB_PORT,
+  DEFAULT_DB_USERNAME,
+  DEFAULT_DB_PASSWORD,
+  DEFAULT_DB_DATABASE,
+} from '../../config/defaults';
 
 dotenv.config();
 
@@ -26,11 +33,11 @@ interface SpotRow {
 
 async function main() {
   const client = new Client({
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '5432', 10),
-    user: process.env.DB_USERNAME || 'surfwave',
-    password: process.env.DB_PASSWORD || 'surfwave123',
-    database: process.env.DB_DATABASE || 'surfwave',
+    host: process.env.DB_HOST || DEFAULT_DB_HOST,
+    port: parseInt(process.env.DB_PORT || String(DEFAULT_DB_PORT), 10),
+    user: process.env.DB_USERNAME || DEFAULT_DB_USERNAME,
+    password: process.env.DB_PASSWORD || DEFAULT_DB_PASSWORD,
+    database: process.env.DB_DATABASE || DEFAULT_DB_DATABASE,
   });
 
   await client.connect();

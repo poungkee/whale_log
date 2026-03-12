@@ -1,12 +1,14 @@
 /**
  * @file surf-rating.util.ts
- * @description 서핑 적합도(Surf Rating) 계산 유틸리티 v1.4.2
+ * @description 서핑 적합도(Surf Rating) 계산 유틸리티 v1.5
  *
  * 계산 흐름:
  *   STEP 1: 하드블록 안전 필터 (위험 조건 먼저 차단)
  *   STEP 2: 5개 항목 fit 점수 계산 (각 0~10점)
+ *     └ waveFit에 boardType별 파고 구간 보정 적용 ← v1.5
  *   STEP 2.5: 약풍 시 풍향 보정 ← v1.4.2 (FN-2)
  *   STEP 3: 가중 합산 → rawSurfRating (0~10)
+ *     └ waveFit=0(플랫) 시 surfRating 최대 1.0점 제한 ← v1.5
  *   STEP 3.5: 거짓양성 보정 (복합 위험 감점 + 품질 게이트) ← v1.4.1
  *   STEP 3.7: 거짓음성 보정 (하드블록 grace zone) ← v1.4.2 (FN-1)
  *   STEP 4: 레벨별 적합도 + 추천 메시지 반환
@@ -16,9 +18,17 @@
  *   - 하드블록은 점수 계산보다 먼저 실행 (안전 우선)
  *   - 풍향 데이터는 "from" 방향 → "to" 방향으로 변환 후 사용
  *   - gust(돌풍)를 effectiveWind에 반영
+ *   - boardType(LONGBOARD/MIDLENGTH/SHORTBOARD)에 따라 waveFit 파고 구간 보정 ← v1.5
+ *
+ * 하드블록 경계값 참고 (> vs >=):
+ *   - effectiveWind: > 35 (35는 PASS, windSpeedFit=0으로 점수 감점만)
+ *   - windGusts: >= 35/45/50 (해당 값 포함)
+ *   - waveHeight: > 1.2 / > 2.5 (해당 값은 PASS)
+ *   - waterTemperature: < 10 / < 14 (해당 값은 PASS)
  */
 
 import { Difficulty } from '../../../common/enums/difficulty.enum';
+import { UserBoardType } from '../../../common/enums/user-board-type.enum';
 
 // =============================================================
 // 타입 정의
@@ -179,6 +189,91 @@ const WAVE_TEMPLATES: Record<string, Record<string, WaveRange>> = {
 };
 
 // =============================================================
+// 보드 타입별 파고 보정 팩터
+// =============================================================
+
+/**
+ * 보드 타입별 파고 구간 보정 팩터
+ *
+ * 기존 WAVE_TEMPLATES(breakType × difficulty)의 파고 구간에 곱하여
+ * 보드 특성에 맞는 최적/허용 구간을 산출합니다.
+ *
+ * - LONGBOARD: 작은 파도에서도 잘 탐 → 하한 낮추고 상한도 약간 낮춤
+ * - MIDLENGTH: 범용적 → 보정 거의 없음 (약간만 확장)
+ * - SHORTBOARD: 큰 파도 필요 → 하한 높이고 상한도 높임
+ * - UNSET: 보정 없음 (기본 템플릿 그대로)
+ *
+ * 각 팩터는 [optMin배율, optMax배율, tolMin배율, tolMax배율]
+ */
+interface BoardWaveFactor {
+  /** 최적 하한 배율 (< 1.0이면 더 작은 파도부터 최적) */
+  optMinFactor: number;
+  /** 최적 상한 배율 (< 1.0이면 상한이 내려감) */
+  optMaxFactor: number;
+  /** 허용 하한 배율 */
+  tolMinFactor: number;
+  /** 허용 상한 배율 */
+  tolMaxFactor: number;
+}
+
+const BOARD_WAVE_FACTORS: Record<string, BoardWaveFactor> = {
+  /** 롱보드: 작은 파도 OK, 큰 파도는 다루기 어려움 */
+  [UserBoardType.LONGBOARD]: {
+    optMinFactor: 0.7,   // 0.5m → 0.35m (더 작은 파도도 최적)
+    optMaxFactor: 0.85,  // 1.5m → 1.28m (큰 파도는 살짝 불리)
+    tolMinFactor: 0.6,   // 0.3m → 0.18m (매우 작은 파도도 허용)
+    tolMaxFactor: 0.9,   // 2.0m → 1.8m (상한 약간 축소)
+  },
+  /** 미드렝스: 범용 - 약간의 확장만 */
+  [UserBoardType.MIDLENGTH]: {
+    optMinFactor: 0.85,  // 약간 낮춤
+    optMaxFactor: 1.05,  // 약간 높임
+    tolMinFactor: 0.8,
+    tolMaxFactor: 1.05,
+  },
+  /** 숏보드: 파워 있는 파도 필요 */
+  [UserBoardType.SHORTBOARD]: {
+    optMinFactor: 1.3,   // 0.5m → 0.65m (작은 파도에서 불리)
+    optMaxFactor: 1.2,   // 1.5m → 1.8m (큰 파도에서 유리)
+    tolMinFactor: 1.2,   // 0.3m → 0.36m (최소 파고 올림)
+    tolMaxFactor: 1.25,  // 2.0m → 2.5m (상한 확대)
+  },
+  /** 미설정: 보정 없음 */
+  [UserBoardType.UNSET]: {
+    optMinFactor: 1.0,
+    optMaxFactor: 1.0,
+    tolMinFactor: 1.0,
+    tolMaxFactor: 1.0,
+  },
+};
+
+/**
+ * 보드 타입에 따라 파고 구간을 보정합니다.
+ * 기존 WaveRange에 보드별 팩터를 곱하여 새 WaveRange를 반환합니다.
+ *
+ * @param base - 기본 파고 구간 (breakType × difficulty 템플릿)
+ * @param boardType - 사용자 보드 타입
+ * @returns 보정된 파고 구간
+ */
+function applyBoardWaveFactor(base: WaveRange, boardType?: UserBoardType): WaveRange {
+  if (!boardType || boardType === UserBoardType.UNSET) return base;
+
+  const factor = BOARD_WAVE_FACTORS[boardType];
+  if (!factor) return base;
+
+  return {
+    optimal: [
+      Math.round(base.optimal[0] * factor.optMinFactor * 100) / 100,
+      Math.round(base.optimal[1] * factor.optMaxFactor * 100) / 100,
+    ],
+    tolerable: [
+      Math.round(base.tolerable[0] * factor.tolMinFactor * 100) / 100,
+      Math.round(base.tolerable[1] * factor.tolMaxFactor * 100) / 100,
+    ],
+  };
+}
+
+// =============================================================
 // 가중치 상수
 // =============================================================
 
@@ -233,6 +328,21 @@ function clamp010(value: number): number {
 // =============================================================
 
 /**
+ * 안전 사유의 원인 카테고리 (safety reason category)
+ *
+ * grace zone 등에서 "어떤 이유로 차단되었는지" 판별할 때 사용.
+ * 한국어 메시지 문자열 매칭 대신 카테고리로 분류하여 유지보수 안전성 확보.
+ *
+ *   WIND       - 풍속 초과 (①번 룰: effectiveWind > 35)
+ *   GUST       - 돌풍 초과 (②③번 룰: gust 레벨별 차등)
+ *   BREAK_TYPE - 리프/포인트 브레이크 제한 (④번 룰)
+ *   SPOT_LEVEL - 스팟 난이도 제한 (⑤⑥번 룰)
+ *   WAVE       - 파고 초과 (⑦⑧번 룰)
+ *   WATER_TEMP - 수온 위험 (⑨⑩번 룰)
+ */
+type SafetyCategory = 'WIND' | 'GUST' | 'BREAK_TYPE' | 'SPOT_LEVEL' | 'WAVE' | 'WATER_TEMP';
+
+/**
  * 안전 사유의 우선순위 카테고리
  *
  * 사용자에게 "왜 차단/경고인지" 가장 중요한 사유를 먼저 보여주기 위한 정렬 기준
@@ -248,6 +358,8 @@ interface SafetyReason {
   message: string;
   /** 정렬 우선순위 (1=최우선, 4=참고) */
   priority: SafetyPriority;
+  /** 차단 원인 카테고리 - grace zone 등에서 문자열 매칭 대신 사용 */
+  category: SafetyCategory;
 }
 
 /**
@@ -272,7 +384,7 @@ interface SafetyReason {
 function checkHardBlock(
   spot: SpotForRating,
   forecast: ForecastForRating,
-): { levelFit: LevelFitResult; safetyReasons: string[] } {
+): { levelFit: LevelFitResult; safetyReasons: SafetyReason[] } {
   /** 각 레벨의 상태를 PASS로 초기화 */
   const levelFit: LevelFitResult = {
     BEGINNER: 'PASS',
@@ -299,6 +411,7 @@ function checkHardBlock(
     reasons.push({
       message: `풍속 ${Math.round(windSpeed)}km/h${gustInfo} - 강풍 위험`,
       priority: 1,
+      category: 'WIND',
     });
   }
 
@@ -315,6 +428,7 @@ function checkHardBlock(
       reasons.push({
         message: `돌풍 ${Math.round(windGusts)}km/h - 초보자 서핑 위험`,
         priority: 1,
+        category: 'GUST',
       });
     }
   } else if (windGusts >= 35) {
@@ -323,6 +437,7 @@ function checkHardBlock(
       reasons.push({
         message: `돌풍 ${Math.round(windGusts)}km/h - 초보자 주의`,
         priority: 4,
+        category: 'GUST',
       });
     }
   }
@@ -332,6 +447,7 @@ function checkHardBlock(
       reasons.push({
         message: `돌풍 ${Math.round(windGusts)}km/h - 중급자 서핑 위험`,
         priority: 1,
+        category: 'GUST',
       });
     }
   } else if (windGusts >= 45) {
@@ -340,6 +456,7 @@ function checkHardBlock(
       reasons.push({
         message: `돌풍 ${Math.round(windGusts)}km/h - 중급자 주의`,
         priority: 4,
+        category: 'GUST',
       });
     }
   }
@@ -352,6 +469,7 @@ function checkHardBlock(
     reasons.push({
       message: '리프/포인트 브레이크 - 초보자 서핑 금지',
       priority: 3,
+      category: 'BREAK_TYPE',
     });
   }
 
@@ -363,6 +481,7 @@ function checkHardBlock(
     reasons.push({
       message: '상급자 전용 스팟입니다',
       priority: 3,
+      category: 'SPOT_LEVEL',
     });
   }
 
@@ -374,6 +493,7 @@ function checkHardBlock(
     reasons.push({
       message: '전문가 전용 스팟입니다',
       priority: 3,
+      category: 'SPOT_LEVEL',
     });
   }
 
@@ -383,6 +503,7 @@ function checkHardBlock(
     reasons.push({
       message: `파고 ${waveHeight.toFixed(1)}m - 초보자에게 위험`,
       priority: 1,
+      category: 'WAVE',
     });
   }
 
@@ -394,6 +515,7 @@ function checkHardBlock(
     reasons.push({
       message: `파고 ${waveHeight.toFixed(1)}m - 주의 필요`,
       priority: 4,
+      category: 'WAVE',
     });
   }
 
@@ -416,6 +538,7 @@ function checkHardBlock(
       reasons.push({
         message: `수온 ${waterTemp.toFixed(0)}°C - 저체온증 위험`,
         priority: 1,
+        category: 'WATER_TEMP',
       });
     } else if (waterTemp < 14) {
       if (levelFit.BEGINNER === 'PASS') {
@@ -424,19 +547,22 @@ function checkHardBlock(
       reasons.push({
         message: `수온 ${waterTemp.toFixed(0)}°C - 웻슈트 필수`,
         priority: 2,
+        category: 'WATER_TEMP',
       });
     }
   }
 
   /**
-   * 사유를 우선순위로 정렬 후 문자열 배열로 변환
+   * 사유를 우선순위로 정렬
    * P1(생존) → P2(장비) → P3(스팟) → P4(컨디션)
    * 같은 우선순위 내에서는 입력 순서(=위험 발견 순서) 유지
+   *
+   * SafetyReason[] 그대로 반환 → grace zone에서 category로 판별 가능
+   * 최종적으로 외부에 전달할 때 .map(r => r.message)로 string[] 변환
    */
   reasons.sort((a, b) => a.priority - b.priority);
-  const safetyReasons = reasons.map(r => r.message);
 
-  return { levelFit, safetyReasons };
+  return { levelFit, safetyReasons: reasons };
 }
 
 // =============================================================
@@ -679,13 +805,27 @@ function applyHardBlockGraceZone(
   forecast: ForecastForRating,
   detail: RatingDetail,
   levelFit: LevelFitResult,
-  safetyReasons: string[],
-): { levelFit: LevelFitResult; safetyReasons: string[] } {
+  safetyReasons: SafetyReason[],
+): { levelFit: LevelFitResult; safetyReasons: SafetyReason[] } {
   const waveHeight = Number(forecast.waveHeight);
   const breakType = spot.breakType || 'beach_break';
 
   /** 조건 1: BEGINNER가 BLOCKED 상태여야 함 */
   if (levelFit.BEGINNER !== 'BLOCKED') return { levelFit, safetyReasons };
+
+  /**
+   * 조건 1.5: BLOCKED 사유가 파고(⑦) 때문인지 확인 (안전 방어)
+   *
+   * 강풍(WIND)/돌풍(GUST)/수온(WATER_TEMP) 등 다른 사유로 BLOCKED된 경우
+   * grace zone 적용을 차단하여 안전을 유지.
+   *
+   * ★ v1.5.1: 한국어 문자열 매칭('풍속', '돌풍') 대신 category 필드로 판별
+   *   → 메시지 문구를 바꿔도 로직이 깨지지 않음
+   */
+  const hasNonWaveBlock = safetyReasons.some(
+    r => r.category === 'WIND' || r.category === 'GUST' || r.category === 'WATER_TEMP',
+  );
+  if (hasNonWaveBlock) return { levelFit, safetyReasons };
 
   /** 조건 2: 파고 grace zone (1.2 초과 ~ 1.4 이하) */
   if (waveHeight <= 1.2 || waveHeight > 1.4) return { levelFit, safetyReasons };
@@ -704,12 +844,14 @@ function applyHardBlockGraceZone(
 
   /**
    * 모든 조건 충족 → BLOCKED → WARNING으로 완화
-   * 기존 파고 하드블록 사유를 "주의하며 서핑 가능" 메시지로 교체
+   *
+   * 기존 파고 하드블록 사유(WAVE 카테고리)를 "경험자 동행 필수" 메시지로 교체
+   * ★ v1.5.1: category === 'WAVE'로 판별 (기존: '초보자에게 위험' 문자열 매칭)
    */
   const newLevelFit = { ...levelFit, BEGINNER: 'WARNING' as LevelFitStatus };
   const newSafetyReasons = safetyReasons.map(r =>
-    r.includes('초보자에게 위험')
-      ? `파고 ${waveHeight.toFixed(1)}m - 초보에겐 여전히 높은 파고, 경험자 동행 필수`
+    r.category === 'WAVE'
+      ? { ...r, message: `파고 ${waveHeight.toFixed(1)}m - 초보에겐 여전히 높은 파고, 경험자 동행 필수` }
       : r,
   );
 
@@ -726,14 +868,15 @@ function applyHardBlockGraceZone(
  * 스팟의 breakType + difficulty에 따라 최적/허용 구간이 달라짐
  * 스팟에 override 값(optimalWaveMin 등)이 있으면 우선 사용
  *
- * 점수 규칙 (v1.4.2 - grace margin 추가):
+ * 점수 규칙 (v1.5):
  *   - optimal 범위 내부(경계 포함): waveFit = 10 (최적)
  *   - optimal 밖 ~ tolerable 내부(경계 포함): 3~9 선형 감점
- *   - tolerable 밖 grace zone(±5cm): 1~2점 (측정 오차 허용)
+ *   - tolerable 밖 grace zone(±5cm): 1~2점 (측정 오차 허용) ← v1.4.2
  *   - grace 밖: waveFit = 0 (서핑 부적합)
  *   - tolerable min==max 비정상 케이스: 해당 쪽 0점 처리
+ *   - boardType 보정: 보드별 파고 팩터로 최적/허용 구간 조정 ← v1.5
  */
-function calcWaveFit(spot: SpotForRating, forecast: ForecastForRating): number {
+function calcWaveFit(spot: SpotForRating, forecast: ForecastForRating, boardType?: UserBoardType): number {
   const waveHeight = Number(forecast.waveHeight);
   const breakType = spot.breakType || 'beach_break';
   const difficulty = spot.difficulty;
@@ -746,8 +889,14 @@ function calcWaveFit(spot: SpotForRating, forecast: ForecastForRating): number {
    * - 없으면(null) breakType+difficulty 템플릿의 해당 값 사용
    * → 예: optimalMin만 override하고 나머지는 템플릿 값 유지 가능
    */
-  const template = WAVE_TEMPLATES[breakType]?.[difficulty]
+  const baseTemplate = WAVE_TEMPLATES[breakType]?.[difficulty]
     || WAVE_TEMPLATES.beach_break.INTERMEDIATE; // 매칭 실패 시 기본값
+
+  /**
+   * v1.5: 보드 타입 보정 적용
+   * 스팟에 override가 있으면 override 우선, 없으면 보드 보정된 템플릿 사용
+   */
+  const template = applyBoardWaveFactor(baseTemplate, boardType);
 
   const optMin = spot.optimalWaveMin != null ? Number(spot.optimalWaveMin) : template.optimal[0];
   const optMax = spot.optimalWaveMax != null ? Number(spot.optimalWaveMax) : template.optimal[1];
@@ -821,7 +970,7 @@ function calcWaveFit(spot: SpotForRating, forecast: ForecastForRating): number {
 }
 
 /**
- * ② 파주기 점수 (periodFit) - 가중치 15%
+ * ② 파주기 점수 (periodFit) - 가중치 10%
  *
  * 주기가 길수록 ground swell = 깨끗하고 파워 있는 파도
  * 6초 이하는 wind swell로 거의 서핑 불가
@@ -928,7 +1077,7 @@ function calcSwellFit(spot: SpotForRating, forecast: ForecastForRating): number 
 }
 
 /**
- * ⑤ 풍향 점수 (windDirFit) - 가중치 15%
+ * ⑤ 풍향 점수 (windDirFit) - 가중치 20%
  *
  * 오프쇼어(육지→바다) = 파도면 깨끗 = 최고
  * 온쇼어(바다→육지) = 파도면 엉망 = 최악
@@ -1023,8 +1172,14 @@ function getRecommendationKo(
 /**
  * 간단한 컨디션 요약 (프론트엔드 표시용)
  * 파도/바람/전체 상태를 한국어로 표현
+ *
+ * v1.5: boardType에 따라 "좋음" 판정 파고 구간을 조정
+ * - 롱보드: 0.3~1.2m이면 좋음 (작은 파도 OK)
+ * - 미드렝스: 0.4~1.8m이면 좋음 (범용)
+ * - 숏보드: 0.8~2.5m이면 좋음 (큰 파도 필요)
+ * - 기본(UNSET): 0.5~1.5m이면 좋음
  */
-function getSimpleCondition(forecast: ForecastForRating): {
+function getSimpleCondition(forecast: ForecastForRating, boardType?: UserBoardType): {
   waveStatus: string;
   windStatus: string;
   overall: string;
@@ -1048,11 +1203,24 @@ function getSimpleCondition(forecast: ForecastForRating): {
   else if (effectiveWind <= 30) windStatus = '강함';
   else                          windStatus = '매우 강함';
 
-  // 전체 상태
+  // 전체 상태 - 보드 타입별 "좋음" 파고 구간
+  let goodMin = 0.5;
+  let goodMax = 1.5;
+  if (boardType === UserBoardType.LONGBOARD) {
+    goodMin = 0.3;
+    goodMax = 1.2;
+  } else if (boardType === UserBoardType.MIDLENGTH) {
+    goodMin = 0.4;
+    goodMax = 1.8;
+  } else if (boardType === UserBoardType.SHORTBOARD) {
+    goodMin = 0.8;
+    goodMax = 2.5;
+  }
+
   let overall: string;
-  if (wh >= 0.5 && wh <= 1.5 && effectiveWind < 20)  overall = '좋음';
-  else if (wh > 2.5 || effectiveWind > 30)            overall = '주의';
-  else                                                 overall = '보통';
+  if (wh >= goodMin && wh <= goodMax && effectiveWind < 20)  overall = '좋음';
+  else if (wh > 2.5 || effectiveWind > 30)                   overall = '주의';
+  else                                                        overall = '보통';
 
   return { waveStatus, windStatus, overall };
 }
@@ -1062,25 +1230,28 @@ function getSimpleCondition(forecast: ForecastForRating): {
 // =============================================================
 
 /**
- * 서핑 적합도 종합 계산 (v1.4.2)
+ * 서핑 적합도 종합 계산 (v1.5 - 보드 타입 반영)
  *
  * @param spot - 스팟 고정 속성 (breakType, difficulty, coastFacingDeg 등)
  * @param forecast - 현재 시각 예보 데이터 (파고, 풍속, 스웰 방향 등)
  * @param userLevel - 사용자 서핑 레벨 (기본: INTERMEDIATE)
+ * @param boardType - 사용자 보드 타입 (v1.5) - waveFit 계산 시 보드별 파고 구간 보정
  * @returns 종합 점수 + 레벨 적합도 + 상세 점수 + 추천 메시지
  */
 export function calculateSurfRating(
   spot: SpotForRating,
   forecast: ForecastForRating,
   userLevel: Difficulty = Difficulty.INTERMEDIATE,
+  boardType?: UserBoardType,
 ): SurfRatingResult {
   // ----- STEP 1: 하드블록 안전 필터 -----
   // ⚠️ levelFit, safetyReasons는 STEP 3.5 보정에서 수정 가능하므로 let 선언
   let { levelFit, safetyReasons } = checkHardBlock(spot, forecast);
 
   // ----- STEP 2: 5개 항목 fit 점수 계산 (하드블록과 무관하게 항상 계산) -----
+  // v1.5: waveFit에 boardType 전달하여 보드별 파고 구간 보정
   const detail: RatingDetail = {
-    waveFit: calcWaveFit(spot, forecast),
+    waveFit: calcWaveFit(spot, forecast, boardType),
     periodFit: calcPeriodFit(forecast),
     windSpeedFit: calcWindSpeedFit(forecast),
     swellFit: calcSwellFit(spot, forecast),
@@ -1100,27 +1271,34 @@ export function calculateSurfRating(
     detail.windDirFit  * WEIGHTS.windDir;
 
   /**
-   * 파고 페널티: waveFit이 낮으면 전체 점수를 비례 감소
+   * 파고 페널티: waveFit이 낮으면 전체 점수를 비례 감소 (v1.5)
    *
    * 파도가 없으면 아무리 바람/방향이 좋아도 서핑 불가.
-   * waveFit 3 이하일 때 페널티 적용 (0이면 ×0.2, 3이면 ×1.0)
    *
-   * 예시:
-   *   waveFit=0 → multiplier=0.2 → 최대 2점 (기존: 6점 가능)
-   *   waveFit=1 → multiplier=0.47 → 약 절반
-   *   waveFit=2 → multiplier=0.73
-   *   waveFit=3 → multiplier=1.0 (페널티 없음)
-   *   waveFit≥3 → multiplier=1.0
+   * 규칙:
+   *   waveFit=0 → multiplier=0.2 적용 후, 추가로 min(surfRating, 1.0) 제한
+   *              (이중 적용 이유: multiplier만으로는 rawScore 10일 때 2.0점이 되므로
+   *               완전 플랫에서 최대 1.0점을 보장하기 위한 안전망)
+   *   waveFit 1~2 → multiplier 비례 감소 (0.47~0.73)
+   *   waveFit≥3 → multiplier=1.0 (페널티 없음)
    */
   const WAVE_PENALTY_THRESHOLD = 3;
   const WAVE_PENALTY_FLOOR = 0.2;
   let waveMultiplier = 1.0;
-  if (detail.waveFit < WAVE_PENALTY_THRESHOLD) {
+  if (detail.waveFit === 0) {
+    /** v1.5: waveFit=0 (파도 없음) → 최대 1.0점으로 강제 제한 */
+    waveMultiplier = WAVE_PENALTY_FLOOR;
+  } else if (detail.waveFit < WAVE_PENALTY_THRESHOLD) {
     waveMultiplier = WAVE_PENALTY_FLOOR
       + (1 - WAVE_PENALTY_FLOOR) * (detail.waveFit / WAVE_PENALTY_THRESHOLD);
   }
 
   let surfRating = clamp010(rawScore * waveMultiplier);
+
+  /** v1.5: waveFit=0이면 surfRating 최대 1.0점 (플랫 = 서핑 불가) */
+  if (detail.waveFit === 0) {
+    surfRating = Math.min(surfRating, 1.0);
+  }
 
   // ----- ★ STEP 3.5: 보정 필터 적용 (v1.4.1) -----
   // 기존 엔진의 점수 산출 이후, 거짓양성을 정교하게 눌러주는 보정 레이어
@@ -1136,7 +1314,8 @@ export function calculateSurfRating(
   }
   if (compoundRisk.reason) {
     // P2(안전 근접) 우선순위 - 하드블록 P1 뒤에 배치
-    safetyReasons = [...safetyReasons, compoundRisk.reason];
+    // compound risk는 하드블록이 아닌 보정 레이어이므로 WAVE 카테고리로 분류
+    safetyReasons = [...safetyReasons, { message: compoundRisk.reason, priority: 2 as SafetyPriority, category: 'WAVE' as SafetyCategory }];
   }
 
   /** ② 품질 패턴 게이트 - 나쁜 조합 패턴 시 상한 제한 */
@@ -1149,7 +1328,7 @@ export function calculateSurfRating(
   }
   if (qualityGate.reason) {
     // P4(컨디션/품질) 우선순위 - 가장 뒤에 배치
-    safetyReasons = [...safetyReasons, qualityGate.reason];
+    safetyReasons = [...safetyReasons, { message: qualityGate.reason, priority: 4 as SafetyPriority, category: 'WIND' as SafetyCategory }];
   }
 
   // ----- ★ STEP 3.7: 거짓 음성 보정 (v1.4.2) -----
@@ -1161,17 +1340,27 @@ export function calculateSurfRating(
 
   // ----- STEP 4: 추천 메시지 생성 (보정된 surfRating 사용) -----
   // 사용자 레벨에 해당하는 levelFit 상태로 메시지 결정
-  const userLevelKey = userLevel as keyof LevelFitResult;
-  const userLevelFit = levelFit[userLevelKey] || 'PASS';
+  // EXPERT는 LevelFitResult에 키가 없으므로 ADVANCED와 동일하게 처리
+  // (EXPERT도 위험 조건에서는 안전 경고를 받아야 함)
+  const safeLevelKey = (userLevel === 'EXPERT' ? 'ADVANCED' : userLevel) as keyof LevelFitResult;
+  const userLevelFit = levelFit[safeLevelKey] || 'PASS';
 
-  const recommendationKo = getRecommendationKo(surfRating, userLevelFit, safetyReasons);
+  /**
+   * SafetyReason[] → string[] 변환
+   *
+   * 내부에서는 category 필드로 사유를 구분하지만,
+   * 외부(API 응답, hints 등)에는 한국어 메시지 문자열만 전달
+   */
+  const safetyMessages = safetyReasons.map(r => r.message);
+
+  const recommendationKo = getRecommendationKo(surfRating, userLevelFit, safetyMessages);
 
   return {
     surfRating,
     levelFit,
     detail,
     recommendationKo,
-    safetyReasons,
+    safetyReasons: safetyMessages,
   };
 }
 
