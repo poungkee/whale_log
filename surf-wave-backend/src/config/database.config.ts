@@ -47,7 +47,17 @@ export const getDatabaseConfig = (
     migrations: [__dirname + '/../migrations/*{.ts,.js}'],
     synchronize: !isProduction,
     logging: !isProduction,
-    ssl: isProduction ? { rejectUnauthorized: false } : false,
+    /**
+     * SSL 설정
+     * - 프로덕션: 인증서 검증 활성화 (MITM 공격 방지)
+     * - DB_SSL_REJECT_UNAUTHORIZED=false로 명시적 비활성화 가능 (자체 서명 인증서 환경)
+     */
+    ssl: isProduction
+      ? {
+          rejectUnauthorized:
+            configService.get<string>('DB_SSL_REJECT_UNAUTHORIZED') !== 'false',
+        }
+      : false,
     autoLoadEntities: true,
     migrationsRun: isProduction,
     extra: {

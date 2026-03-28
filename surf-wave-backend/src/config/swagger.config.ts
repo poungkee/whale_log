@@ -35,7 +35,7 @@ export function setupSwagger(app: INestApplication): void {
         scheme: 'bearer',
         bearerFormat: 'JWT',
         name: 'Authorization',
-        description: 'Enter your Firebase ID token',
+        description: 'Enter your JWT access token',
         in: 'header',
       },
       'firebase-auth',

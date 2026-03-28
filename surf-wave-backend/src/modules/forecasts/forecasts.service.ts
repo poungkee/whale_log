@@ -389,9 +389,24 @@ export class ForecastsService {
         ? generateHints({ ...hintsInput, boardType })
         : generatePublicHints(hintsInput);
 
+      /**
+       * 풍속 단위 변환 (km/h → m/s)
+       * DB에는 Open-Meteo 원본값(km/h)을 저장하지만,
+       * 서핑 앱에서는 m/s가 표준이므로(WSB FARM, Surfline 등)
+       * API 응답에 m/s 변환값도 함께 제공
+       */
+      const windSpeedMs = forecast.windSpeed != null
+        ? Math.round((Number(forecast.windSpeed) / 3.6) * 10) / 10
+        : null;
+      const windGustsMs = forecast.windGusts != null
+        ? Math.round((Number(forecast.windGusts) / 3.6) * 10) / 10
+        : null;
+
       return {
         spot,
         forecast,
+        /** 풍속 m/s 변환값 — 프론트엔드 표시용 */
+        windDisplay: { windSpeedMs, windGustsMs },
         surfRating: ratingResult.surfRating,
         levelFit: ratingResult.levelFit,
         detail: ratingResult.detail,

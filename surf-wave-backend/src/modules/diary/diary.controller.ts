@@ -25,6 +25,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { DiaryService } from './diary.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
+import { Public } from '../../common/decorators/public.decorator';
 import { CreateDiaryDto } from './dto/create-diary.dto';
 import { UpdateDiaryDto } from './dto/update-diary.dto';
 import { DiaryQueryDto } from './dto/diary-query.dto';
@@ -48,8 +49,9 @@ export class DiaryController {
     return this.diaryService.getCalendar(user.id, query);
   }
 
+  @Public()
   @Get('public')
-  @ApiOperation({ summary: 'Get public diary entries' })
+  @ApiOperation({ summary: '공개 다이어리 목록 (비로그인 허용)' })
   async getPublicDiaries(@Query() query: DiaryQueryDto) {
     return this.diaryService.findPublic(query);
   }

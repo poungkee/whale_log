@@ -15,11 +15,12 @@
  * 시간별 예보 API: GET /api/v1/spots/:spotId/forecast?hours=24
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   ArrowLeft, AlertTriangle, Waves, Wind,
   ArrowUp, ArrowDown, Navigation, BarChart3, TrendingUp,
-  Thermometer, Droplets, Cloud,
+  Thermometer, Droplets, Cloud, BookOpen, MapPin, Clock,
+  Star, Sunrise, Eye, ChevronDown, Loader2,
 } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
@@ -38,8 +39,45 @@ interface SpotDetailModalProps {
   onClose: () => void;
 }
 
-/** 상세 모달의 탭 종류 */
-type DetailTab = 'fit' | 'chart';
+/** 상세 모달의 탭 종류 - 적합도 / 시간별 / 서핑기록 */
+type DetailTab = 'fit' | 'chart' | 'diary';
+
+/**
+ * 스팟별 공개 다이어리 항목 타입
+ * GET /api/v1/diary/public?spotId=xxx 응답 기반
+ */
+interface PublicDiaryEntry {
+  id: string;
+  surfDate: string;
+  /** 서핑 시작 시간 (HH:mm) */
+  surfTime: string | null;
+  boardType: string;
+  durationMinutes: number;
+  satisfaction: number;
+  memo: string | null;
+  waveHeight: string | null;
+  wavePeriod: string | null;
+  windSpeed: string | null;
+  /** 작성자 정보 (공개 다이어리용 - 닉네임/아바타만 노출) */
+  user: { id: string; nickname: string; avatarUrl: string | null };
+  spot: { id: string; name: string; region: string } | null;
+}
+
+/** 보드 타입별 이모지 + 한국어 라벨 */
+const DIARY_BOARD_CONFIG: Record<string, { emoji: string; label: string; color: string }> = {
+  LONGBOARD: { emoji: '🏄', label: '롱보드', color: '#32CD32' },
+  MIDLENGTH: { emoji: '🏄‍♂️', label: '미드렝스', color: '#008CBA' },
+  SHORTBOARD: { emoji: '🏄‍♀️', label: '숏보드', color: '#FF8C00' },
+};
+
+/** 만족도별 이모지 + 색상 */
+const DIARY_SAT_CONFIG: Record<number, { emoji: string; color: string; label: string }> = {
+  1: { emoji: '😞', color: '#ef4444', label: '별로' },
+  2: { emoji: '😕', color: '#f97316', label: '아쉬움' },
+  3: { emoji: '😊', color: '#eab308', label: '보통' },
+  4: { emoji: '😄', color: '#22c55e', label: '좋음' },
+  5: { emoji: '🤩', color: '#3b82f6', label: '최고' },
+};
 
 /** 바람이 offshore인지 판별 - 해안 방향 기준 */
 function getWindType(windDir: number | null, coastFacingDeg: number | null): string {
@@ -145,6 +183,18 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
   /** 시간별 데이터 로딩 상태 */
   const [chartLoading, setChartLoading] = useState(false);
 
+  /* ===== 서핑 기록 탭 상태 ===== */
+  /** 이 스팟의 공개 다이어리 목록 */
+  const [publicDiaries, setPublicDiaries] = useState<PublicDiaryEntry[]>([]);
+  /** 다이어리 로딩 상태 */
+  const [diaryLoading, setDiaryLoading] = useState(false);
+  /** 다이어리 총 건수 */
+  const [diaryTotal, setDiaryTotal] = useState(0);
+  /** 다이어리 현재 페이지 */
+  const [diaryPage, setDiaryPage] = useState(1);
+  /** 더보기 가능 여부 */
+  const [diaryHasMore, setDiaryHasMore] = useState(false);
+
   /** 신호등 색상 - 상단 점수 표시용 */
   const ratingColor = getRatingColor(surfRating);
   const ratingGrade = getRatingGrade(surfRating);
@@ -175,6 +225,44 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
     };
     fetchHourly();
   }, [spot.id]);
+
+  /**
+   * 스팟별 공개 다이어리 조회
+   * GET /api/v1/diary/public?spotId={spotId}&page={page}&limit=10
+   * - 서핑 기록 탭 진입 시 호출 (lazy load)
+   * - 더보기 클릭 시 다음 페이지 추가 로드
+   */
+  const fetchPublicDiaries = useCallback(async (pageNum: number, append = false) => {
+    setDiaryLoading(true);
+    try {
+      /** @Public() 엔드포인트 - 인증 불필요, 비로그인도 조회 가능 */
+      const res = await fetch(
+        `/api/v1/diary/public?spotId=${spot.id}&page=${pageNum}&limit=10`,
+      );
+      if (!res.ok) throw new Error('공개 다이어리 조회 실패');
+
+      const json = await res.json();
+      const items: PublicDiaryEntry[] = json.data || [];
+      const meta = json.meta || {};
+
+      /** append=true면 기존 목록에 추가 (더보기), false면 교체 */
+      setPublicDiaries(prev => append ? [...prev, ...items] : items);
+      setDiaryTotal(meta.totalItems || 0);
+      setDiaryHasMore(meta.hasNext || false);
+      setDiaryPage(pageNum);
+    } catch {
+      console.warn('스팟 공개 다이어리 조회 실패');
+    } finally {
+      setDiaryLoading(false);
+    }
+  }, [spot.id]);
+
+  /** 서핑 기록 탭 진입 시 데이터 조회 (lazy load - 탭 전환 시에만) */
+  useEffect(() => {
+    if (activeTab === 'diary' && publicDiaries.length === 0 && diaryTotal === 0) {
+      fetchPublicDiaries(1);
+    }
+  }, [activeTab, publicDiaries.length, diaryTotal, fetchPublicDiaries]);
 
   /** 차트용 데이터 변환 - 시간별 파고/풍속/조석/기온/수온 */
   const chartData = hourlyData.map(h => ({
@@ -283,6 +371,18 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
             >
               <TrendingUp className="w-3 h-3" />
               시간별
+            </button>
+            {/* 서핑 기록 탭 - 이 스팟의 공개 다이어리 모아보기 */}
+            <button
+              onClick={() => setActiveTab('diary')}
+              className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                activeTab === 'diary'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <BookOpen className="w-3 h-3" />
+              기록
             </button>
           </div>
         </div>
@@ -624,8 +724,196 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
           <SpotVote spotId={spot.id} />
         </div>
 
+        {/* ====== 서핑 기록 탭 - 스팟별 공개 다이어리 피드 ====== */}
+        {activeTab === 'diary' && (
+          <div className="space-y-3">
+            {/* 헤더 - 총 기록 수 */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-primary" />
+                <span className="text-sm font-bold">서핑 기록</span>
+                {diaryTotal > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    총 <span className="text-primary font-bold">{diaryTotal}</span>개
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* 로딩 스켈레톤 */}
+            {diaryLoading && publicDiaries.length === 0 && (
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="bg-card border border-border rounded-xl p-4 animate-pulse">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-8 h-8 bg-secondary rounded-full" />
+                      <div className="flex-1">
+                        <div className="h-3 bg-secondary rounded w-20 mb-1" />
+                        <div className="h-2.5 bg-secondary rounded w-32" />
+                      </div>
+                    </div>
+                    <div className="h-3 bg-secondary rounded w-40" />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 공개 다이어리 카드 목록 */}
+            {publicDiaries.length > 0 && (
+              <>
+                {publicDiaries.map(entry => {
+                  const sat = DIARY_SAT_CONFIG[entry.satisfaction] || DIARY_SAT_CONFIG[3];
+                  const board = DIARY_BOARD_CONFIG[entry.boardType] || DIARY_BOARD_CONFIG['LONGBOARD'];
+                  /** 날짜 포맷: "3월 14일" */
+                  const d = new Date(entry.surfDate + 'T00:00:00');
+                  const dateStr = `${d.getMonth() + 1}월 ${d.getDate()}일`;
+                  /** 서핑 시간 포맷 */
+                  const durStr = entry.durationMinutes >= 60
+                    ? `${Math.floor(entry.durationMinutes / 60)}시간${entry.durationMinutes % 60 > 0 ? ` ${entry.durationMinutes % 60}분` : ''}`
+                    : `${entry.durationMinutes}분`;
+
+                  return (
+                    <div
+                      key={entry.id}
+                      className="bg-card border border-border rounded-xl overflow-hidden
+                                 hover:border-primary/20 transition-all"
+                    >
+                      {/* 만족도 색상 상단 바 */}
+                      <div className="h-0.5" style={{ backgroundColor: sat.color }} />
+
+                      <div className="p-3.5">
+                        {/* 상단: 작성자 + 날짜 + 보드 */}
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            {/* 작성자 아바타 (없으면 닉네임 첫 글자) */}
+                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center text-xs font-bold">
+                              {entry.user.avatarUrl ? (
+                                <img src={entry.user.avatarUrl} className="w-full h-full rounded-full object-cover" alt="" />
+                              ) : (
+                                entry.user.nickname.charAt(0)
+                              )}
+                            </div>
+                            <div>
+                              {/* 닉네임 */}
+                              <span className="text-xs font-bold">{entry.user.nickname}</span>
+                              {/* 날짜 + 시작 시간 */}
+                              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                <span>{dateStr}</span>
+                                {entry.surfTime && (
+                                  <span className="flex items-center gap-0.5 text-orange-400">
+                                    <Sunrise className="w-2.5 h-2.5" />
+                                    {entry.surfTime}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          {/* 만족도 이모지 + 보드 배지 */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-lg" title={sat.label}>{sat.emoji}</span>
+                            <span
+                              className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold"
+                              style={{ backgroundColor: `${board.color}18`, color: board.color }}
+                            >
+                              {board.emoji} {board.label}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* 중앙: 파도 데이터 칩 (forecast 자동 매칭 데이터) */}
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          {/* 서핑 시간 */}
+                          <div className="flex items-center gap-1 text-[10px] bg-secondary/70 px-1.5 py-0.5 rounded">
+                            <Clock className="w-2.5 h-2.5 text-blue-400" />
+                            <span className="font-medium">{durStr}</span>
+                          </div>
+                          {/* 파고 - 자동 매칭 데이터 */}
+                          {entry.waveHeight && (
+                            <div className="flex items-center gap-1 text-[10px] bg-cyan-500/10 px-1.5 py-0.5 rounded">
+                              <Waves className="w-2.5 h-2.5 text-cyan-400" />
+                              <span className="font-medium text-cyan-300">{Number(entry.waveHeight).toFixed(1)}m</span>
+                            </div>
+                          )}
+                          {/* 파도 주기 */}
+                          {entry.wavePeriod && (
+                            <div className="flex items-center gap-1 text-[10px] bg-blue-500/10 px-1.5 py-0.5 rounded">
+                              <span className="text-blue-400 text-[9px]">T</span>
+                              <span className="font-medium text-blue-300">{Number(entry.wavePeriod).toFixed(1)}s</span>
+                            </div>
+                          )}
+                          {/* 풍속 */}
+                          {entry.windSpeed && (
+                            <div className="flex items-center gap-1 text-[10px] bg-green-500/10 px-1.5 py-0.5 rounded">
+                              <Wind className="w-2.5 h-2.5 text-green-400" />
+                              <span className="font-medium text-green-300">{Number(entry.windSpeed).toFixed(0)}km/h</span>
+                            </div>
+                          )}
+                          {/* 만족도 별점 */}
+                          <div className="flex gap-0.5 ml-auto">
+                            {[1, 2, 3, 4, 5].map(s => (
+                              <Star
+                                key={s}
+                                className={`w-2.5 h-2.5 ${s <= entry.satisfaction ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground/20'}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* 메모 (있으면 표시) */}
+                        {entry.memo && (
+                          <div className="relative">
+                            <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-full bg-primary/30" />
+                            <p className="text-[11px] text-muted-foreground line-clamp-2 pl-2.5 italic leading-relaxed">
+                              "{entry.memo}"
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* 더보기 버튼 */}
+                {diaryHasMore && (
+                  <button
+                    onClick={() => fetchPublicDiaries(diaryPage + 1, true)}
+                    disabled={diaryLoading}
+                    className="w-full py-3 text-sm text-primary font-medium bg-primary/5 rounded-xl
+                               hover:bg-primary/10 transition-colors flex items-center justify-center gap-1.5
+                               disabled:opacity-50"
+                  >
+                    {diaryLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    )}
+                    더보기
+                  </button>
+                )}
+              </>
+            )}
+
+            {/* 빈 상태 - 기록이 없을 때 */}
+            {!diaryLoading && publicDiaries.length === 0 && (
+              <div className="text-center py-12">
+                <div className="relative w-16 h-16 mx-auto mb-4">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full animate-pulse" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-3xl">📖</span>
+                  </div>
+                </div>
+                <h3 className="text-sm font-bold mb-1">아직 공유된 서핑 기록이 없어요</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  이 스팟에서 서핑한 후<br />
+                  다이어리를 "전체 공개"로 작성해보세요!
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* 예보 없음 */}
-        {!forecast && (
+        {!forecast && activeTab !== 'diary' && (
           <div className="text-center py-12">
             <p className="text-muted-foreground">예보 데이터가 없습니다</p>
           </div>

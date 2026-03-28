@@ -27,6 +27,9 @@ import { LevelSelect } from './pages/LevelSelect';
 import { Home } from './pages/Home';
 import { Explore } from './pages/Explore';
 import { MyPage } from './pages/MyPage';
+import { Favorites } from './pages/Favorites';
+import { Diary } from './pages/Diary';
+import { PoseTraining } from './pages/PoseTraining';
 import { BottomNav } from './components/BottomNav';
 
 export default function App() {
@@ -40,11 +43,36 @@ export default function App() {
   const [surfLevel, setSurfLevel] = useState<SurfLevel | null>(null);
   /** 로그인된 사용자 정보 */
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  /** 즐겨찾기 스팟 ID Set - 전역 관리 (홈/즐겨찾기 페이지 공유) */
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+  /** 프로필 탭 서브 페이지 - 'main'(마이페이지) / 'diary'(서핑 다이어리) / 'poseTraining'(자세 연습) */
+  const [profileSubPage, setProfileSubPage] = useState<'main' | 'diary' | 'poseTraining'>('main');
+
+  /**
+   * 서버에서 즐겨찾기 목록 가져오기
+   * GET /api/v1/spots/favorites (인증 필요)
+   * 반환값: [{ id, name, region, ... , isFavorited: true }, ...]
+   */
+  const fetchFavorites = async (token: string) => {
+    try {
+      const res = await fetch('/api/v1/spots/favorites', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const spots = await res.json();
+      /** 스팟 ID만 추출하여 Set으로 관리 */
+      const ids = new Set<string>(spots.map((s: { id: string }) => s.id));
+      setFavoriteIds(ids);
+    } catch {
+      console.warn('즐겨찾기 목록 조회 실패');
+    }
+  };
 
   /**
    * 앱 시작 시 localStorage에서 저장된 인증 정보 복원
    * - accessToken이 있으면 로그인된 상태로 간주
    * - surfLevel이 있으면 메인 화면으로 바로 이동
+   * - 즐겨찾기 목록도 서버에서 가져옴
    */
   useEffect(() => {
     const savedToken = localStorage.getItem('accessToken');
@@ -64,6 +92,8 @@ export default function App() {
         if (savedLevel) {
           setSurfLevel(savedLevel);
         }
+        /** 즐겨찾기 목록 서버에서 가져오기 */
+        fetchFavorites(savedToken);
       } catch {
         /** JSON 파싱 실패 시 저장 데이터 초기화 */
         localStorage.removeItem('accessToken');
@@ -150,6 +180,64 @@ export default function App() {
   }, [screen]);
 
   /**
+   * 즐겨찾기 토글 (추가/제거)
+   * - 이미 즐겨찾기 → DELETE /api/v1/spots/:spotId/favorite
+   * - 아직 즐겨찾기 아님 → POST /api/v1/spots/:spotId/favorite
+   * 낙관적 업데이트: API 호출 전에 로컬 상태 먼저 변경
+   *
+   * @param spotId - 토글할 스팟 UUID
+   */
+  const handleToggleFavorite = async (spotId: string) => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+
+    const isCurrentlyFavorited = favoriteIds.has(spotId);
+
+    /** 낙관적 업데이트 - 즉시 UI에 반영 */
+    setFavoriteIds(prev => {
+      const next = new Set(prev);
+      if (isCurrentlyFavorited) {
+        next.delete(spotId);
+      } else {
+        next.add(spotId);
+      }
+      return next;
+    });
+
+    try {
+      const method = isCurrentlyFavorited ? 'DELETE' : 'POST';
+      const res = await fetch(`/api/v1/spots/${spotId}/favorite`, {
+        method,
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        /** API 실패 시 낙관적 업데이트 롤백 */
+        setFavoriteIds(prev => {
+          const rollback = new Set(prev);
+          if (isCurrentlyFavorited) {
+            rollback.add(spotId);
+          } else {
+            rollback.delete(spotId);
+          }
+          return rollback;
+        });
+      }
+    } catch {
+      /** 네트워크 에러 시 롤백 */
+      setFavoriteIds(prev => {
+        const rollback = new Set(prev);
+        if (isCurrentlyFavorited) {
+          rollback.add(spotId);
+        } else {
+          rollback.delete(spotId);
+        }
+        return rollback;
+      });
+    }
+  };
+
+  /**
    * 로그인/회원가입 성공 후 호출
    * API 응답(AuthResponse)을 받아 localStorage에 저장하고 화면 전환
    *
@@ -160,6 +248,9 @@ export default function App() {
     localStorage.setItem('accessToken', authData.accessToken);
     localStorage.setItem('user', JSON.stringify(authData.user));
     setUserInfo(authData.user);
+
+    /** 로그인 성공 시 즐겨찾기 목록도 가져오기 */
+    fetchFavorites(authData.accessToken);
 
     /** surfLevel + boardType 유무에 따라 화면 전환 결정 */
     if (authData.user.surfLevel) {
@@ -250,6 +341,54 @@ export default function App() {
   };
 
   /**
+   * 알림 설정 토글 (마이페이지에서 호출)
+   * PATCH /api/v1/users/me { notificationsEnabled: boolean }
+   * 서버에 알림 수신 여부 저장 + 로컬 상태 반영
+   *
+   * @param enabled - true: 알림 수신, false: 알림 차단
+   */
+  const handleNotificationToggle = async (enabled: boolean) => {
+    /** 로컬 상태 즉시 반영 (낙관적 업데이트) */
+    if (userInfo) {
+      const updated = { ...userInfo, notificationsEnabled: enabled };
+      setUserInfo(updated);
+      localStorage.setItem('user', JSON.stringify(updated));
+    }
+
+    /** 서버에 알림 설정 저장 */
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      try {
+        const res = await fetch('/api/v1/users/me', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ notificationsEnabled: enabled }),
+        });
+
+        if (!res.ok) {
+          /** API 실패 시 롤백 */
+          if (userInfo) {
+            const rollback = { ...userInfo, notificationsEnabled: !enabled };
+            setUserInfo(rollback);
+            localStorage.setItem('user', JSON.stringify(rollback));
+          }
+        }
+      } catch {
+        /** 네트워크 에러 시 롤백 */
+        if (userInfo) {
+          const rollback = { ...userInfo, notificationsEnabled: !enabled };
+          setUserInfo(rollback);
+          localStorage.setItem('user', JSON.stringify(rollback));
+        }
+        console.warn('서버에 알림 설정 저장 실패');
+      }
+    }
+  };
+
+  /**
    * 보드 타입 변경 (마이페이지 설정에서 호출)
    * 서버 API로 보드 타입 업데이트하고 로컬 상태 반영
    */
@@ -289,6 +428,8 @@ export default function App() {
     localStorage.removeItem('surfLevel');
     setUserInfo(null);
     setSurfLevel(null);
+    /** 로그아웃 시 즐겨찾기 상태도 초기화 */
+    setFavoriteIds(new Set());
     setScreen('welcome');
     setMainTab('home');
   };
@@ -370,8 +511,33 @@ export default function App() {
   const renderMainPage = () => {
     switch (mainTab) {
       case 'home':
-        return <Home key={homeResetKey} surfLevel={surfLevel!} boardType={userInfo?.boardType} />;
+        return (
+          <Home
+            key={homeResetKey}
+            surfLevel={surfLevel!}
+            boardType={userInfo?.boardType}
+            favoriteIds={favoriteIds}
+            onToggleFavorite={handleToggleFavorite}
+          />
+        );
       case 'profile':
+        /** 프로필 탭 내 서브 페이지 분기 - diary/poseTraining/main */
+        if (profileSubPage === 'diary') {
+          return (
+            <Diary
+              defaultBoardType={userInfo?.boardType}
+              onBack={() => setProfileSubPage('main')}
+            />
+          );
+        }
+        /** 자세 연습 서브 페이지 — 카메라 실시간 포즈 감지 */
+        if (profileSubPage === 'poseTraining') {
+          return (
+            <PoseTraining
+              onBack={() => setProfileSubPage('main')}
+            />
+          );
+        }
         return (
           <MyPage
             surfLevel={surfLevel!}
@@ -379,20 +545,21 @@ export default function App() {
             onLogout={handleLogout}
             onLevelChange={handleLevelChange}
             onBoardTypeChange={handleBoardTypeChange}
+            onNotificationToggle={handleNotificationToggle}
+            onNavigateToDiary={() => setProfileSubPage('diary')}
+            onNavigateToPoseTraining={() => setProfileSubPage('poseTraining')}
           />
         );
       case 'explore':
         return <Explore surfLevel={surfLevel!} />;
       case 'favorites':
-        /** 준비중 플레이스홀더 */
         return (
-          <div className="min-h-screen flex items-center justify-center pb-20">
-            <div className="text-center">
-              <div className="text-5xl mb-4">⭐</div>
-              <h2 className="text-lg font-bold mb-2">즐겨찾기</h2>
-              <p className="text-sm text-muted-foreground">준비중입니다</p>
-            </div>
-          </div>
+          <Favorites
+            surfLevel={surfLevel!}
+            boardType={userInfo?.boardType}
+            favoriteIds={favoriteIds}
+            onToggleFavorite={handleToggleFavorite}
+          />
         );
       default:
         return <Home key={homeResetKey} surfLevel={surfLevel!} boardType={userInfo?.boardType} />;
@@ -409,6 +576,10 @@ export default function App() {
           /** 이미 홈 탭인데 다시 누르면 → 홈 화면 초기화 (필터/검색/스크롤 리셋) */
           setHomeResetKey(k => k + 1);
           window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        /** 프로필 탭 벗어나면 서브 페이지 초기화 */
+        if (tab !== 'profile') {
+          setProfileSubPage('main');
         }
         setMainTab(tab);
       }} />

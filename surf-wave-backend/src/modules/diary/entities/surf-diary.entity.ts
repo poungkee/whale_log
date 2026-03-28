@@ -30,6 +30,14 @@ export class SurfDiary extends BaseEntity {
   @Column({ name: 'surf_date', type: 'date' })
   surfDate: string;
 
+  /**
+   * 서핑 시작 시간 (HH:mm 형식, 예: "10:00")
+   * - nullable: 기존 데이터 호환 + 시간 미입력 허용
+   * - 이 값이 있으면 해당 시점의 forecast 데이터를 자동 매칭
+   */
+  @Column({ name: 'surf_time', type: 'varchar', length: 5, nullable: true })
+  surfTime: string | null;
+
   @Column({
     name: 'board_type',
     type: 'enum',

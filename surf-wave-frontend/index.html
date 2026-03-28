@@ -4,6 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#0D1B2A" />
+    <!--
+      CSP 보안 정책 - XSS 공격 방지 (허용된 출처에서만 스크립트/리소스 로드)
+      - blob: (script-src) — MediaPipe WASM 런타임이 blob URL로 내부 스크립트를 실행함
+      - blob: (worker-src) — MediaPipe가 Web Worker를 blob URL로 생성함
+      - WASM/모델 파일은 public/mediapipe/에서 로컬 서빙 → 외부 CDN 불필요
+    -->
+    <meta http-equiv="Content-Security-Policy"
+      content="default-src 'self';
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://accounts.google.com https://t1.kakaocdn.net https://kauth.kakao.com;
+        style-src 'self' 'unsafe-inline' https://accounts.google.com;
+        img-src 'self' data: blob: https: http:;
+        worker-src 'self' blob:;
+        connect-src 'self' blob: https://accounts.google.com https://oauth2.googleapis.com https://kapi.kakao.com https://kauth.kakao.com https://*.tile.openstreetmap.org https://*.openfreemap.org https://tiles.openfreemap.org https://api.open-meteo.com;
+        frame-src 'self' https://accounts.google.com;
+        font-src 'self' data:;" />
     <title>서핑 파도</title>
   </head>
   <body>

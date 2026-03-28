@@ -3,26 +3,32 @@
  * @description 서프 웨이브 백엔드 애플리케이션의 진입점 (Entry Point)
  *
  * NestJS 애플리케이션을 초기화하고 부트스트랩하는 파일입니다.
- * - 글로벌 API 접두사 설정 (/api/v1)
- * - CORS (Cross-Origin Resource Sharing) 허용 설정
+ * - 프로덕션 환경변수 검증 (보안 필수값 누락 시 시작 차단)
+ * - Helmet 보안 헤더 설정 (XSS, 클릭재킹, MIME 스니핑 방지)
+ * - CORS 화이트리스트 기반 출처 제한
  * - 요청 데이터 유효성 검증 파이프라인 설정
- * - Swagger API 문서 자동 생성 설정
+ * - Swagger API 문서 (개발 환경에서만 활성화)
  */
 
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { setupSwagger } from './config/swagger.config';
+import { validateProductionEnv } from './config/defaults';
 
 /**
  * bootstrap - 애플리케이션 부트스트랩 함수
  *
  * NestJS 애플리케이션을 생성하고 모든 글로벌 설정을 적용한 후 서버를 시작합니다.
- * 환경 변수에서 포트(PORT)와 API 접두사(API_PREFIX)를 읽어옵니다.
+ * 프로덕션 환경에서는 필수 환경변수 검증 후 보안 설정을 강화합니다.
  */
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
+
+  /** 프로덕션 환경변수 검증 - 필수 보안 값 누락 시 앱 시작 차단 */
+  validateProductionEnv();
 
   /** AppModule을 기반으로 NestJS 애플리케이션 인스턴스 생성 */
   const app = await NestFactory.create(AppModule);
@@ -31,33 +37,49 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT', 3000);
   const apiPrefix = configService.get<string>('API_PREFIX', '/api/v1');
+  const isProduction = configService.get<string>('NODE_ENV') === 'production';
 
   /**
    * 글로벌 API 접두사 설정
    * 모든 엔드포인트 URL 앞에 '/api/v1'이 자동으로 붙습니다.
-   * 예: /spots → /api/v1/spots
    */
   app.setGlobalPrefix(apiPrefix);
 
   /**
+   * Helmet 보안 헤더 설정
+   * - X-Content-Type-Options: nosniff (MIME 스니핑 방지)
+   * - X-Frame-Options: DENY (클릭재킹 방지)
+   * - X-XSS-Protection (XSS 필터 활성화)
+   * - Strict-Transport-Security (HTTPS 강제 - 프로덕션)
+   * - Content-Security-Policy (스크립트/리소스 출처 제한)
+   */
+  app.use(helmet({
+    /** 프로덕션에서는 HSTS 활성화 (1년간 HTTPS 강제) */
+    hsts: isProduction ? { maxAge: 31536000, includeSubDomains: true } : false,
+    /** CSP는 API 서버이므로 기본 설정 사용 */
+    contentSecurityPolicy: isProduction ? undefined : false,
+  }));
+
+  /**
    * CORS (Cross-Origin Resource Sharing) 설정
-   * 프론트엔드(모바일 앱, 웹)에서 이 API 서버로 교차 출처 요청을 허용합니다.
-   * - origin: true → 모든 출처 허용
+   * - 개발 환경: localhost 허용
+   * - 프로덕션: ALLOWED_ORIGINS 환경변수에 지정된 도메인만 허용
    * - credentials: true → 쿠키/인증 헤더 포함 요청 허용
    */
+  const allowedOrigins = configService.get<string>('ALLOWED_ORIGINS');
   app.enableCors({
-    origin: true,
+    origin: isProduction
+      ? (allowedOrigins ? allowedOrigins.split(',').map(o => o.trim()) : false)
+      : true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
 
   /**
    * 글로벌 유효성 검증 파이프 (ValidationPipe) 설정
-   * 모든 API 요청의 DTO(Data Transfer Object)에 대해 자동으로 유효성 검증을 수행합니다.
    * - whitelist: DTO에 정의되지 않은 속성은 자동으로 제거
    * - forbidNonWhitelisted: DTO에 없는 속성이 전달되면 400 에러 반환
    * - transform: 요청 데이터를 DTO 클래스 인스턴스로 자동 변환
-   * - enableImplicitConversion: 문자열 → 숫자 등 타입 자동 변환
    */
   app.useGlobalPipes(
     new ValidationPipe({
@@ -71,17 +93,18 @@ async function bootstrap() {
   );
 
   /**
-   * Swagger API 문서 설정
-   * /docs 경로에서 API 문서를 확인할 수 있습니다.
+   * Swagger API 문서 설정 - 개발 환경에서만 활성화
+   * 프로덕션에서는 API 스키마 노출 방지를 위해 비활성화
    */
-  setupSwagger(app);
+  if (!isProduction) {
+    setupSwagger(app);
+    logger.log(`Swagger documentation available at: http://localhost:${port}/docs`);
+  }
 
   /** 지정된 포트에서 HTTP 서버 시작 */
   await app.listen(port);
   logger.log(`Application is running on: http://localhost:${port}${apiPrefix}`);
-  logger.log(
-    `Swagger documentation available at: http://localhost:${port}/docs`,
-  );
+  logger.log(`Environment: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
 }
 
 bootstrap();

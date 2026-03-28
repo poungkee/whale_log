@@ -10,7 +10,7 @@
  * 사용처: POST /api/v1/auth/register
  */
 
-import { IsString, IsNotEmpty, IsEmail, MinLength, MaxLength } from 'class-validator';
+import { IsString, IsNotEmpty, IsEmail, MinLength, MaxLength, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterDto {
@@ -20,10 +20,16 @@ export class RegisterDto {
   @IsNotEmpty({ message: '이메일은 필수 입력값입니다' })
   email: string;
 
-  /** 비밀번호 - bcrypt로 해싱되어 password_hash 컬럼에 저장 */
-  @ApiProperty({ description: '비밀번호 (최소 6자)', minLength: 6, example: 'password123' })
+  /**
+   * 비밀번호 - bcrypt로 해싱되어 password_hash 컬럼에 저장
+   * 최소 8자, 영문+숫자 조합 필수 (앱스토어 보안 요구사항)
+   */
+  @ApiProperty({ description: '비밀번호 (최소 8자, 영문+숫자 조합)', minLength: 8, example: 'Surfer2026!' })
   @IsString({ message: '비밀번호는 문자열이어야 합니다' })
-  @MinLength(6, { message: '비밀번호는 최소 6자 이상이어야 합니다' })
+  @MinLength(8, { message: '비밀번호는 최소 8자 이상이어야 합니다' })
+  @Matches(/^(?=.*[A-Za-z])(?=.*\d).{8,}$/, {
+    message: '비밀번호는 영문과 숫자를 모두 포함해야 합니다',
+  })
   password: string;
 
   /** 닉네임 - 서비스 내 표시 이름, users 테이블에서 unique */

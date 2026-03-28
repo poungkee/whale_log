@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+
+# Environment (절대 커밋하지 말 것!)
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+coverage/

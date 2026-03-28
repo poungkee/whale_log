@@ -23,6 +23,7 @@ import {
   Request,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -31,6 +32,8 @@ import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('auth') // Swagger 문서에서 'auth' 그룹으로 분류
 @Controller('auth') // 기본 경로: /api/v1/auth (글로벌 prefix + 컨트롤러 경로)
+/** 인증 엔드포인트는 브루트포스 방지를 위해 60초당 5회로 제한 */
+@Throttle({ default: { ttl: 60000, limit: 5 } })
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 

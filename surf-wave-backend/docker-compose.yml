@@ -5,12 +5,15 @@ services:
     image: postgres:15-alpine
     container_name: surfwave-postgres
     restart: unless-stopped
-    ports:
-      - '5432:5432'
+    ## 보안: DB 포트는 외부 노출하지 않음 (내부 네트워크에서만 접근)
+    ## 로컬 개발 시 직접 접근이 필요하면 아래 주석 해제
+    # ports:
+    #   - '5432:5432'
     environment:
-      POSTGRES_USER: surfwave
-      POSTGRES_PASSWORD: surfwave123
-      POSTGRES_DB: surfwave
+      ## 프로덕션 배포 시 반드시 강력한 비밀번호로 변경 필수!
+      POSTGRES_USER: ${DB_USERNAME:-surfwave}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-surfwave123}
+      POSTGRES_DB: ${DB_DATABASE:-surfwave}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -26,13 +29,15 @@ services:
     image: redis:7-alpine
     container_name: surfwave-redis
     restart: unless-stopped
-    ports:
-      - '6379:6379'
+    ## 보안: Redis 포트도 외부 노출하지 않음
+    # ports:
+    #   - '6379:6379'
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes
+    ## Redis 인증 비밀번호 설정 + AOF 영속성
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-surfwave-redis-dev}
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD:-surfwave-redis-dev}', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -53,6 +58,7 @@ services:
     environment:
       DB_HOST: postgres
       REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-surfwave-redis-dev}
     depends_on:
       postgres:
         condition: service_healthy

@@ -10,7 +10,7 @@
  * - BLOCKED 카드: opacity-50 grayscale 처리
  */
 
-import { Wind, Clock, ArrowDown, ArrowUp, Sun, CloudRain, Cloud, Thermometer, Droplets } from 'lucide-react';
+import { Wind, Clock, ArrowDown, ArrowUp, Sun, CloudRain, Cloud, Thermometer, Droplets, Heart } from 'lucide-react';
 import { getRatingGrade, getRatingColor, getLevelFitColor, getLevelFitLabel } from '../lib/utils';
 import type { SpotForecast, SurfLevel, HintTag } from '../types';
 
@@ -29,6 +29,10 @@ interface SpotCardProps {
   currentLevel: SurfLevel;
   /** 카드 클릭 핸들러 */
   onClick?: () => void;
+  /** 즐겨찾기 여부 - true면 하트 채워짐 */
+  isFavorited?: boolean;
+  /** 즐겨찾기 토글 핸들러 - 하트 버튼 클릭 시 호출 */
+  onToggleFavorite?: () => void;
 }
 
 /** 난이도 한국어 약칭 */
@@ -52,7 +56,7 @@ function getTideLabel(status: string | null): { label: string; rising: boolean }
   }
 }
 
-export function SpotCard({ data, currentLevel, onClick }: SpotCardProps) {
+export function SpotCard({ data, currentLevel, onClick, isFavorited, onToggleFavorite }: SpotCardProps) {
   const { spot, forecast, surfRating, levelFit, recommendationKo, safetyReasons } = data;
 
   /** 현재 레벨의 적합도 판정 */
@@ -148,12 +152,34 @@ export function SpotCard({ data, currentLevel, onClick }: SpotCardProps) {
             </>
           )}
         </div>
-        {/* 오른쪽: 스팟 이름 + 지역 */}
-        <div className="text-right flex-shrink-0">
-          <h3 className="font-bold text-sm">{spot.name}</h3>
-          <p className="text-[11px] text-muted-foreground">
-            {spot.region} · {getDifficultyShort(spot.difficulty)}
-          </p>
+        {/* 오른쪽: 스팟 이름 + 지역 + 즐겨찾기 하트 */}
+        <div className="flex items-start gap-1.5">
+          <div className="text-right flex-shrink-0">
+            <h3 className="font-bold text-sm">{spot.name}</h3>
+            <p className="text-[11px] text-muted-foreground">
+              {spot.region} · {getDifficultyShort(spot.difficulty)}
+            </p>
+          </div>
+          {/* 즐겨찾기 하트 버튼 - onToggleFavorite이 있을 때만 표시 */}
+          {onToggleFavorite && (
+            <button
+              onClick={(e) => {
+                /** 카드 클릭 이벤트 전파 방지 (모달 열림 방지) */
+                e.stopPropagation();
+                onToggleFavorite();
+              }}
+              className="p-1 -mr-1 -mt-0.5 rounded-full hover:bg-secondary/50 transition-colors"
+              aria-label={isFavorited ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+            >
+              <Heart
+                className={`w-4 h-4 transition-colors ${
+                  isFavorited
+                    ? 'text-red-500 fill-red-500'   /* 즐겨찾기 됨: 빨간 채워진 하트 */
+                    : 'text-muted-foreground'         /* 즐겨찾기 안 됨: 빈 하트 */
+                }`}
+              />
+            </button>
+          )}
         </div>
       </div>
 

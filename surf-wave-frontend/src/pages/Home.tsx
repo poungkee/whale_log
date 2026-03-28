@@ -25,6 +25,10 @@ interface HomeProps {
   surfLevel: SurfLevel;
   /** 보드 타입 - API에 전달하여 hints에 보드별 팁 포함 */
   boardType?: BoardType;
+  /** 즐겨찾기 스팟 ID Set - App.tsx에서 전역 관리 */
+  favoriteIds?: Set<string>;
+  /** 즐겨찾기 토글 핸들러 - 하트 버튼 클릭 시 호출 */
+  onToggleFavorite?: (spotId: string) => void;
 }
 
 /** 한글 검색어 → 영문 매핑 (검색 시 한글로 발리 스팟 찾기 위해) */
@@ -50,7 +54,7 @@ const MAJOR_TABS: { key: '전체' | '국내' | '발리'; label: string }[] = [
   { key: '발리', label: '발리' },
 ];
 
-export function Home({ surfLevel, boardType }: HomeProps) {
+export function Home({ surfLevel, boardType, favoriteIds, onToggleFavorite }: HomeProps) {
   /** 대시보드 API에서 받아온 스팟별 예보 데이터 목록 */
   const [spots, setSpots] = useState<SpotForecast[]>([]);
   /** 데이터 로딩 중 상태 */
@@ -309,6 +313,8 @@ export function Home({ surfLevel, boardType }: HomeProps) {
                 data={spotData}
                 currentLevel={surfLevel}
                 onClick={() => setSelectedSpot(spotData)}
+                isFavorited={favoriteIds?.has(spotData.spot.id)}
+                onToggleFavorite={onToggleFavorite ? () => onToggleFavorite(spotData.spot.id) : undefined}
               />
             ))}
           </div>

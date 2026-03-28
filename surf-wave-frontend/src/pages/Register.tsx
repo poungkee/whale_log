@@ -9,7 +9,7 @@
  * 클라이언트 사이드 유효성 검증:
  * - 닉네임: 2자 이상
  * - 이메일: @ 포함
- * - 비밀번호: 6자 이상
+ * - 비밀번호: 8자 이상, 영문+숫자 조합 필수
  * - 비밀번호 확인: 비밀번호와 일치
  *
  * 서버 사이드 에러:
@@ -60,8 +60,10 @@ export function Register({ onBack, onAuthSuccess, onGoLogin }: RegisterProps) {
     if (!email.includes('@')) {
       newErrors.email = '올바른 이메일을 입력하세요';
     }
-    if (password.length < 6) {
-      newErrors.password = '비밀번호는 6자 이상이어야 합니다';
+    if (password.length < 8) {
+      newErrors.password = '비밀번호는 8자 이상이어야 합니다';
+    } else if (!/^(?=.*[A-Za-z])(?=.*\d)/.test(password)) {
+      newErrors.password = '비밀번호는 영문과 숫자를 모두 포함해야 합니다';
     }
     if (password !== confirmPassword) {
       newErrors.confirmPassword = '비밀번호가 일치하지 않습니다';
@@ -208,7 +210,7 @@ export function Register({ onBack, onAuthSuccess, onGoLogin }: RegisterProps) {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="비밀번호 (6자 이상)"
+                placeholder="비밀번호 (8자 이상, 영문+숫자)"
                 className="w-full pl-11 pr-12 py-3 bg-card border border-border rounded-lg focus:outline-none focus:border-primary transition-colors text-foreground placeholder:text-muted-foreground"
                 required
               />
