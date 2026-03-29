@@ -11,9 +11,11 @@
  */
 
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
+import * as path from 'path';
 import { AppModule } from './app.module';
 import { setupSwagger } from './config/swagger.config';
 import { validateProductionEnv } from './config/defaults';
@@ -30,8 +32,17 @@ async function bootstrap() {
   /** 프로덕션 환경변수 검증 - 필수 보안 값 누락 시 앱 시작 차단 */
   validateProductionEnv();
 
-  /** AppModule을 기반으로 NestJS 애플리케이션 인스턴스 생성 */
-  const app = await NestFactory.create(AppModule);
+  /** AppModule을 기반으로 NestJS 애플리케이션 인스턴스 생성 (Express 어댑터) */
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  /**
+   * 정적 파일 서빙 — 업로드된 이미지를 /uploads/ 경로로 접근 가능하게
+   * S3 미설정 시 로컬 파일 시스템에 저장된 이미지를 서빙
+   * 예: /uploads/userId/timestamp-uuid.jpg → {cwd}/uploads/userId/timestamp-uuid.jpg
+   */
+  app.useStaticAssets(path.join(process.cwd(), 'uploads'), {
+    prefix: '/uploads/',
+  });
 
   /** ConfigService를 통해 환경 변수에서 설정값 조회 */
   const configService = app.get(ConfigService);

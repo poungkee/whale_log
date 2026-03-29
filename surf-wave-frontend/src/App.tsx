@@ -27,7 +27,7 @@ import { LevelSelect } from './pages/LevelSelect';
 import { Home } from './pages/Home';
 import { Explore } from './pages/Explore';
 import { MyPage } from './pages/MyPage';
-import { Favorites } from './pages/Favorites';
+import { Guide } from './pages/Guide';
 import { Diary } from './pages/Diary';
 import { PoseTraining } from './pages/PoseTraining';
 import { BottomNav } from './components/BottomNav';
@@ -552,15 +552,8 @@ export default function App() {
         );
       case 'explore':
         return <Explore surfLevel={surfLevel!} />;
-      case 'favorites':
-        return (
-          <Favorites
-            surfLevel={surfLevel!}
-            boardType={userInfo?.boardType}
-            favoriteIds={favoriteIds}
-            onToggleFavorite={handleToggleFavorite}
-          />
-        );
+      case 'guide':
+        return <Guide />;
       default:
         return <Home key={homeResetKey} surfLevel={surfLevel!} boardType={userInfo?.boardType} />;
     }

@@ -9,14 +9,14 @@
 /** 서핑 레벨 - 사용자가 선택하는 서핑 실력 레벨 (백엔드 Difficulty enum과 동일) */
 export type SurfLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT';
 
-/** 보드 타입 - 사용자가 주로 사용하는 서핑 보드 종류 */
-export type BoardType = 'LONGBOARD' | 'MIDLENGTH' | 'SHORTBOARD' | 'UNSET';
+/** 보드 타입 - 서핑 보드 종류 (프로필 + 다이어리 공용, 백엔드 BoardType/UserBoardType 통일) */
+export type BoardType = 'SHORTBOARD' | 'LONGBOARD' | 'FUNBOARD' | 'FISH' | 'SUP' | 'BODYBOARD' | 'FOIL' | 'OTHER' | 'MIDLENGTH' | 'UNSET';
 
 /** 앱 화면 상태 - 현재 표시 중인 화면 */
 export type AppScreen = 'splash' | 'welcome' | 'login' | 'register' | 'level-select' | 'main';
 
-/** 메인 탭 - 하단 네비게이션의 탭 종류 */
-export type MainTab = 'home' | 'explore' | 'favorites' | 'profile';
+/** 메인 탭 - 하단 네비게이션의 탭 종류 (guide: 초보 서핑 가이드) */
+export type MainTab = 'home' | 'explore' | 'guide' | 'profile';
 
 /** 조석 상태 - 밀물/썰물/만조/간조 */
 export type TideStatus = 'HIGH' | 'LOW' | 'RISING' | 'FALLING';
@@ -166,8 +166,8 @@ export interface Hints {
  * sub: 세부 지역 (null이면 대분류 전체 선택)
  */
 export interface RegionFilter {
-  /** 대분류: 전체, 국내, 발리 */
-  major: '전체' | '국내' | '발리';
+  /** 대분류: 전체, 국내, 발리, 즐겨찾기 */
+  major: '전체' | '국내' | '발리' | '즐겨찾기';
   /** 세부 지역 키 (null = 대분류 전체) */
   sub: string | null;
 }

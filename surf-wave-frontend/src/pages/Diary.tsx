@@ -48,11 +48,17 @@ interface CalendarDay {
   spotNames: string[];
 }
 
-/** 보드 타입별 한국어 라벨 + 이모지 */
+/** 보드 타입별 한국어 라벨 + 이모지 — 백엔드 BoardType 8종류 + MIDLENGTH(레거시) */
 const BOARD_CONFIG: Record<string, { label: string; emoji: string; color: string }> = {
   LONGBOARD: { label: '롱보드', emoji: '🏄', color: '#32CD32' },
-  MIDLENGTH: { label: '미드렝스', emoji: '🏄‍♂️', color: '#008CBA' },
+  FUNBOARD: { label: '펀보드', emoji: '🛹', color: '#008CBA' },
+  MIDLENGTH: { label: '미드렝스', emoji: '🏄‍♂️', color: '#6366F1' },
+  FISH: { label: '피쉬', emoji: '🐟', color: '#EC4899' },
   SHORTBOARD: { label: '숏보드', emoji: '🏄‍♀️', color: '#FF8C00' },
+  SUP: { label: 'SUP', emoji: '🚣', color: '#14B8A6' },
+  BODYBOARD: { label: '바디보드', emoji: '🤸', color: '#8B5CF6' },
+  FOIL: { label: '포일', emoji: '🪁', color: '#0EA5E9' },
+  OTHER: { label: '기타', emoji: '🏖️', color: '#6B7280' },
 };
 
 /** 만족도별 이모지 + 색상 + 라벨 */
@@ -426,7 +432,8 @@ export function Diary({ defaultBoardType, onBack }: DiaryProps) {
                     <div
                       key={entry.id}
                       className="bg-card border border-border rounded-2xl overflow-hidden
-                                 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 transition-all"
+                                 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 transition-all cursor-pointer"
+                      onClick={() => openEdit(entry)}
                     >
                       {/* 만족도 색상 상단 바 */}
                       <div className="h-1" style={{ backgroundColor: sat.color }} />
@@ -542,10 +549,27 @@ export function Diary({ defaultBoardType, onBack }: DiaryProps) {
                           </div>
                         )}
 
+                        {/* 첨부 사진 (있으면 표시) — 가로 스크롤 썸네일 */}
+                        {entry.images && entry.images.length > 0 && (
+                          <div className="flex gap-2 mb-2 overflow-x-auto pb-1">
+                            {entry.images
+                              .sort((a, b) => a.sortOrder - b.sortOrder)
+                              .map((img) => (
+                                <img
+                                  key={img.id}
+                                  src={img.imageUrl}
+                                  alt="서핑 사진"
+                                  className="w-20 h-20 rounded-lg object-cover border border-border shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                                  onClick={(e) => { e.stopPropagation(); window.open(img.imageUrl, '_blank'); }}
+                                />
+                              ))}
+                          </div>
+                        )}
+
                         {/* 하단: 수정/삭제 버튼 */}
                         <div className="flex justify-end gap-1 mt-2 pt-2 border-t border-border/50">
                           <button
-                            onClick={() => openEdit(entry)}
+                            onClick={(e) => { e.stopPropagation(); openEdit(entry); }}
                             className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary
                                        transition-colors px-2.5 py-1.5 rounded-lg hover:bg-primary/5"
                           >
@@ -553,7 +577,7 @@ export function Diary({ defaultBoardType, onBack }: DiaryProps) {
                             수정
                           </button>
                           <button
-                            onClick={() => setDeleteTargetId(entry.id)}
+                            onClick={(e) => { e.stopPropagation(); setDeleteTargetId(entry.id); }}
                             className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-destructive
                                        transition-colors px-2.5 py-1.5 rounded-lg hover:bg-destructive/5"
                           >

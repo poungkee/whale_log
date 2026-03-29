@@ -18,6 +18,8 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { S3_CLIENT } from '../../config/aws.config';
 import { v4 as uuidv4 } from 'uuid';
 import { PresignedUrlDto } from './dto/presigned-url.dto';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -118,15 +120,41 @@ export class UploadService {
     return `uploads/${userId}/${timestamp}-${uuid}.${ext}`;
   }
 
+  /**
+   * S3에 파일 업로드 — S3 미설정 시 로컬 파일 시스템에 저장
+   *
+   * 로컬 저장 경로: {프로젝트루트}/uploads/{userId}/{timestamp}-{uuid}.{ext}
+   * 로컬 접근 URL: /uploads/{userId}/{timestamp}-{uuid}.{ext}
+   * → NestJS ServeStaticModule 또는 express.static으로 서빙
+   *
+   * @param key - S3 키 or 로컬 파일 경로 (uploads/userId/filename.ext)
+   * @param body - 파일 바이너리 데이터
+   * @param contentType - MIME 타입
+   * @returns 접근 가능한 URL
+   */
   private async uploadToS3(
     key: string,
     body: Buffer,
     contentType: string,
   ): Promise<string> {
     if (!this.s3Client) {
-      // Return mock URL for development without S3
-      this.logger.warn('S3 not configured, returning mock URL');
-      return `https://mock-s3.local/${key}`;
+      /**
+       * S3 미설정 → 로컬 파일 시스템에 저장 (개발/테스트용)
+       * 파일 경로: {cwd}/uploads/{userId}/{filename}
+       * 반환 URL: /uploads/{userId}/{filename} (NestJS static 서빙)
+       */
+      this.logger.warn('S3 미설정 → 로컬 파일 시스템에 저장');
+      const localPath = path.join(process.cwd(), key);
+      const dir = path.dirname(localPath);
+
+      /** 디렉토리가 없으면 생성 (recursive) */
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      fs.writeFileSync(localPath, body);
+
+      /** 슬래시 통일 (Windows 호환) + 앞에 / 붙여서 URL 형태로 */
+      return `/${key.replace(/\\/g, '/')}`;
     }
 
     const command = new PutObjectCommand({

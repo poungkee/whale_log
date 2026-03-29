@@ -58,31 +58,71 @@ const levels: { level: SurfLevel; emoji: string; title: string; subtitle: string
   },
 ];
 
-/** 보드 타입 카드 데이터 - 각 보드별 이모지, 한국어 이름/설명, 테마 색상 */
+/** 보드 타입 카드 데이터 — 8종류 (백엔드 BoardType enum 통일) */
 const boards: { type: BoardType; emoji: string; title: string; subtitle: string; description: string; color: string }[] = [
   {
     type: 'LONGBOARD',
-    emoji: '🏄‍♀️',
+    emoji: '🏄',
     title: '롱보드',
-    subtitle: '9ft 이상',
-    description: '안정적이고 작은 파도에서도 잘 타요. 여유로운 서핑 스타일.',
+    subtitle: '9ft+',
+    description: '안정적이고 작은 파도에서도 잘 타요. 여유로운 크루징.',
     color: '#32CD32',
   },
   {
-    type: 'MIDLENGTH',
-    emoji: '🏄',
-    title: '미드렝스',
-    subtitle: '6~8ft',
-    description: '롱보드의 안정성과 숏보드의 기동성을 겸비한 만능 보드.',
+    type: 'FUNBOARD',
+    emoji: '🛹',
+    title: '펀보드',
+    subtitle: '7~8ft',
+    description: '롱보드의 안정성 + 숏보드의 기동성. 입문자에게 인기.',
     color: '#008CBA',
   },
   {
-    type: 'SHORTBOARD',
+    type: 'MIDLENGTH',
     emoji: '🏄‍♂️',
+    title: '미드렝스',
+    subtitle: '6.6~8ft',
+    description: '범용적인 중간 사이즈. 다양한 파도에서 활용 가능.',
+    color: '#6366F1',
+  },
+  {
+    type: 'FISH',
+    emoji: '🐟',
+    title: '피쉬',
+    subtitle: '5.2~6.2ft',
+    description: '넓고 짧은 보드. 작은 파도에서 속도가 잘 나요.',
+    color: '#EC4899',
+  },
+  {
+    type: 'SHORTBOARD',
+    emoji: '🏄‍♀️',
     title: '숏보드',
-    subtitle: '6ft 이하',
-    description: '날카로운 턴과 에어가 가능해요. 파워풀한 파도에서 진가 발휘.',
+    subtitle: '~6.4ft',
+    description: '날카로운 턴과 에어. 파워풀한 파도에서 진가 발휘.',
     color: '#FF8C00',
+  },
+  {
+    type: 'SUP',
+    emoji: '🚣',
+    title: 'SUP',
+    subtitle: '스탠드업 패들',
+    description: '패들로 서서 타는 보드. 평수에서도 즐길 수 있어요.',
+    color: '#14B8A6',
+  },
+  {
+    type: 'BODYBOARD',
+    emoji: '🤸',
+    title: '바디보드',
+    subtitle: '엎드려 타기',
+    description: '엎드려서 파도를 타요. 입문이 쉽고 재미있어요.',
+    color: '#8B5CF6',
+  },
+  {
+    type: 'FOIL',
+    emoji: '🪁',
+    title: '포일',
+    subtitle: '수중익 보드',
+    description: '수중익으로 물 위를 나는 듯이. 상급자용.',
+    color: '#0EA5E9',
   },
 ];
 

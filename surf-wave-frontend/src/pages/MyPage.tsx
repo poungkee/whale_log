@@ -106,24 +106,36 @@ const LEVEL_COLORS: Record<SurfLevel, string> = {
 /** 전체 레벨 목록 - 레벨 변경 드롭다운에 사용 */
 const ALL_LEVELS: SurfLevel[] = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT'];
 
-/** 보드 타입별 한국어 라벨 */
+/** 보드 타입별 한국어 라벨 — 백엔드 BoardType 8종류 + MIDLENGTH(레거시) + UNSET */
 const BOARD_LABELS: Record<BoardType, string> = {
   LONGBOARD: '롱보드',
+  FUNBOARD: '펀보드',
   MIDLENGTH: '미드렝스',
+  FISH: '피쉬',
   SHORTBOARD: '숏보드',
+  SUP: 'SUP',
+  BODYBOARD: '바디보드',
+  FOIL: '포일',
+  OTHER: '기타',
   UNSET: '미설정',
 };
 
 /** 보드 타입별 테마 색상 */
 const BOARD_COLORS: Record<BoardType, string> = {
   LONGBOARD: '#32CD32',
-  MIDLENGTH: '#008CBA',
+  FUNBOARD: '#008CBA',
+  MIDLENGTH: '#6366F1',
+  FISH: '#EC4899',
   SHORTBOARD: '#FF8C00',
+  SUP: '#14B8A6',
+  BODYBOARD: '#8B5CF6',
+  FOIL: '#0EA5E9',
+  OTHER: '#6B7280',
   UNSET: '#888888',
 };
 
-/** 선택 가능한 보드 타입 목록 (UNSET 제외) */
-const ALL_BOARDS: BoardType[] = ['LONGBOARD', 'MIDLENGTH', 'SHORTBOARD'];
+/** 선택 가능한 보드 타입 목록 (UNSET 제외, 프로필 변경 드롭다운에 표시) */
+const ALL_BOARDS: BoardType[] = ['LONGBOARD', 'FUNBOARD', 'MIDLENGTH', 'FISH', 'SHORTBOARD', 'SUP', 'BODYBOARD', 'FOIL', 'OTHER'];
 
 export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange, onBoardTypeChange, onNotificationToggle, onNavigateToDiary, onNavigateToPoseTraining }: MyPageProps) {
   /** 레벨 변경 드롭다운 열림/닫힘 상태 */
@@ -152,7 +164,8 @@ export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange, onBoardTy
       }
 
       try {
-        const res = await fetch('/api/v1/diary?limit=200', {
+        /** limit 최대 100 (백엔드 PaginationDto @Max(100) 제한) */
+        const res = await fetch('/api/v1/diary?limit=100', {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         if (!res.ok) {

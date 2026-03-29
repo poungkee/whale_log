@@ -16,8 +16,15 @@
  */
 
 import { useState, useEffect } from 'react';
-import { X, Loader2, MapPin, Search, Calendar, Clock, Eye, EyeOff, Sunrise } from 'lucide-react';
+import { X, Loader2, MapPin, Search, Calendar, Clock, Eye, EyeOff, Sunrise, ImagePlus, Trash2 } from 'lucide-react';
 import type { BoardType } from '../types';
+
+/**
+ * 다이어리 보드 타입 — 백엔드 BoardType enum과 1:1 대응
+ * 사용자 프로필의 UserBoardType(LONGBOARD/MIDLENGTH/SHORTBOARD/UNSET)과 별개
+ * 다이어리에서는 8종류 보드를 선택할 수 있음
+ */
+type DiaryBoardType = 'SHORTBOARD' | 'LONGBOARD' | 'FUNBOARD' | 'FISH' | 'SUP' | 'BODYBOARD' | 'FOIL' | 'OTHER';
 
 /** 스팟 선택 목록용 간략 타입 */
 interface SpotOption {
@@ -59,11 +66,19 @@ interface DiaryFormModalProps {
   onSaved: () => void;
 }
 
-/** 보드 타입별 설정 (이모지 + 라벨 + 색상 + 설명) */
+/**
+ * 보드 타입별 설정 (이모지 + 라벨 + 색상 + 설명)
+ * 백엔드 BoardType enum 8종류와 1:1 대응
+ */
 const BOARD_CONFIG: { type: BoardType; emoji: string; label: string; color: string; desc: string }[] = [
-  { type: 'LONGBOARD', emoji: '🏄', label: '롱보드', color: '#32CD32', desc: '안정적 라이딩' },
-  { type: 'MIDLENGTH', emoji: '🏄‍♂️', label: '미드렝스', color: '#008CBA', desc: '올라운드' },
-  { type: 'SHORTBOARD', emoji: '🏄‍♀️', label: '숏보드', color: '#FF8C00', desc: '기동성 최고' },
+  { type: 'LONGBOARD', emoji: '🏄', label: '롱보드', color: '#32CD32', desc: '9ft+ 안정적' },
+  { type: 'FUNBOARD', emoji: '🛹', label: '펀보드', color: '#008CBA', desc: '7~8ft 올라운드' },
+  { type: 'MIDLENGTH', emoji: '🏄‍♂️', label: '미드렝스', color: '#6366F1', desc: '6.6~8ft 범용' },
+  { type: 'FISH', emoji: '🐟', label: '피쉬', color: '#EC4899', desc: '5.2~6.2ft 작은파도' },
+  { type: 'SHORTBOARD', emoji: '🏄‍♀️', label: '숏보드', color: '#FF8C00', desc: '~6.4ft 기동성' },
+  { type: 'SUP', emoji: '🚣', label: 'SUP', color: '#14B8A6', desc: '패들보드' },
+  { type: 'BODYBOARD', emoji: '🤸', label: '바디보드', color: '#8B5CF6', desc: '엎드려 타기' },
+  { type: 'FOIL', emoji: '🪁', label: '포일', color: '#0EA5E9', desc: '수중익 보드' },
 ];
 
 /** 만족도별 설정 (이모지 + 라벨 + 색상) */
@@ -127,6 +142,31 @@ export function DiaryFormModal({ editEntry, defaultBoardType, onClose, onSaved }
     editEntry?.visibility || 'PRIVATE'
   );
 
+  /**
+   * 이미지 상태 — 미리보기용 로컬 URL + 업로드 완료 후 서버 URL
+   * - localUrl: URL.createObjectURL()로 생성한 미리보기용 (브라우저 메모리)
+   * - serverUrl: POST /upload/images 응답으로 받은 서버 저장 URL (null이면 아직 업로드 안 됨)
+   * - file: 업로드할 원본 File 객체
+   */
+  interface ImageItem {
+    localUrl: string;
+    serverUrl: string | null;
+    file: File;
+  }
+  const [images, setImages] = useState<ImageItem[]>(() => {
+    /** 수정 모드일 때 기존 이미지를 미리보기에 표시 */
+    if (editEntry?.images?.length) {
+      return editEntry.images.map(img => ({
+        localUrl: img.imageUrl,
+        serverUrl: img.imageUrl,
+        file: null as unknown as File, // 기존 이미지는 File 객체 없음
+      }));
+    }
+    return [];
+  });
+  /** 이미지 업로드 진행 중 여부 */
+  const [uploading, setUploading] = useState(false);
+
   /* ===== UI 상태 ===== */
   /** 스팟 목록 (API에서 가져옴) */
   const [spots, setSpots] = useState<SpotOption[]>([]);
@@ -176,6 +216,90 @@ export function DiaryFormModal({ editEntry, defaultBoardType, onClose, onSaved }
   const selectedSpot = spots.find(s => s.id === spotId);
 
   /**
+   * 사진/영상 선택 핸들러
+   * - input[type=file]에서 선택한 파일을 미리보기 목록에 추가
+   * - 최대 5장 제한 (백엔드 FilesInterceptor max 5)
+   * - 허용: image/jpeg, image/png, image/webp (백엔드 MIME 체크와 동일)
+   */
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    /** 최대 5장 초과 체크 */
+    const remaining = 5 - images.length;
+    if (remaining <= 0) {
+      setError('사진은 최대 5장까지 첨부할 수 있어요');
+      return;
+    }
+    const toAdd = files.slice(0, remaining);
+
+    /** 파일 → 미리보기 아이템 변환 */
+    const newItems: ImageItem[] = toAdd.map(file => ({
+      localUrl: URL.createObjectURL(file),
+      serverUrl: null, // 아직 업로드 안 됨
+      file,
+    }));
+    setImages(prev => [...prev, ...newItems]);
+
+    /** input value 초기화 — 같은 파일 재선택 가능하도록 */
+    e.target.value = '';
+  };
+
+  /**
+   * 미리보기 이미지 삭제
+   * - localUrl이 blob URL이면 메모리 해제 (URL.revokeObjectURL)
+   */
+  const removeImage = (index: number) => {
+    setImages(prev => {
+      const removed = prev[index];
+      /** blob URL 메모리 해제 */
+      if (removed.localUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(removed.localUrl);
+      }
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  /**
+   * 이미지를 서버에 업로드
+   * POST /api/v1/upload/images (FormData, 최대 5개)
+   *
+   * @returns 업로드된 이미지 URL 배열 (이미 업로드된 건 기존 serverUrl 사용)
+   */
+  const uploadImages = async (token: string): Promise<string[]> => {
+    /** 업로드할 새 이미지와 이미 업로드된 이미지 분리 */
+    const needUpload = images.filter(img => !img.serverUrl);
+    const alreadyUploaded = images.filter(img => img.serverUrl).map(img => img.serverUrl!);
+
+    if (needUpload.length === 0) return alreadyUploaded;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      /** 백엔드 FilesInterceptor 필드명: 'files' */
+      needUpload.forEach(img => formData.append('files', img.file));
+
+      const res = await fetch('/api/v1/upload/images', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.message || '사진 업로드에 실패했어요');
+      }
+
+      const data = await res.json();
+      /** 백엔드 응답: { urls: string[] } */
+      const uploadedUrls: string[] = data.urls || [];
+      return [...alreadyUploaded, ...uploadedUrls];
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  /**
    * 폼 제출 - 다이어리 생성 또는 수정
    * POST /api/v1/diary (신규) 또는 PATCH /api/v1/diary/:id (수정)
    */
@@ -200,14 +324,24 @@ export function DiaryFormModal({ editEntry, defaultBoardType, onClose, onSaved }
     setError(null);
 
     try {
+      /**
+       * 1단계: 새 이미지가 있으면 먼저 서버에 업로드
+       * POST /api/v1/upload/images → URL 배열 반환
+       */
+      let imageUrls: string[] = [];
+      if (images.length > 0) {
+        imageUrls = await uploadImages(token);
+      }
+
       const isEdit = !!editEntry;
       const url = isEdit ? `/api/v1/diary/${editEntry.id}` : '/api/v1/diary';
       const method = isEdit ? 'PATCH' : 'POST';
 
       /**
-       * 요청 body 구성
+       * 2단계: 다이어리 생성/수정 요청
+       * - imageUrls: 업로드된 이미지 URL 배열 포함
        * - 수정 시 spotId/surfDate/surfTime은 변경 불가 (백엔드 DTO 제한)
-       * - visibility는 수정 가능 (나중에 공개↔비공개 전환 허용)
+       * - visibility는 수정 가능
        */
       const body: Record<string, unknown> = {
         boardType,
@@ -215,6 +349,8 @@ export function DiaryFormModal({ editEntry, defaultBoardType, onClose, onSaved }
         satisfaction,
         memo: memo.trim() || undefined,
         visibility,
+        /** 이미지 URL 배열 — 빈 배열이면 이미지 없음 (수정 시 기존 이미지 삭제됨) */
+        imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
       };
 
       /** 신규 작성 시에만 spotId, surfDate, surfTime 포함 */
@@ -435,12 +571,12 @@ export function DiaryFormModal({ editEntry, defaultBoardType, onClose, onSaved }
             <label className="flex items-center gap-1.5 text-sm font-semibold mb-2">
               🏄 보드 타입
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-1.5">
               {BOARD_CONFIG.map(b => (
                 <button
                   key={b.type}
                   onClick={() => setBoardType(b.type)}
-                  className={`py-3 px-2 rounded-xl text-center border-2 transition-all
+                  className={`py-2.5 px-1 rounded-xl text-center border-2 transition-all
                     ${boardType === b.type
                       ? 'scale-[1.02] shadow-md'
                       : 'border-border hover:border-primary/30 opacity-60 hover:opacity-100'
@@ -450,11 +586,11 @@ export function DiaryFormModal({ editEntry, defaultBoardType, onClose, onSaved }
                     backgroundColor: `${b.color}10`,
                   } : {}}
                 >
-                  <span className="text-2xl block mb-1">{b.emoji}</span>
-                  <span className="text-xs font-bold block" style={boardType === b.type ? { color: b.color } : {}}>
+                  <span className="text-lg block mb-0.5">{b.emoji}</span>
+                  <span className="text-[10px] font-bold block" style={boardType === b.type ? { color: b.color } : {}}>
                     {b.label}
                   </span>
-                  <span className="text-[9px] text-muted-foreground block mt-0.5">{b.desc}</span>
+                  <span className="text-[8px] text-muted-foreground block mt-0.5">{b.desc}</span>
                 </button>
               ))}
             </div>
@@ -534,7 +670,70 @@ export function DiaryFormModal({ editEntry, defaultBoardType, onClose, onSaved }
             </div>
           </div>
 
-          {/* ===== 6. 메모 ===== */}
+          {/* ===== 6. 사진 첨부 (최대 5장) ===== */}
+          <div>
+            <label className="flex items-center gap-1.5 text-sm font-semibold mb-2">
+              📷 사진
+              <span className="text-xs text-muted-foreground font-normal">(선택, 최대 5장)</span>
+            </label>
+
+            {/* 이미지 미리보기 그리드 + 추가 버튼 */}
+            <div className="grid grid-cols-4 gap-2">
+              {/* 기존/선택된 이미지 미리보기 */}
+              {images.map((img, idx) => (
+                <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-border group">
+                  <img
+                    src={img.localUrl}
+                    alt={`사진 ${idx + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  {/* 삭제 버튼 — 우상단 */}
+                  <button
+                    type="button"
+                    onClick={() => removeImage(idx)}
+                    className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center
+                               opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 className="w-3 h-3 text-white" />
+                  </button>
+                  {/* 업로드 대기 표시 — serverUrl 없으면 아직 업로드 안 됨 */}
+                  {!img.serverUrl && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-[9px] text-white text-center py-0.5">
+                      저장 시 업로드
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* 사진 추가 버튼 — 5장 미만일 때만 표시 */}
+              {images.length < 5 && (
+                <label className="aspect-square rounded-xl border-2 border-dashed border-border hover:border-primary/50
+                                  flex flex-col items-center justify-center gap-1 cursor-pointer
+                                  hover:bg-secondary/50 transition-all">
+                  <ImagePlus className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-[10px] text-muted-foreground">{images.length}/5</span>
+                  {/* 숨겨진 file input — 클릭 시 갤러리/카메라 선택 */}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                    onChange={handleImageSelect}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+
+            {/* 업로드 진행 중 표시 */}
+            {uploading && (
+              <div className="flex items-center gap-2 mt-2 text-sm text-primary">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                사진 업로드 중...
+              </div>
+            )}
+          </div>
+
+          {/* ===== 7. 메모 ===== */}
           <div>
             <label className="flex items-center gap-1.5 text-sm font-semibold mb-2">
               📝 메모
@@ -617,7 +816,7 @@ export function DiaryFormModal({ editEntry, defaultBoardType, onClose, onSaved }
           {/* 저장 버튼 - 그라데이션 */}
           <button
             onClick={handleSubmit}
-            disabled={saving}
+            disabled={saving || uploading}
             className="w-full py-3.5 bg-gradient-to-r from-primary to-blue-600 text-white
                        rounded-2xl font-bold text-base shadow-lg shadow-primary/25
                        hover:shadow-primary/40 hover:scale-[1.01]

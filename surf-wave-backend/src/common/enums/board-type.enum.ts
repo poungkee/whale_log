@@ -8,6 +8,7 @@ export enum BoardType {
   SHORTBOARD = 'SHORTBOARD',   // 숏보드 - 기동성이 좋은 짧은 보드
   LONGBOARD = 'LONGBOARD',     // 롱보드 - 안정적이고 긴 보드
   FUNBOARD = 'FUNBOARD',       // 펀보드 - 숏보드와 롱보드의 중간 크기
+  MIDLENGTH = 'MIDLENGTH',     // 미드렝스 - 중간 크기 보드 (6.6~8ft)
   FISH = 'FISH',               // 피쉬보드 - 넓고 짧은 물고기 모양 보드
   SUP = 'SUP',                 // SUP (Stand Up Paddle) - 스탠드업 패들보드
   BODYBOARD = 'BODYBOARD',     // 바디보드 - 엎드려서 타는 보드

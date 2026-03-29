@@ -63,11 +63,17 @@ interface PublicDiaryEntry {
   spot: { id: string; name: string; region: string } | null;
 }
 
-/** 보드 타입별 이모지 + 한국어 라벨 */
+/** 보드 타입별 이모지 + 한국어 라벨 — 백엔드 BoardType 8종류 + MIDLENGTH(레거시) */
 const DIARY_BOARD_CONFIG: Record<string, { emoji: string; label: string; color: string }> = {
   LONGBOARD: { emoji: '🏄', label: '롱보드', color: '#32CD32' },
-  MIDLENGTH: { emoji: '🏄‍♂️', label: '미드렝스', color: '#008CBA' },
+  FUNBOARD: { emoji: '🛹', label: '펀보드', color: '#008CBA' },
+  MIDLENGTH: { emoji: '🏄‍♂️', label: '미드렝스', color: '#6366F1' },
+  FISH: { emoji: '🐟', label: '피쉬', color: '#EC4899' },
   SHORTBOARD: { emoji: '🏄‍♀️', label: '숏보드', color: '#FF8C00' },
+  SUP: { emoji: '🚣', label: 'SUP', color: '#14B8A6' },
+  BODYBOARD: { emoji: '🤸', label: '바디보드', color: '#8B5CF6' },
+  FOIL: { emoji: '🪁', label: '포일', color: '#0EA5E9' },
+  OTHER: { emoji: '🏖️', label: '기타', color: '#6B7280' },
 };
 
 /** 만족도별 이모지 + 색상 */

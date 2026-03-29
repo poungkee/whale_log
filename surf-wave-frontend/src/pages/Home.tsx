@@ -47,11 +47,12 @@ const SEARCH_ALIASES: Record<string, string[]> = {
   '체닝안': ['lembongan'],
 };
 
-/** 대분류 탭 정의 */
-const MAJOR_TABS: { key: '전체' | '국내' | '발리'; label: string }[] = [
+/** 대분류 탭 정의 — 즐겨찾기 탭 포함 (기존 하단 즐겨찾기 탭을 홈으로 통합) */
+const MAJOR_TABS: { key: '전체' | '국내' | '발리' | '즐겨찾기'; label: string }[] = [
   { key: '전체', label: '전체' },
   { key: '국내', label: '국내' },
   { key: '발리', label: '발리' },
+  { key: '즐겨찾기', label: '⭐ 즐겨찾기' },
 ];
 
 export function Home({ surfLevel, boardType, favoriteIds, onToggleFavorite }: HomeProps) {
@@ -123,8 +124,11 @@ export function Home({ surfLevel, boardType, favoriteIds, onToggleFavorite }: Ho
   const filteredSpots = useMemo(() => {
     let result = spots;
 
-    /** 지역 필터 적용 */
-    if (regionFilter.major !== '전체') {
+    /** 즐겨찾기 필터 — favoriteIds에 포함된 스팟만 표시 */
+    if (regionFilter.major === '즐겨찾기') {
+      result = result.filter(s => favoriteIds?.has(s.spot.id) ?? false);
+    } else if (regionFilter.major !== '전체') {
+      /** 지역 필터 적용 */
       result = result.filter(s => matchRegionFilter(s.spot.region, regionFilter));
     }
 
@@ -151,8 +155,8 @@ export function Home({ surfLevel, boardType, favoriteIds, onToggleFavorite }: Ho
     return result;
   }, [spots, regionFilter, searchQuery]);
 
-  /** 대분류 탭 변경 핸들러 */
-  const handleMajorTabChange = (major: '전체' | '국내' | '발리') => {
+  /** 대분류 탭 변경 핸들러 (즐겨찾기 포함) */
+  const handleMajorTabChange = (major: '전체' | '국내' | '발리' | '즐겨찾기') => {
     setRegionFilter({ major, sub: null });
   };
 

@@ -12,7 +12,7 @@
  * 비활성 탭: muted 색상
  */
 
-import { Home, Compass, Star, User } from 'lucide-react';
+import { Home, Compass, BookOpen, User } from 'lucide-react';
 import type { MainTab } from '../types';
 
 interface BottomNavProps {
@@ -26,7 +26,7 @@ interface BottomNavProps {
 const navItems: { id: MainTab; label: string; icon: typeof Home }[] = [
   { id: 'home', label: '홈', icon: Home },
   { id: 'explore', label: '탐색', icon: Compass },
-  { id: 'favorites', label: '즐겨찾기', icon: Star },
+  { id: 'guide', label: '가이드', icon: BookOpen },
   { id: 'profile', label: '내정보', icon: User },
 ];
 

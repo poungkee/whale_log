@@ -19,6 +19,11 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
+      /** 업로드된 이미지 로컬 서빙 — 백엔드 정적 파일 프록시 */
+      '/uploads': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
     },
   },
   /** 프로덕션 빌드 보안 설정 */

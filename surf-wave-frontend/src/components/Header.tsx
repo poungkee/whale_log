@@ -56,6 +56,9 @@ export function matchRegionFilter(spotRegion: string, filter: RegionFilter): boo
   /** 전체 선택 → 모든 스팟 표시 */
   if (major === '전체') return true;
 
+  /** 즐겨찾기 필터는 Home.tsx에서 별도 처리 (favoriteIds 필요) → 여기선 전부 통과 */
+  if (major === '즐겨찾기') return true;
+
   /** 국내 필터 */
   if (major === '국내') {
     if (!sub) {
