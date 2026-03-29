@@ -112,7 +112,10 @@ export function Header({
       <div className="max-w-md mx-auto px-4 py-3">
         {/* 첫 줄: 타이틀 + 버튼 */}
         <div className="flex justify-between items-center">
-          <h1 className="text-lg font-bold">서핑 파도</h1>
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="Whale Log" className="w-7 h-7 rounded-full" />
+            <h1 className="text-lg font-bold">Whale Log</h1>
+          </div>
           <div className="flex items-center gap-1">
             {/* 업데이트 시각 */}
             {lastUpdated && (

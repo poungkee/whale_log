@@ -45,6 +45,14 @@ export class SurfDiary extends BaseEntity {
   })
   boardType: BoardType;
 
+  /**
+   * 그날 사용한 보드 길이 (피트, 소수점 1자리)
+   * 예: 6.2, 9.0, 5.8
+   * null이면 미입력 (선택사항)
+   */
+  @Column({ name: 'board_size_ft', type: 'decimal', precision: 3, scale: 1, nullable: true })
+  boardSizeFt: number | null;
+
   @Column({ name: 'duration_minutes', type: 'int' })
   durationMinutes: number;
 

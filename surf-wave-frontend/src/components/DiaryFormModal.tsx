@@ -40,6 +40,8 @@ export interface DiaryFullEntry {
   /** 서핑 시작 시간 (HH:mm, 예: "10:00") - null이면 미입력 */
   surfTime: string | null;
   boardType: BoardType;
+  /** 보드 길이 (피트, 소수점 1자리) — null이면 미입력 */
+  boardSizeFt: number | null;
   durationMinutes: number;
   satisfaction: number;
   memo: string | null;
@@ -131,6 +133,8 @@ export function DiaryFormModal({ editEntry, defaultBoardType, onClose, onSaved }
   const [boardType, setBoardType] = useState<BoardType>(
     editEntry?.boardType || (defaultBoardType && defaultBoardType !== 'UNSET' ? defaultBoardType : 'LONGBOARD')
   );
+  /** 보드 길이 (피트) — 빈 문자열이면 미입력, 숫자면 소수점 1자리 */
+  const [boardSizeFt, setBoardSizeFt] = useState(editEntry?.boardSizeFt?.toString() || '');
   /** 서핑 시간 (분) */
   const [durationMinutes, setDurationMinutes] = useState(editEntry?.durationMinutes || 60);
   /** 만족도 (1~5) */
@@ -343,8 +347,11 @@ export function DiaryFormModal({ editEntry, defaultBoardType, onClose, onSaved }
        * - 수정 시 spotId/surfDate/surfTime은 변경 불가 (백엔드 DTO 제한)
        * - visibility는 수정 가능
        */
+      /** boardSizeFt: 빈 문자열이면 undefined (미입력), 숫자면 float 변환 */
+      const parsedFt = boardSizeFt.trim() ? parseFloat(boardSizeFt) : undefined;
       const body: Record<string, unknown> = {
         boardType,
+        boardSizeFt: parsedFt && !isNaN(parsedFt) ? parsedFt : undefined,
         durationMinutes,
         satisfaction,
         memo: memo.trim() || undefined,
@@ -594,6 +601,32 @@ export function DiaryFormModal({ editEntry, defaultBoardType, onClose, onSaved }
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* ===== 3.5. 보드 길이 (피트) — 선택사항 ===== */}
+          <div>
+            <label className="flex items-center gap-1.5 text-sm font-semibold mb-2">
+              📏 보드 길이
+              <span className="text-xs text-muted-foreground font-normal">(선택, 피트)</span>
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                value={boardSizeFt}
+                onChange={(e) => setBoardSizeFt(e.target.value)}
+                placeholder="예: 6.2"
+                min={3.0}
+                max={12.0}
+                step={0.1}
+                className="flex-1 px-4 py-2.5 bg-secondary border border-border rounded-xl text-sm text-center font-medium
+                           focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all
+                           placeholder:text-muted-foreground/40"
+              />
+              <span className="text-sm text-muted-foreground font-medium">ft</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1 ml-1">
+              모르면 비워두세요 (3.0 ~ 12.0 피트)
+            </p>
           </div>
 
           {/* ===== 4. 서핑 시간 (분) ===== */}

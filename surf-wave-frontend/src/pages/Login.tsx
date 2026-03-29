@@ -245,13 +245,11 @@ export function Login({ onBack, onAuthSuccess, onGoRegister }: LoginProps) {
       </header>
 
       <div className="max-w-md mx-auto px-6 py-4 page-transition">
-        {/* 로고 + 환영 메시지 */}
+        {/* Whale Log 로고 + 환영 메시지 */}
         <div className="text-center mb-10">
-          <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center shadow-xl">
-            <span className="text-4xl">🏄</span>
-          </div>
+          <img src="/logo.png" alt="Whale Log" className="w-20 h-20 mx-auto mb-4 rounded-full shadow-xl shadow-primary/20" />
           <h1 className="text-3xl font-bold mb-2">환영합니다!</h1>
-          <p className="text-muted-foreground">계정에 로그인하세요</p>
+          <p className="text-muted-foreground">Whale Log에 로그인하세요</p>
         </div>
 
         {/* 로그인 폼 */}

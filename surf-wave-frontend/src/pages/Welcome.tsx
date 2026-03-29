@@ -1,17 +1,12 @@
 /**
  * @file Welcome.tsx
- * @description 시작 화면 - 앱 소개 + 로그인/회원가입 진입점
+ * @description 시작 화면 — Whale Log 앱 소개 + 로그인/회원가입 진입점
  *
- * 앱을 처음 실행하거나 로그아웃 후 표시되는 화면입니다.
- * 주요 기능 소개 (실시간 파도 예보, 서퍼 커뮤니티, 스팟 탐색) +
- * 로그인/회원가입 버튼을 제공합니다.
- *
- * 화면 전환 흐름:
- * - 로그인 버튼 → Login 화면 (App.tsx에서 screen='login'으로 전환)
- * - 회원가입 버튼 → Register 화면 (App.tsx에서 screen='register'로 전환)
+ * 로고 + 슬로건 + 주요 기능 3개 소개 + CTA 버튼
+ * 밝은 바다색 그라데이션 배경 (로고 컬러와 통일)
  */
 
-import { TrendingUp, Users, MapPin } from 'lucide-react';
+import { TrendingUp, BookOpen, MapPin } from 'lucide-react';
 
 interface WelcomeProps {
   /** 로그인 버튼 클릭 → App.tsx에서 setScreen('login') 호출 */
@@ -22,79 +17,87 @@ interface WelcomeProps {
 
 export function Welcome({ onLoginClick, onRegisterClick }: WelcomeProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0D1B2A] via-[#1A2332] to-[#0D1B2A] flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-[#0F2535] via-[#1A3345] to-[#0F2535] flex flex-col relative overflow-hidden">
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
-        {/* Logo & Title */}
+        {/* 로고 + 앱 이름 + 슬로건 */}
         <div className="text-center mb-12 page-transition">
-          <div className="w-32 h-32 mx-auto mb-6 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center shadow-2xl">
-            <span className="text-6xl">🏄</span>
-          </div>
-          <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            서핑 파도
+          {/* Whale Log 로고 이미지 */}
+          <img
+            src="/logo.png"
+            alt="Whale Log"
+            className="w-28 h-28 mx-auto mb-5 rounded-full shadow-2xl shadow-primary/20"
+          />
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-[#3CC4DB] to-[#2AAFC6] bg-clip-text text-transparent">
+            Whale Log
           </h1>
-          <p className="text-lg text-muted-foreground">
-            완벽한 파도를 찾아서
+          <p className="text-base text-[#8BB5C9]">
+            나만의 서핑 코치
           </p>
         </div>
 
-        {/* Features */}
-        <div className="w-full max-w-md space-y-4 mb-12">
-          <div className="flex items-center gap-4 bg-card/50 backdrop-blur-sm rounded-lg p-4 border border-border/50">
-            <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center shrink-0">
-              <TrendingUp className="w-6 h-6 text-primary" />
+        {/* 주요 기능 소개 3가지 */}
+        <div className="w-full max-w-md space-y-3 mb-12">
+          {/* 1. 맞춤 파도 추천 */}
+          <div className="flex items-center gap-4 bg-[#1A3345]/80 backdrop-blur-sm rounded-xl p-4 border border-[#3CC4DB]/10">
+            <div className="w-11 h-11 bg-[#3CC4DB]/15 rounded-full flex items-center justify-center shrink-0">
+              <TrendingUp className="w-5 h-5 text-[#3CC4DB]" />
             </div>
             <div>
-              <h3 className="font-semibold mb-1">실시간 파도 예보</h3>
-              <p className="text-sm text-muted-foreground">시간대별 상세한 파도 정보</p>
+              <h3 className="font-semibold text-sm mb-0.5 text-[#E8F4F8]">나에게 맞는 파도 추천</h3>
+              <p className="text-xs text-[#8BB5C9]">레벨과 보드에 딱 맞는 스팟을 찾아드려요</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 bg-card/50 backdrop-blur-sm rounded-lg p-4 border border-border/50">
-            <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center shrink-0">
-              <Users className="w-6 h-6 text-accent" />
+          {/* 2. 서핑 가이드 */}
+          <div className="flex items-center gap-4 bg-[#1A3345]/80 backdrop-blur-sm rounded-xl p-4 border border-[#FF8C42]/10">
+            <div className="w-11 h-11 bg-[#FF8C42]/15 rounded-full flex items-center justify-center shrink-0">
+              <BookOpen className="w-5 h-5 text-[#FF8C42]" />
             </div>
             <div>
-              <h3 className="font-semibold mb-1">서퍼 커뮤니티</h3>
-              <p className="text-sm text-muted-foreground">생생한 현장 정보 공유</p>
+              <h3 className="font-semibold text-sm mb-0.5 text-[#E8F4F8]">초보 서핑 가이드</h3>
+              <p className="text-xs text-[#8BB5C9]">바다 규칙부터 자세 연습까지</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 bg-card/50 backdrop-blur-sm rounded-lg p-4 border border-border/50">
-            <div className="w-12 h-12 bg-[#32CD32]/20 rounded-full flex items-center justify-center shrink-0">
-              <MapPin className="w-6 h-6 text-[#32CD32]" />
+          {/* 3. 스팟 탐색 + 기록 */}
+          <div className="flex items-center gap-4 bg-[#1A3345]/80 backdrop-blur-sm rounded-xl p-4 border border-[#34C759]/10">
+            <div className="w-11 h-11 bg-[#34C759]/15 rounded-full flex items-center justify-center shrink-0">
+              <MapPin className="w-5 h-5 text-[#34C759]" />
             </div>
             <div>
-              <h3 className="font-semibold mb-1">스팟 탐색</h3>
-              <p className="text-sm text-muted-foreground">전국 서핑 스팟 정보</p>
+              <h3 className="font-semibold text-sm mb-0.5 text-[#E8F4F8]">서핑 기록 & 성장</h3>
+              <p className="text-xs text-[#8BB5C9]">다이어리로 내 서핑 여정을 기록하세요</p>
             </div>
           </div>
         </div>
 
-        {/* CTA Buttons */}
+        {/* CTA 버튼 */}
         <div className="w-full max-w-md space-y-3">
           <button
             onClick={onLoginClick}
-            className="w-full py-4 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl active:scale-[0.98]"
+            className="w-full py-4 bg-gradient-to-r from-[#2AAFC6] to-[#3CC4DB] text-white rounded-xl font-semibold
+                       hover:shadow-lg hover:shadow-[#2AAFC6]/30 transition-all active:scale-[0.98]"
           >
             로그인
           </button>
           <button
             onClick={onRegisterClick}
-            className="w-full py-4 bg-transparent border-2 border-primary text-primary rounded-lg font-semibold hover:bg-primary/10 transition-all active:scale-[0.98]"
+            className="w-full py-4 bg-transparent border-2 border-[#3CC4DB]/40 text-[#3CC4DB] rounded-xl font-semibold
+                       hover:bg-[#3CC4DB]/10 transition-all active:scale-[0.98]"
           >
             회원가입
           </button>
         </div>
 
         {/* Footer */}
-        <div className="mt-12 text-center text-sm text-muted-foreground">
-          <p>&copy; 2026 서핑 파도. All rights reserved.</p>
+        <div className="mt-12 text-center text-sm text-[#6B8A99]">
+          <p>&copy; 2026 Whale Log. All rights reserved.</p>
         </div>
       </div>
 
-      {/* Decorative waves */}
-      <div className="absolute bottom-0 left-0 right-0 opacity-10 pointer-events-none">
-        <svg viewBox="0 0 1440 120" className="w-full">
+      {/* 장식 파도 SVG */}
+      <div className="absolute bottom-0 left-0 right-0 opacity-5 pointer-events-none">
+        <svg viewBox="0 0 1440 120" className="w-full text-[#3CC4DB]">
           <path
             fill="currentColor"
             d="M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,58.7C960,64,1056,64,1152,58.7C1248,53,1344,43,1392,37.3L1440,32L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z"

@@ -13,7 +13,7 @@
  * - notificationsEnabled: 푸시 알림 수신 여부
  */
 
-import { IsString, IsOptional, IsBoolean, IsEnum, MinLength, MaxLength } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsEnum, IsNumber, Min, Max, MinLength, MaxLength } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Difficulty } from '../../../common/enums/difficulty.enum';
 import { UserBoardType } from '../../../common/enums/user-board-type.enum';
@@ -72,8 +72,19 @@ export class UpdateProfileDto {
     example: UserBoardType.LONGBOARD,
   })
   @IsOptional()
-  @IsEnum(UserBoardType, { message: '보드 타입은 LONGBOARD, MIDLENGTH, SHORTBOARD, UNSET 중 하나여야 합니다' })
+  @IsEnum(UserBoardType, { message: '유효한 보드 타입을 선택해주세요' })
   boardType?: UserBoardType;
+
+  /**
+   * 보드 길이 (피트, 소수점 1자리)
+   * 범위: 3.0 ~ 12.0 ft, null이면 미입력
+   */
+  @ApiPropertyOptional({ description: '보드 길이 (피트)', example: 6.2 })
+  @IsOptional()
+  @IsNumber({}, { message: '보드 길이는 숫자여야 합니다' })
+  @Min(3.0, { message: '보드 길이는 3.0ft 이상이어야 합니다' })
+  @Max(12.0, { message: '보드 길이는 12.0ft 이하여야 합니다' })
+  boardSizeFt?: number;
 
   /** 알림 수신 여부 변경 - false로 설정하면 푸시 알림을 받지 않음 */
   @ApiPropertyOptional({ description: '푸시 알림 수신 여부', example: true })

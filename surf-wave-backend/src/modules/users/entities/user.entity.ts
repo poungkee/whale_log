@@ -69,6 +69,15 @@ export class User extends BaseEntity {
   })
   boardType: UserBoardType;
 
+  /**
+   * 보드 길이 (피트, 소수점 1자리)
+   * 예: 6.2, 9.0, 5.8
+   * null이면 미입력 (초보자는 모를 수 있음)
+   * 범위: 3.0 ~ 12.0 ft
+   */
+  @Column({ name: 'board_size_ft', type: 'decimal', precision: 3, scale: 1, nullable: true })
+  boardSizeFt: number | null;
+
   /** 소셜 로그인 제공자 - GOOGLE, APPLE, KAKAO */
   @Column({ type: 'enum', enum: SocialProvider, nullable: true })
   provider: SocialProvider | null;

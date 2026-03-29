@@ -46,7 +46,8 @@ export interface UserInfo {
   avatarUrl: string | null;      // 프로필 사진 URL (null이면 기본 아바타)
   role: string;                  // 역할 ('USER' | 'ADMIN')
   surfLevel: string | null;      // 서핑 레벨 (null이면 아직 선택 안 함)
-  boardType: BoardType;          // 보드 타입 (LONGBOARD | MIDLENGTH | SHORTBOARD | UNSET)
+  boardType: BoardType;          // 보드 타입 (9종류 + UNSET)
+  boardSizeFt: number | null;    // 보드 길이 (피트, 소수점 1자리, null이면 미입력)
   provider: string | null;       // 소셜 로그인 제공자 ('GOOGLE' | 'KAKAO' | null)
   notificationsEnabled: boolean; // 알림 수신 여부
 }

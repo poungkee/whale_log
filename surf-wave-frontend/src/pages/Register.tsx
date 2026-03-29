@@ -147,13 +147,11 @@ export function Register({ onBack, onAuthSuccess, onGoLogin }: RegisterProps) {
       </header>
 
       <div className="max-w-md mx-auto px-6 py-4 page-transition">
-        {/* 로고 + 타이틀 */}
+        {/* Whale Log 로고 + 타이틀 */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center shadow-xl">
-            <span className="text-4xl">🏄</span>
-          </div>
+          <img src="/logo.png" alt="Whale Log" className="w-20 h-20 mx-auto mb-4 rounded-full shadow-xl shadow-primary/20" />
           <h1 className="text-3xl font-bold mb-2">회원가입</h1>
-          <p className="text-muted-foreground">서핑 파도와 함께 시작하세요</p>
+          <p className="text-muted-foreground">Whale Log와 함께 시작하세요</p>
         </div>
 
         {/* 회원가입 폼 */}

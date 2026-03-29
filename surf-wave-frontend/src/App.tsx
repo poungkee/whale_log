@@ -442,11 +442,10 @@ export default function App() {
       <div className="dark min-h-screen bg-background text-foreground">
         <div className="min-h-screen bg-gradient-to-b from-[#0D1B2A] via-[#1A2332] to-[#0D1B2A] flex items-center justify-center">
           <div className="text-center animate-pulse">
-            <div className="w-28 h-28 mx-auto mb-6 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center shadow-2xl">
-              <span className="text-6xl">🏄</span>
-            </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              서핑 파도
+            {/* Whale Log 스플래시 로고 */}
+            <img src="/logo.png" alt="Whale Log" className="w-28 h-28 mx-auto mb-6 rounded-full shadow-2xl shadow-primary/20" />
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-[#3CC4DB] to-[#2AAFC6] bg-clip-text text-transparent">
+              Whale Log
             </h1>
           </div>
         </div>

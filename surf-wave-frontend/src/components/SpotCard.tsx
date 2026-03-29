@@ -98,124 +98,116 @@ export function SpotCard({ data, currentLevel, onClick, isFavorited, onToggleFav
         isBlocked ? 'opacity-50 grayscale' : ''
       }`}
     >
-      {/* 상단: 왼쪽(색상dot+등급+점수+안전배지) + 오른쪽(스팟명+지역) */}
-      <div className="flex justify-between items-start mb-1">
-        {/* 왼쪽: BLOCKED면 차단 사유, 아니면 점수+등급 표시 */}
-        <div className="flex items-center gap-1.5 min-w-0">
-          {isBlocked ? (
-            <>
-              {/* BLOCKED: 빨간 차단 배지만 표시 (점수 숨김) */}
-              <span
-                className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-                style={{ backgroundColor: '#E74C3C20', color: '#E74C3C' }}
-              >
-                차단
-              </span>
-              {/* 차단 사유 한줄 표시 */}
-              <span className="text-[10px] text-[#E74C3C] truncate">
-                {safetyReasons?.[0] || '서핑 불가'}
-              </span>
-            </>
-          ) : (
-            <>
-              {/* 색상 dot - 등급 색상 표시 */}
-              <span
-                className="w-3 h-3 rounded-full flex-shrink-0"
-                style={{ backgroundColor: ratingColor }}
-              />
-              {/* 등급 텍스트 */}
-              <span className="text-xs font-bold" style={{ color: ratingColor }}>
-                {ratingGrade}
-              </span>
-              {/* surfRating 점수 */}
-              <span className="text-sm font-black" style={{ color: ratingColor }}>
-                {surfRating.toFixed(1)}
-              </span>
-              {/* WARNING 배지 (주의 필요 시만 표시) */}
-              {isWarning && (
-                <span
-                  className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-                  style={{ backgroundColor: '#F1C40F20', color: '#F1C40F' }}
-                >
-                  주의
-                </span>
-              )}
-              {/* PASS일 때 안전 배지 */}
-              {fitResult === 'PASS' && (
-                <span
-                  className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-                  style={{ backgroundColor: `${fitColor}20`, color: fitColor }}
-                >
-                  {fitLabel}
-                </span>
-              )}
-            </>
-          )}
-        </div>
-        {/* 오른쪽: 스팟 이름 + 지역 + 즐겨찾기 하트 */}
-        <div className="flex items-start gap-1.5">
-          <div className="text-right flex-shrink-0">
-            <h3 className="font-bold text-sm">{spot.name}</h3>
-            <p className="text-[11px] text-muted-foreground">
-              {spot.region} · {getDifficultyShort(spot.difficulty)}
-            </p>
-          </div>
-          {/* 즐겨찾기 하트 버튼 - onToggleFavorite이 있을 때만 표시 */}
+      {/* ── 상단: 왼쪽(스팟명 크게) + 오른쪽(점수 원형) ── */}
+      <div className="flex justify-between items-start mb-2">
+        {/* 왼쪽: 스팟 이름 (크게) + 지역·난이도 + 즐겨찾기 하트 */}
+        <div className="flex items-start gap-2 min-w-0 flex-1">
+          {/* 즐겨찾기 하트 버튼 */}
           {onToggleFavorite && (
             <button
               onClick={(e) => {
-                /** 카드 클릭 이벤트 전파 방지 (모달 열림 방지) */
                 e.stopPropagation();
                 onToggleFavorite();
               }}
-              className="p-1 -mr-1 -mt-0.5 rounded-full hover:bg-secondary/50 transition-colors"
+              className="p-0.5 mt-0.5 rounded-full hover:bg-secondary/50 transition-colors shrink-0"
               aria-label={isFavorited ? '즐겨찾기 해제' : '즐겨찾기 추가'}
             >
               <Heart
                 className={`w-4 h-4 transition-colors ${
                   isFavorited
-                    ? 'text-red-500 fill-red-500'   /* 즐겨찾기 됨: 빨간 채워진 하트 */
-                    : 'text-muted-foreground'         /* 즐겨찾기 안 됨: 빈 하트 */
+                    ? 'text-red-500 fill-red-500'
+                    : 'text-muted-foreground/40'
                 }`}
               />
             </button>
           )}
+          <div className="min-w-0">
+            {/* 스팟 이름 — 가독성을 위해 크고 굵게 */}
+            <h3 className="font-extrabold text-base leading-tight truncate">{spot.name}</h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              {spot.region} · {getDifficultyShort(spot.difficulty)}
+            </p>
+          </div>
+        </div>
+
+        {/* 오른쪽: 점수 원형 배지 (가독성 핵심!) */}
+        <div className="shrink-0 ml-2">
+          {isBlocked ? (
+            /* BLOCKED: 빨간 차단 배지 */
+            <div className="w-12 h-12 rounded-full flex flex-col items-center justify-center"
+              style={{ backgroundColor: '#E74C3C18' }}
+            >
+              <span className="text-[10px] font-bold text-[#E74C3C]">차단</span>
+            </div>
+          ) : (
+            /* 점수 원형 — 등급 색상 배경 + 큰 숫자 */
+            <div
+              className="w-12 h-12 rounded-full flex flex-col items-center justify-center"
+              style={{ backgroundColor: `${ratingColor}18` }}
+            >
+              <span className="text-lg font-black leading-none" style={{ color: ratingColor }}>
+                {surfRating.toFixed(1)}
+              </span>
+              <span className="text-[8px] font-bold" style={{ color: ratingColor }}>
+                {ratingGrade}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* 파고 크게 강조 (3xl 폰트) */}
-      <div className="my-2">
-        <span className="text-3xl font-black leading-none">
+      {/* ── BLOCKED 차단 사유 / WARNING 주의 / PASS 안전 배지 ── */}
+      {isBlocked && (
+        <div className="flex items-center gap-1 mb-2">
+          <span className="text-[10px] text-[#E74C3C]">
+            {safetyReasons?.[0] || '서핑 불가'}
+          </span>
+        </div>
+      )}
+      {!isBlocked && (isWarning || fitResult === 'PASS') && (
+        <div className="flex items-center gap-1.5 mb-2">
+          <span
+            className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+            style={{ backgroundColor: `${fitColor}20`, color: fitColor }}
+          >
+            {fitLabel}
+          </span>
+        </div>
+      )}
+
+      {/* ── 파고 + 주기/풍속/조석 한줄 ── */}
+      <div className="flex items-baseline gap-2 mb-2">
+        {/* 파고 크게 (핵심 수치) */}
+        <span className="text-2xl font-black leading-none">
           {Number(forecast.waveHeight).toFixed(1)}
         </span>
-        <span className="text-sm font-medium text-muted-foreground ml-1">m</span>
+        <span className="text-xs font-medium text-muted-foreground">m</span>
+
+        {/* 구분선 */}
+        <span className="text-border">|</span>
+
+        {/* 주기/풍속/조석 인라인 */}
+        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-0.5">
+            <Clock className="w-3 h-3" />
+            <span className="font-semibold text-foreground">{Number(forecast.wavePeriod).toFixed(0)}s</span>
+          </div>
+          {forecast.windSpeed && (
+            <div className="flex items-center gap-0.5">
+              <Wind className="w-3 h-3" />
+              <span className="font-semibold text-foreground">{Number(forecast.windSpeed).toFixed(0)}km/h</span>
+            </div>
+          )}
+          {forecast.tideStatus && (
+            <div className="flex items-center gap-0.5">
+              {tideInfo.rising ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+              <span className="font-semibold text-foreground">{tideInfo.label}</span>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* 주기 / 풍속 / 조석 한줄 요약 */}
-      <div className="flex items-center gap-3 text-[11px] text-muted-foreground mb-2">
-        {/* 주기 */}
-        <div className="flex items-center gap-1">
-          <Clock className="w-3 h-3" />
-          <span className="font-semibold text-foreground">{Number(forecast.wavePeriod).toFixed(0)}s</span>
-        </div>
-        {/* 풍속 */}
-        {forecast.windSpeed && (
-          <div className="flex items-center gap-1">
-            <Wind className="w-3 h-3" />
-            <span className="font-semibold text-foreground">{Number(forecast.windSpeed).toFixed(0)}km/h</span>
-          </div>
-        )}
-        {/* 조석 */}
-        {forecast.tideStatus && (
-          <div className="flex items-center gap-1">
-            {tideInfo.rising
-              ? <ArrowUp className="w-3 h-3" />
-              : <ArrowDown className="w-3 h-3" />
-            }
-            <span className="font-semibold text-foreground">{tideInfo.label}</span>
-          </div>
-        )}
-      </div>
+      {/* (주기/풍속/조석은 파고 옆 인라인으로 이동됨) */}
 
       {/* 날씨 / 기온 / 수온 구조화된 행 */}
       {(forecast.waterTemperature || forecast.airTemperature || forecast.weatherCondition) && (

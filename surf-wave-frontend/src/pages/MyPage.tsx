@@ -149,6 +149,10 @@ export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange, onBoardTy
 
   /** 현재 보드 타입 - userInfo에서 가져오거나 기본값 UNSET */
   const currentBoard: BoardType = userInfo?.boardType ?? 'UNSET';
+  /** 보드 길이 (피트) — userInfo에서 가져오거나 빈 문자열 */
+  const currentBoardFt = userInfo?.boardSizeFt;
+  /** 보드 길이 입력값 (마이페이지 보드 변경 시) */
+  const [boardFtInput, setBoardFtInput] = useState(currentBoardFt?.toString() || '');
 
   /**
    * 다이어리 데이터 가져오기 (통계 계산용)
@@ -304,7 +308,7 @@ export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange, onBoardTy
                     color: BOARD_COLORS[currentBoard],
                   }}
                 >
-                  {BOARD_LABELS[currentBoard]}
+                  {BOARD_LABELS[currentBoard]}{currentBoardFt ? ` ${currentBoardFt}ft` : ''}
                 </div>
               </div>
             </div>
@@ -519,6 +523,7 @@ export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange, onBoardTy
           {/* 보드 타입 선택 드롭다운 */}
           {showBoardPicker && (
             <div className="p-4 bg-secondary/50 space-y-2">
+              {/* 보드 타입 선택 목록 */}
               {ALL_BOARDS.map((board) => (
                 <button
                   key={board}
@@ -540,6 +545,43 @@ export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange, onBoardTy
                   )}
                 </button>
               ))}
+
+              {/* 보드 길이(피트) 입력 — 선택사항 */}
+              <div className="pt-2 border-t border-border/50">
+                <label className="text-xs text-muted-foreground mb-1 block">보드 길이 (선택)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={boardFtInput}
+                    onChange={(e) => setBoardFtInput(e.target.value)}
+                    placeholder="예: 6.2"
+                    min={3.0}
+                    max={12.0}
+                    step={0.1}
+                    className="flex-1 px-3 py-2 bg-card border border-border rounded-lg text-sm text-center
+                               focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                  <span className="text-sm text-muted-foreground">ft</span>
+                  <button
+                    onClick={async () => {
+                      /** 피트 값을 서버에 저장 — PATCH /api/v1/users/me */
+                      const token = localStorage.getItem('accessToken');
+                      if (!token) return;
+                      const ft = boardFtInput.trim() ? parseFloat(boardFtInput) : null;
+                      try {
+                        await fetch('/api/v1/users/me', {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                          body: JSON.stringify({ boardSizeFt: ft }),
+                        });
+                      } catch { /* 실패해도 무시 */ }
+                    }}
+                    className="px-3 py-2 bg-primary text-primary-foreground text-xs rounded-lg font-medium"
+                  >
+                    저장
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 

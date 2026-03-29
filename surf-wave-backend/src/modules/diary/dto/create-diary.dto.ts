@@ -12,6 +12,7 @@ import {
   IsDateString,
   IsEnum,
   IsInt,
+  IsNumber,
   IsString,
   IsOptional,
   IsArray,
@@ -47,10 +48,22 @@ export class CreateDiaryDto {
   })
   surfTime?: string;
 
-  /** 사용한 보드 타입 (LONGBOARD / MIDLENGTH / SHORTBOARD) */
+  /** 사용한 보드 타입 — 8종류 + MIDLENGTH */
   @ApiProperty({ enum: BoardType })
   @IsEnum(BoardType)
   boardType: BoardType;
+
+  /**
+   * 그날 사용한 보드 길이 (피트, 소수점 1자리)
+   * 선택사항 — 모르면 안 보내도 됨
+   * 범위: 3.0 ~ 12.0 ft
+   */
+  @ApiPropertyOptional({ description: '보드 길이 (피트)', example: 6.2 })
+  @IsOptional()
+  @IsNumber({}, { message: '보드 길이는 숫자여야 합니다' })
+  @Min(3.0, { message: '보드 길이는 3.0ft 이상이어야 합니다' })
+  @Max(12.0, { message: '보드 길이는 12.0ft 이하여야 합니다' })
+  boardSizeFt?: number;
 
   /** 서핑 시간 (분 단위, 최소 1분) */
   @ApiProperty({ description: '서핑 시간 (분)' })

@@ -2,23 +2,62 @@
  * @file Home.tsx
  * @description 메인 홈 화면 - Surfline 스타일 리디자인
  *
- * API 호출: GET /api/v1/dashboard/forecasts?level={surfLevel}
+ * API 호출:
+ * - 스팟 모드: GET /api/v1/dashboard/forecasts?level={surfLevel}
+ * - 후기 모드: GET /api/v1/diary/public?page={page}&limit=20
  *
  * 레이아웃 구조:
  * 1. Header (심플 - 타이틀 + 검색 + 새로고침)
- * 2. 오늘의 베스트 수평 캐러셀 (상위 3개, BLOCKED 제외)
- * 3. 탭 바: 전체 | 국내 | 발리
- * 4. 세부 칩: 동해/남해/제주/서해 (국내 선택 시)
- * 5. SpotCard 리스트
+ * 2. 뷰 토글: [ 스팟 🌊 ] [ 후기 📝 ]
+ * 3. 오늘의 베스트 수평 캐러셀 (스팟 모드만)
+ * 4. 탭 바: 전체 | 국내 | 발리 | ⭐즐겨찾기
+ * 5. 세부 칩: 동해/남해/제주/서해 (국내 선택 시)
+ * 6. SpotCard 리스트 (스팟 모드) 또는 후기 피드 (후기 모드)
  */
 
-import { useState, useEffect, useMemo } from 'react';
-import { Star } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Star, Clock, Waves, Heart } from 'lucide-react';
 import { getRatingGrade, getRatingColor } from '../lib/utils';
 import type { SurfLevel, BoardType, SpotForecast, DashboardResponse, RegionFilter } from '../types';
 import { SpotCard } from '../components/SpotCard';
 import { SpotDetailModal } from '../components/SpotDetailModal';
 import { Header, matchRegionFilter, DOMESTIC_GROUPS, BALI_GROUPS } from '../components/Header';
+
+/** 홈 화면 뷰 모드 — 스팟 목록 or 후기 피드 */
+type HomeViewMode = 'spots' | 'reviews';
+
+/**
+ * 공개 다이어리(후기) 항목 타입
+ * GET /api/v1/diary/public 응답의 data[] 내 각 항목
+ */
+interface PublicDiaryItem {
+  id: string;
+  surfDate: string;
+  boardType: string;
+  durationMinutes: number;
+  satisfaction: number;
+  memo: string | null;
+  waveHeight: string | null;
+  windSpeed: string | null;
+  spot: { id: string; name: string; region: string } | null;
+  user: { id: string; nickname: string; avatarUrl: string | null };
+  images: { id: string; imageUrl: string; sortOrder: number }[];
+}
+
+/** 만족도별 이모지 + 색상 */
+const SAT_EMOJI: Record<number, { emoji: string; color: string }> = {
+  1: { emoji: '😞', color: '#ef4444' },
+  2: { emoji: '😕', color: '#f97316' },
+  3: { emoji: '😊', color: '#eab308' },
+  4: { emoji: '😄', color: '#22c55e' },
+  5: { emoji: '🤩', color: '#3b82f6' },
+};
+
+/** 보드 타입별 이모지 */
+const BOARD_EMOJI: Record<string, string> = {
+  LONGBOARD: '🏄', FUNBOARD: '🛹', MIDLENGTH: '🏄‍♂️', FISH: '🐟',
+  SHORTBOARD: '🏄‍♀️', SUP: '🚣', BODYBOARD: '🤸', FOIL: '🪁', OTHER: '🏖️',
+};
 
 interface HomeProps {
   /** 사용자 서핑 레벨 - 대시보드 API 쿼리 파라미터로 사용 */
@@ -56,6 +95,11 @@ const MAJOR_TABS: { key: '전체' | '국내' | '발리' | '즐겨찾기'; label:
 ];
 
 export function Home({ surfLevel, boardType, favoriteIds, onToggleFavorite }: HomeProps) {
+  /* ===== 뷰 모드 상태 ===== */
+  /** 현재 뷰 모드 — 'spots'(스팟 목록) 또는 'reviews'(후기 피드) */
+  const [viewMode, setViewMode] = useState<HomeViewMode>('spots');
+
+  /* ===== 스팟 모드 상태 (기존) ===== */
   /** 대시보드 API에서 받아온 스팟별 예보 데이터 목록 */
   const [spots, setSpots] = useState<SpotForecast[]>([]);
   /** 데이터 로딩 중 상태 */
@@ -70,6 +114,16 @@ export function Home({ surfLevel, boardType, favoriteIds, onToggleFavorite }: Ho
   const [regionFilter, setRegionFilter] = useState<RegionFilter>({ major: '전체', sub: null });
   /** 검색어 */
   const [searchQuery, setSearchQuery] = useState('');
+
+  /* ===== 후기 모드 상태 ===== */
+  /** 공개 다이어리(후기) 목록 */
+  const [reviews, setReviews] = useState<PublicDiaryItem[]>([]);
+  /** 후기 로딩 중 */
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  /** 후기 현재 페이지 */
+  const [reviewPage, setReviewPage] = useState(1);
+  /** 후기 다음 페이지 존재 여부 */
+  const [reviewHasNext, setReviewHasNext] = useState(false);
 
   /**
    * 대시보드 예보 데이터 조회
@@ -98,6 +152,40 @@ export function Home({ surfLevel, boardType, favoriteIds, onToggleFavorite }: Ho
   useEffect(() => {
     fetchData();
   }, [surfLevel, boardType]);
+
+  /**
+   * 공개 다이어리(후기) 조회
+   * GET /api/v1/diary/public?page={page}&limit=20
+   * @Public 엔드포인트 — 인증 불필요
+   *
+   * @param pageNum - 조회할 페이지 번호
+   * @param append - true면 기존 목록에 추가 (더보기), false면 교체
+   */
+  const fetchReviews = useCallback(async (pageNum: number, append = false) => {
+    setReviewsLoading(true);
+    try {
+      const res = await fetch(`/api/v1/diary/public?page=${pageNum}&limit=20`);
+      if (!res.ok) throw new Error('후기 조회 실패');
+      const json = await res.json();
+      const items: PublicDiaryItem[] = json.data || [];
+      const meta = json.meta || {};
+
+      setReviews(prev => append ? [...prev, ...items] : items);
+      setReviewHasNext(meta.hasNext || false);
+      setReviewPage(pageNum);
+    } catch {
+      console.warn('후기 조회 실패');
+    } finally {
+      setReviewsLoading(false);
+    }
+  }, []);
+
+  /** 후기 모드 전환 시 첫 페이지 로드 (최초 1회) */
+  useEffect(() => {
+    if (viewMode === 'reviews' && reviews.length === 0) {
+      fetchReviews(1);
+    }
+  }, [viewMode, reviews.length, fetchReviews]);
 
   /**
    * 오늘의 베스트 스팟 (상위 3개)
@@ -155,6 +243,24 @@ export function Home({ surfLevel, boardType, favoriteIds, onToggleFavorite }: Ho
     return result;
   }, [spots, regionFilter, searchQuery]);
 
+  /**
+   * 후기 목록을 현재 지역 필터에 맞게 필터링
+   * - "전체": 모든 후기
+   * - "국내": spot.region이 Bali가 아닌 후기
+   * - "발리": spot.region이 Bali로 시작하는 후기
+   * - "즐겨찾기": 즐겨찾기 스팟의 후기
+   */
+  const filteredReviews = useMemo(() => {
+    if (regionFilter.major === '전체') return reviews;
+    if (regionFilter.major === '즐겨찾기') {
+      return reviews.filter(r => r.spot && (favoriteIds?.has(r.spot.id) ?? false));
+    }
+    return reviews.filter(r => {
+      if (!r.spot) return false;
+      return matchRegionFilter(r.spot.region, regionFilter);
+    });
+  }, [reviews, regionFilter, favoriteIds]);
+
   /** 대분류 탭 변경 핸들러 (즐겨찾기 포함) */
   const handleMajorTabChange = (major: '전체' | '국내' | '발리' | '즐겨찾기') => {
     setRegionFilter({ major, sub: null });
@@ -210,8 +316,34 @@ export function Home({ surfLevel, boardType, favoriteIds, onToggleFavorite }: Ho
           </div>
         )}
 
-        {/* 오늘의 베스트 캐러셀 - 상위 3개 스팟 */}
-        {!isLoading && bestSpots.length > 0 && (
+        {/* ── 뷰 모드 토글: 스팟 🌊 / 후기 📝 ── */}
+        {!isLoading && spots.length > 0 && (
+          <div className="flex bg-secondary rounded-lg p-0.5 mb-3">
+            <button
+              onClick={() => setViewMode('spots')}
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors flex items-center justify-center gap-1.5 ${
+                viewMode === 'spots'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              🌊 스팟
+            </button>
+            <button
+              onClick={() => setViewMode('reviews')}
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors flex items-center justify-center gap-1.5 ${
+                viewMode === 'reviews'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              📝 후기
+            </button>
+          </div>
+        )}
+
+        {/* 오늘의 베스트 캐러셀 - 상위 3개 스팟 (스팟 모드에서만 표시) */}
+        {viewMode === 'spots' && !isLoading && bestSpots.length > 0 && (
           <div className="mb-5">
             {/* 섹션 제목 */}
             <div className="flex items-center gap-1.5 mb-3">
@@ -308,8 +440,8 @@ export function Home({ surfLevel, boardType, favoriteIds, onToggleFavorite }: Ho
           </div>
         )}
 
-        {/* 스팟 카드 목록 - 필터/검색 적용된 결과 */}
-        {filteredSpots.length > 0 && (
+        {/* ═══════ 스팟 모드: 카드 목록 ═══════ */}
+        {viewMode === 'spots' && filteredSpots.length > 0 && (
           <div className="space-y-3">
             {filteredSpots.map((spotData) => (
               <SpotCard
@@ -324,8 +456,8 @@ export function Home({ surfLevel, boardType, favoriteIds, onToggleFavorite }: Ho
           </div>
         )}
 
-        {/* 필터 결과 없음 */}
-        {!isLoading && spots.length > 0 && filteredSpots.length === 0 && (
+        {/* 필터 결과 없음 (스팟 모드) */}
+        {viewMode === 'spots' && !isLoading && spots.length > 0 && filteredSpots.length === 0 && (
           <div className="text-center py-12">
             <div className="text-4xl mb-3">🔍</div>
             <h3 className="text-base font-semibold mb-1">검색 결과가 없어요</h3>
@@ -341,13 +473,140 @@ export function Home({ surfLevel, boardType, favoriteIds, onToggleFavorite }: Ho
           </div>
         )}
 
-        {/* 빈 상태 - API에서 데이터 자체가 없을 때 */}
-        {!isLoading && spots.length === 0 && !error && (
+        {/* 빈 상태 - API에서 데이터 자체가 없을 때 (스팟 모드) */}
+        {viewMode === 'spots' && !isLoading && spots.length === 0 && !error && (
           <div className="text-center py-12">
             <div className="text-5xl mb-4">🌊</div>
             <h3 className="text-lg font-semibold mb-2">스팟 정보가 없어요</h3>
             <p className="text-sm text-muted-foreground">잠시 후 다시 시도해주세요</p>
           </div>
+        )}
+
+        {/* ═══════ 후기 모드: 공개 다이어리 피드 ═══════ */}
+        {viewMode === 'reviews' && (
+          <>
+            {/* 후기 로딩 중 */}
+            {reviewsLoading && reviews.length === 0 && (
+              <div className="text-center py-12">
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground">후기를 불러오는 중...</p>
+              </div>
+            )}
+
+            {/* 후기 목록 */}
+            {filteredReviews.length > 0 && (
+              <div className="space-y-3">
+                {filteredReviews.map(review => {
+                  const sat = SAT_EMOJI[review.satisfaction] || SAT_EMOJI[3];
+                  const boardEmoji = BOARD_EMOJI[review.boardType] || '🏖️';
+                  /** 날짜 포맷: "3월 28일" */
+                  const d = new Date(review.surfDate + 'T00:00:00');
+                  const dateStr = `${d.getMonth() + 1}월 ${d.getDate()}일`;
+
+                  return (
+                    <div
+                      key={review.id}
+                      className="bg-card border border-border rounded-xl p-4 hover:border-primary/30 transition-all"
+                    >
+                      {/* 상단: 사용자 + 스팟 + 날짜 */}
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          {/* 사용자 아바타 (첫 글자) */}
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            <span className="text-xs font-bold text-primary">
+                              {review.user.nickname?.charAt(0) || '?'}
+                            </span>
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-sm font-semibold truncate block">{review.user.nickname}</span>
+                            <span className="text-[11px] text-muted-foreground">
+                              {review.spot?.name || '알 수 없는 스팟'} · {dateStr}
+                            </span>
+                          </div>
+                        </div>
+                        {/* 만족도 이모지 */}
+                        <div className="flex items-center gap-1 shrink-0">
+                          <span className="text-lg">{sat.emoji}</span>
+                        </div>
+                      </div>
+
+                      {/* 보드 + 시간 + 파도 정보 칩 */}
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary font-medium">
+                          {boardEmoji} {review.boardType}
+                        </span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground flex items-center gap-0.5">
+                          <Clock className="w-2.5 h-2.5" />
+                          {review.durationMinutes}분
+                        </span>
+                        {review.waveHeight && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center gap-0.5">
+                            <Waves className="w-2.5 h-2.5" />
+                            {Number(review.waveHeight).toFixed(1)}m
+                          </span>
+                        )}
+                      </div>
+
+                      {/* 메모 */}
+                      {review.memo && (
+                        <p className="text-xs text-muted-foreground mb-2 line-clamp-3 leading-relaxed">
+                          {review.memo}
+                        </p>
+                      )}
+
+                      {/* 첨부 사진 (가로 스크롤) */}
+                      {review.images && review.images.length > 0 && (
+                        <div className="flex gap-2 overflow-x-auto pb-1">
+                          {review.images
+                            .sort((a, b) => a.sortOrder - b.sortOrder)
+                            .map(img => (
+                              <img
+                                key={img.id}
+                                src={img.imageUrl}
+                                alt="서핑 사진"
+                                className="w-24 h-24 rounded-lg object-cover border border-border shrink-0"
+                              />
+                            ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* 후기 더보기 버튼 */}
+            {reviewHasNext && !reviewsLoading && (
+              <div className="text-center mt-4">
+                <button
+                  onClick={() => fetchReviews(reviewPage + 1, true)}
+                  className="text-sm text-primary hover:underline px-4 py-2"
+                >
+                  더보기
+                </button>
+              </div>
+            )}
+
+            {/* 후기 로딩 중 (더보기) */}
+            {reviewsLoading && reviews.length > 0 && (
+              <div className="text-center py-4">
+                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+              </div>
+            )}
+
+            {/* 후기 빈 상태 */}
+            {!reviewsLoading && filteredReviews.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-4xl mb-3">📝</div>
+                <h3 className="text-base font-semibold mb-1">아직 후기가 없어요</h3>
+                <p className="text-sm text-muted-foreground">
+                  {regionFilter.major !== '전체'
+                    ? '해당 지역의 공개 후기가 없습니다'
+                    : '다이어리를 작성하고 공개로 설정하면 여기에 표시돼요'}
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
 
