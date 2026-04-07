@@ -18,8 +18,9 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   ArrowLeft, Plus, List, CalendarDays, Trash2, Edit3,
   Star, Clock, MapPin, ChevronLeft, ChevronRight, Loader2,
-  Waves, Wind, Eye, EyeOff, Sunrise,
+  Waves, Wind, X,
 } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { BoardType } from '../types';
 import { DiaryFormModal } from '../components/DiaryFormModal';
 import type { DiaryFullEntry } from '../components/DiaryFormModal';
@@ -135,6 +136,45 @@ export function Diary({ defaultBoardType, onBack }: DiaryProps) {
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   /** 삭제 진행 중 */
   const [deleting, setDeleting] = useState(false);
+
+  /* ===== 상세 보기 상태 ===== */
+  /** 상세 보기 대상 다이어리 항목 (null이면 닫힘) */
+  const [detailEntry, setDetailEntry] = useState<DiaryFullEntry | null>(null);
+  /** 상세 보기에서 표시할 그날 24시간 예보 차트 데이터 */
+  const [chartData, setChartData] = useState<{ time: string; waveHeight: number; windSpeed: number; waterTemp: number | null }[]>([]);
+  /** 차트 로딩 */
+  const [chartLoading, setChartLoading] = useState(false);
+
+  /**
+   * 다이어리 상세 보기 열기 — 그날의 24시간 예보 차트를 함께 조회
+   * GET /api/v1/spots/:spotId/forecast?date={surfDate}T00:00:00&hours=24
+   */
+  const openDetail = useCallback(async (entry: DiaryFullEntry) => {
+    setDetailEntry(entry);
+    if (!entry.spot?.id) return;
+
+    setChartLoading(true);
+    try {
+      const res = await fetch(
+        `/api/v1/spots/${entry.spot.id}/forecast?date=${entry.surfDate}T00:00:00&hours=24`
+      );
+      if (!res.ok) throw new Error('forecast fetch failed');
+      const forecasts = await res.json();
+
+      /** 시간별 차트 데이터 변환 */
+      const data = (Array.isArray(forecasts) ? forecasts : []).map((f: Record<string, unknown>) => ({
+        time: new Date(f.forecastTime as string).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+        waveHeight: Number(f.waveHeight) || 0,
+        windSpeed: Number(f.windSpeed) || 0,
+        waterTemp: f.waterTemperature ? Number(f.waterTemperature) : null,
+      }));
+      setChartData(data);
+    } catch {
+      setChartData([]);
+    } finally {
+      setChartLoading(false);
+    }
+  }, []);
 
   /**
    * 다이어리 목록 조회
@@ -431,159 +471,59 @@ export function Diary({ defaultBoardType, onBack }: DiaryProps) {
                   return (
                     <div
                       key={entry.id}
-                      className="bg-card border border-border rounded-2xl overflow-hidden
-                                 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 transition-all cursor-pointer"
-                      onClick={() => openEdit(entry)}
+                      className="bg-card border border-border rounded-xl overflow-hidden
+                                 hover:border-primary/30 transition-all cursor-pointer"
+                      onClick={() => openDetail(entry)}
                     >
-                      {/* 만족도 색상 상단 바 */}
-                      <div className="h-1" style={{ backgroundColor: sat.color }} />
-
-                      <div className="p-4">
-                        {/* 상단: 만족도 이모지 + 날짜 + 보드 배지 */}
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            {/* 만족도 이모지 (큰 원형 배경) */}
-                            <div
-                              className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0"
-                              style={{ backgroundColor: sat.bg }}
-                            >
-                              {sat.emoji}
+                      <div className="p-3">
+                        {/* 1행: 날짜 + 스팟 + 만족도 */}
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm font-bold">{formatDateKo(entry.surfDate)}</span>
+                              {entry.surfTime && (
+                                <span className="text-[10px] text-muted-foreground">{entry.surfTime}</span>
+                              )}
+                              {relDate && (
+                                <span className="text-[9px] px-1.5 py-0.5 bg-primary/10 text-primary rounded">{relDate}</span>
+                              )}
                             </div>
-                            <div>
-                              {/* 날짜 - 한국어 포맷 + 시작 시간 + 상대 날짜 태그 */}
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="text-sm font-bold">{formatDateKo(entry.surfDate)}</span>
-                                {/* 서핑 시작 시간 태그 (입력한 경우만 표시) */}
-                                {entry.surfTime && (
-                                  <span className="text-[10px] px-1.5 py-0.5 bg-orange-500/10 text-orange-400 rounded font-medium flex items-center gap-0.5">
-                                    <Sunrise className="w-2.5 h-2.5" />
-                                    {entry.surfTime}
-                                  </span>
-                                )}
-                                {relDate && (
-                                  <span className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary rounded font-medium">
-                                    {relDate}
-                                  </span>
-                                )}
-                              </div>
-                              {/* 스팟 이름 + 지역 */}
-                              <div className="flex items-center gap-1 mt-0.5">
-                                <MapPin className="w-3 h-3 text-muted-foreground shrink-0" />
-                                <span className="text-xs text-muted-foreground truncate max-w-[180px]">
-                                  {entry.spot?.name || '알 수 없는 스팟'}
-                                  {entry.spot?.region && ` · ${entry.spot.region}`}
-                                </span>
-                              </div>
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <MapPin className="w-3 h-3 text-muted-foreground shrink-0" />
+                              <span className="text-[11px] text-muted-foreground truncate">
+                                {entry.spot?.name || '알 수 없는 스팟'}
+                              </span>
                             </div>
                           </div>
-
-                          {/* 보드 타입 + 공개/비공개 배지 */}
-                          <div className="flex items-center gap-1 shrink-0">
-                            {/* 공개/비공개 아이콘 - 한눈에 공개 상태 확인 */}
-                            {entry.visibility === 'PUBLIC' ? (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-400 flex items-center gap-0.5" title="전체 공개">
-                                <Eye className="w-2.5 h-2.5" />
-                              </span>
-                            ) : (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-gray-500/10 text-gray-400 flex items-center gap-0.5" title="나만 보기">
-                                <EyeOff className="w-2.5 h-2.5" />
-                              </span>
-                            )}
-                            {/* 보드 타입 배지 */}
-                            <span
-                              className="text-[10px] px-2 py-1 rounded-full font-semibold flex items-center gap-1"
-                              style={{
-                                backgroundColor: `${board.color}18`,
-                                color: board.color,
-                              }}
-                            >
-                              {board.emoji} {board.label}
-                            </span>
+                          {/* 만족도 이모지 */}
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-lg">{sat.emoji}</span>
                           </div>
                         </div>
 
-                        {/* 중앙: 서핑 시간 + 만족도 별점 + 파도 정보 */}
-                        <div className="flex items-center gap-3 mb-2 flex-wrap">
-                          {/* 서핑 시간 */}
-                          <div className="flex items-center gap-1 text-xs bg-secondary/70 px-2 py-1 rounded-lg">
-                            <Clock className="w-3 h-3 text-blue-400" />
-                            <span className="font-medium">{formatDuration(entry.durationMinutes)}</span>
-                          </div>
-                          {/* 만족도 별점 */}
-                          <div className="flex items-center gap-1">
-                            {renderStars(entry.satisfaction)}
-                            <span className="text-[10px] font-medium ml-0.5" style={{ color: sat.color }}>
-                              {sat.label}
-                            </span>
-                          </div>
-                          {/* 파도 높이 - forecast 자동 매칭 데이터 (surfTime 기반) */}
+                        {/* 2행: 파도 데이터 + 보드 + 시간 (컴팩트 칩) */}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-secondary" style={{ color: board.color }}>
+                            {board.emoji} {board.label}
+                          </span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">
+                            {formatDuration(entry.durationMinutes)}
+                          </span>
                           {entry.waveHeight && (
-                            <div className="flex items-center gap-1 text-xs bg-cyan-500/10 px-2 py-1 rounded-lg">
-                              <Waves className="w-3 h-3 text-cyan-400" />
-                              <span className="font-medium text-cyan-300">{Number(entry.waveHeight).toFixed(1)}m</span>
-                            </div>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400">
+                              {Number(entry.waveHeight).toFixed(1)}m
+                            </span>
                           )}
-                          {/* 파도 주기 - forecast 자동 매칭 데이터 */}
-                          {entry.wavePeriod && (
-                            <div className="flex items-center gap-1 text-xs bg-blue-500/10 px-2 py-1 rounded-lg">
-                              <span className="text-blue-400 text-[10px]">T</span>
-                              <span className="font-medium text-blue-300">{Number(entry.wavePeriod).toFixed(1)}s</span>
-                            </div>
-                          )}
-                          {/* 풍속 - forecast 자동 매칭 데이터 */}
                           {entry.windSpeed && (
-                            <div className="flex items-center gap-1 text-xs bg-green-500/10 px-2 py-1 rounded-lg">
-                              <Wind className="w-3 h-3 text-green-400" />
-                              <span className="font-medium text-green-300">{Number(entry.windSpeed).toFixed(0)}km/h</span>
-                            </div>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/10 text-green-400">
+                              {Number(entry.windSpeed).toFixed(0)}km/h
+                            </span>
                           )}
-                        </div>
-
-                        {/* 메모 (있으면 표시) */}
-                        {entry.memo && (
-                          <div className="relative mb-2">
-                            <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-full bg-primary/30" />
-                            <p className="text-xs text-muted-foreground line-clamp-2 pl-3 italic">
-                              "{entry.memo}"
-                            </p>
-                          </div>
-                        )}
-
-                        {/* 첨부 사진 (있으면 표시) — 가로 스크롤 썸네일 */}
-                        {entry.images && entry.images.length > 0 && (
-                          <div className="flex gap-2 mb-2 overflow-x-auto pb-1">
-                            {entry.images
-                              .sort((a, b) => a.sortOrder - b.sortOrder)
-                              .map((img) => (
-                                <img
-                                  key={img.id}
-                                  src={img.imageUrl}
-                                  alt="서핑 사진"
-                                  className="w-20 h-20 rounded-lg object-cover border border-border shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                                  onClick={(e) => { e.stopPropagation(); window.open(img.imageUrl, '_blank'); }}
-                                />
-                              ))}
-                          </div>
-                        )}
-
-                        {/* 하단: 수정/삭제 버튼 */}
-                        <div className="flex justify-end gap-1 mt-2 pt-2 border-t border-border/50">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); openEdit(entry); }}
-                            className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary
-                                       transition-colors px-2.5 py-1.5 rounded-lg hover:bg-primary/5"
-                          >
-                            <Edit3 className="w-3 h-3" />
-                            수정
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setDeleteTargetId(entry.id); }}
-                            className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-destructive
-                                       transition-colors px-2.5 py-1.5 rounded-lg hover:bg-destructive/5"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                            삭제
-                          </button>
+                          {entry.images && entry.images.length > 0 && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">
+                              📷 {entry.images.length}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -828,6 +768,189 @@ export function Diary({ defaultBoardType, onBack }: DiaryProps) {
           </div>
         </div>
       )}
+
+      {/* ===== 상세 보기 모달 — 파도 차트 포함 ===== */}
+      {detailEntry && (() => {
+        const sat = SATISFACTION_CONFIG[detailEntry.satisfaction] || SATISFACTION_CONFIG[3];
+        const board = BOARD_CONFIG[detailEntry.boardType] || BOARD_CONFIG['LONGBOARD'];
+        return (
+          <div className="fixed inset-0 z-[100] flex items-end justify-center">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDetailEntry(null)} />
+            <div className="relative w-full max-w-md bg-card rounded-t-3xl max-h-[92vh] overflow-y-auto">
+              {/* 드래그 핸들 */}
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+              </div>
+
+              {/* 헤더 */}
+              <div className="sticky top-0 bg-card z-10 px-5 pb-3 pt-1 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{sat.emoji}</span>
+                  <div>
+                    <h2 className="text-base font-bold">{formatDateKo(detailEntry.surfDate)}</h2>
+                    <p className="text-[11px] text-muted-foreground">
+                      {detailEntry.spot?.name || '알 수 없는 스팟'}
+                      {detailEntry.surfTime && ` · ${detailEntry.surfTime}`}
+                    </p>
+                  </div>
+                </div>
+                <button onClick={() => setDetailEntry(null)} className="p-1.5 hover:bg-secondary rounded-full">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="px-5 pb-5 space-y-4">
+                {/* 서핑 정보 카드 */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="bg-secondary/50 rounded-xl p-3 text-center">
+                    <span className="text-lg block">{board.emoji}</span>
+                    <span className="text-[10px] text-muted-foreground block mt-0.5">{board.label}</span>
+                    {detailEntry.boardSizeFt && (
+                      <span className="text-[10px] text-primary font-medium">{detailEntry.boardSizeFt}ft</span>
+                    )}
+                  </div>
+                  <div className="bg-secondary/50 rounded-xl p-3 text-center">
+                    <Clock className="w-4 h-4 mx-auto text-blue-400" />
+                    <span className="text-sm font-bold block mt-1">{formatDuration(detailEntry.durationMinutes)}</span>
+                  </div>
+                  <div className="bg-secondary/50 rounded-xl p-3 text-center">
+                    <div className="flex justify-center">{renderStars(detailEntry.satisfaction)}</div>
+                    <span className="text-[10px] block mt-1" style={{ color: sat.color }}>{sat.label}</span>
+                  </div>
+                </div>
+
+                {/* 파도 데이터 (매칭된 경우) */}
+                {(detailEntry.waveHeight || detailEntry.windSpeed) && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {detailEntry.waveHeight && (
+                      <div className="flex items-center gap-1 text-xs bg-cyan-500/10 px-2.5 py-1.5 rounded-lg">
+                        <Waves className="w-3.5 h-3.5 text-cyan-400" />
+                        <span className="font-semibold text-cyan-400">{Number(detailEntry.waveHeight).toFixed(1)}m</span>
+                      </div>
+                    )}
+                    {detailEntry.wavePeriod && (
+                      <div className="flex items-center gap-1 text-xs bg-blue-500/10 px-2.5 py-1.5 rounded-lg">
+                        <span className="text-blue-400 font-semibold">T {Number(detailEntry.wavePeriod).toFixed(1)}s</span>
+                      </div>
+                    )}
+                    {detailEntry.windSpeed && (
+                      <div className="flex items-center gap-1 text-xs bg-green-500/10 px-2.5 py-1.5 rounded-lg">
+                        <Wind className="w-3.5 h-3.5 text-green-400" />
+                        <span className="font-semibold text-green-400">{Number(detailEntry.windSpeed).toFixed(0)}km/h</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 그날 24시간 파도 차트 */}
+                <div className="bg-secondary/30 rounded-xl p-3">
+                  <h3 className="text-xs font-semibold mb-2 text-muted-foreground">
+                    📊 {formatDateKo(detailEntry.surfDate)} 파도 차트
+                  </h3>
+                  {chartLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    </div>
+                  ) : chartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={160}>
+                      <LineChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                        <XAxis
+                          dataKey="time"
+                          tick={{ fontSize: 9, fill: 'var(--muted-foreground)' }}
+                          interval={3}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 9, fill: 'var(--muted-foreground)' }}
+                          width={30}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'var(--card)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '8px',
+                            fontSize: '11px',
+                          }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="waveHeight"
+                          stroke="#22d3ee"
+                          strokeWidth={2}
+                          dot={false}
+                          name="파고(m)"
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="windSpeed"
+                          stroke="#4ade80"
+                          strokeWidth={1.5}
+                          dot={false}
+                          name="풍속(km/h)"
+                          strokeDasharray="4 2"
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <p className="text-center text-xs text-muted-foreground py-6">
+                      해당 날짜의 예보 데이터가 없어요
+                    </p>
+                  )}
+                  {/* 서핑 시간 표시선 안내 */}
+                  {detailEntry.surfTime && chartData.length > 0 && (
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      🏄 서핑 시작: {detailEntry.surfTime}
+                    </p>
+                  )}
+                </div>
+
+                {/* 메모 */}
+                {detailEntry.memo && (
+                  <div className="bg-secondary/30 rounded-xl p-3">
+                    <p className="text-xs text-foreground leading-relaxed">{detailEntry.memo}</p>
+                  </div>
+                )}
+
+                {/* 첨부 사진 */}
+                {detailEntry.images && detailEntry.images.length > 0 && (
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {detailEntry.images
+                      .sort((a, b) => a.sortOrder - b.sortOrder)
+                      .map((img) => (
+                        <img
+                          key={img.id}
+                          src={img.imageUrl}
+                          alt="서핑 사진"
+                          className="w-24 h-24 rounded-xl object-cover border border-border shrink-0 cursor-pointer"
+                          onClick={() => window.open(img.imageUrl, '_blank')}
+                        />
+                      ))}
+                  </div>
+                )}
+
+                {/* 수정/삭제 버튼 */}
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => { openEdit(detailEntry); setDetailEntry(null); }}
+                    className="flex-1 py-2.5 border border-border rounded-xl text-sm font-medium
+                               hover:bg-secondary transition-colors flex items-center justify-center gap-1"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    수정
+                  </button>
+                  <button
+                    onClick={() => { setDeleteTargetId(detailEntry.id); setDetailEntry(null); }}
+                    className="py-2.5 px-4 border border-destructive/30 text-destructive rounded-xl text-sm font-medium
+                               hover:bg-destructive/5 transition-colors flex items-center justify-center gap-1"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

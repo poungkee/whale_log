@@ -444,7 +444,7 @@ export default function App() {
           <div className="text-center animate-pulse">
             {/* Whale Log 스플래시 로고 */}
             <img src="/logo.png" alt="Whale Log" className="w-28 h-28 mx-auto mb-6 rounded-full shadow-2xl shadow-primary/20" />
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-[#3CC4DB] to-[#2AAFC6] bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-[#26C6DA] to-[#00BCD4] bg-clip-text text-transparent">
               Whale Log
             </h1>
           </div>

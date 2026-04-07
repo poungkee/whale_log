@@ -18,9 +18,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   ArrowLeft, AlertTriangle, Waves, Wind,
-  ArrowUp, ArrowDown, Navigation, BarChart3, TrendingUp,
+  ArrowUp, ArrowDown, Navigation,
   Thermometer, Droplets, Cloud, BookOpen, MapPin, Clock,
-  Star, Sunrise, Eye, ChevronDown, Loader2,
+  Star, Sunrise, ChevronDown, Loader2, MessageCircle,
 } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
@@ -29,6 +29,7 @@ import {
 import { getRatingGrade, getRatingColor } from '../lib/utils';
 import type { SpotForecast, SurfLevel, RatingDetail, ForecastInfo } from '../types';
 import { SpotVote } from './SpotVote';
+import { CommunityFeed } from './community/CommunityFeed';
 
 interface SpotDetailModalProps {
   /** 스팟 예보 데이터 (대시보드에서 전달) */
@@ -39,8 +40,8 @@ interface SpotDetailModalProps {
   onClose: () => void;
 }
 
-/** 상세 모달의 탭 종류 - 적합도 / 시간별 / 서핑기록 */
-type DetailTab = 'fit' | 'chart' | 'diary';
+/** 상세 모달의 탭 종류 - 파도(적합도+시간별 통합) / 소통 / 기록 */
+type DetailTab = 'wave' | 'community' | 'diary';
 
 /**
  * 스팟별 공개 다이어리 항목 타입
@@ -183,7 +184,7 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
   const fitResult = levelFit?.[currentLevel] || 'PASS';
 
   /** 현재 선택된 탭 */
-  const [activeTab, setActiveTab] = useState<DetailTab>('fit');
+  const [activeTab, setActiveTab] = useState<DetailTab>('wave');
   /** 시간별 예보 데이터 (API에서 가져옴) */
   const [hourlyData, setHourlyData] = useState<ForecastInfo[]>([]);
   /** 시간별 데이터 로딩 상태 */
@@ -356,27 +357,29 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
           </div>
           {/* 탭 전환 버튼 */}
           <div className="flex bg-secondary rounded-lg p-0.5">
+            {/* 파도 탭 — 적합도 + 시간별 차트 통합 */}
             <button
-              onClick={() => setActiveTab('fit')}
+              onClick={() => setActiveTab('wave')}
               className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                activeTab === 'fit'
+                activeTab === 'wave'
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              <BarChart3 className="w-3 h-3" />
-              적합도
+              <Waves className="w-3 h-3" />
+              파도
             </button>
+            {/* 소통 탭 - 이 스팟의 게시판 */}
             <button
-              onClick={() => setActiveTab('chart')}
+              onClick={() => setActiveTab('community')}
               className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                activeTab === 'chart'
+                activeTab === 'community'
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              <TrendingUp className="w-3 h-3" />
-              시간별
+              <MessageCircle className="w-3 h-3" />
+              소통
             </button>
             {/* 서핑 기록 탭 - 이 스팟의 공개 다이어리 모아보기 */}
             <button
@@ -393,8 +396,15 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
           </div>
         </div>
 
-        {/* ====== 적합도 탭 ====== */}
-        {activeTab === 'fit' && forecast && detail && (
+        {/* ====== 소통 탭 ====== */}
+        {activeTab === 'community' && (
+          <div className="mb-4">
+            <CommunityFeed spotId={spot.id} />
+          </div>
+        )}
+
+        {/* ====== 파도 탭 (적합도 + 시간별 통합) ====== */}
+        {activeTab === 'wave' && forecast && detail && (
           <>
             {/* 5개 적합도 바 차트 - 신호등 색상 적용 */}
             <div className="bg-card rounded-xl border border-border p-4 mb-4">
@@ -509,11 +519,7 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
                 </div>
               )}
             </div>
-          </>
-        )}
-
-        {/* ====== 시간별 차트 탭 ====== */}
-        {activeTab === 'chart' && (
+            {/* ── 시간별 차트 (파도 탭 하단에 통합) ── */}
           <div className="space-y-4">
             {chartLoading ? (
               /* 로딩 스켈레톤 */
@@ -723,6 +729,7 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
               </div>
             )}
           </div>
+          </>
         )}
 
         {/* 오늘의 컨디션 투표 */}
@@ -919,7 +926,7 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
         )}
 
         {/* 예보 없음 */}
-        {!forecast && activeTab !== 'diary' && (
+        {!forecast && activeTab === 'wave' && (
           <div className="text-center py-12">
             <p className="text-muted-foreground">예보 데이터가 없습니다</p>
           </div>

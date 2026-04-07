@@ -10,7 +10,7 @@
  * - BLOCKED 카드: opacity-50 grayscale 처리
  */
 
-import { Wind, Clock, ArrowDown, ArrowUp, Sun, CloudRain, Cloud, Thermometer, Droplets, Heart } from 'lucide-react';
+import { Wind, Clock, ArrowDown, ArrowUp, Sun, CloudRain, Cloud, Droplets, Heart } from 'lucide-react';
 import { getRatingGrade, getRatingColor, getLevelFitColor, getLevelFitLabel } from '../lib/utils';
 import type { SpotForecast, SurfLevel, HintTag } from '../types';
 

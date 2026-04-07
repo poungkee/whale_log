@@ -151,7 +151,7 @@ export function LevelSelect({ existingLevel, onComplete }: LevelSelectProps) {
   // ===== 1단계: 레벨 선택 화면 =====
   if (step === 'level') {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0D1B2A] via-[#1A2332] to-[#0D1B2A] flex flex-col">
+      <div className="min-h-screen bg-gradient-to-b from-[#071E2F] via-[#0A2D45] to-[#071E2F] flex flex-col">
         <div className="flex-1 flex flex-col items-center px-6 py-12 page-transition">
           {/* 진행 표시 - 1/2 단계 */}
           <div className="flex gap-2 mb-8">
@@ -218,7 +218,7 @@ export function LevelSelect({ existingLevel, onComplete }: LevelSelectProps) {
 
   // ===== 2단계: 보드 타입 선택 화면 =====
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0D1B2A] via-[#1A2332] to-[#0D1B2A] flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-[#071E2F] via-[#0A2D45] to-[#071E2F] flex flex-col">
       <div className="flex-1 flex flex-col items-center px-6 py-12 page-transition">
         {/* 진행 표시 - 2/2 단계 (기존 레벨이 있으면 숨김) */}
         {!existingLevel && (

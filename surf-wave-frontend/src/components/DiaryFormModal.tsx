@@ -190,7 +190,8 @@ export function DiaryFormModal({ editEntry, defaultBoardType, onClose, onSaved }
   useEffect(() => {
     const fetchSpots = async () => {
       try {
-        const res = await fetch('/api/v1/spots');
+        /** limit=150으로 전체 스팟 조회 (124개 스팟 전부 커버) */
+        const res = await fetch('/api/v1/spots?limit=150');
         if (!res.ok) return;
         const data = await res.json();
         /** 배열 형태로 오든 data 프로퍼티로 오든 처리 */

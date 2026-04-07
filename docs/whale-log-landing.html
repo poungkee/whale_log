@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Whale Log — 나만의 서핑 코치</title>
+  <style>
+    /* ===== 기본 리셋 + 폰트 ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+      background: #0F2535;
+      color: #E8F4F8;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+
+    /* ===== 히어로 섹션 ===== */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 24px;
+      background: linear-gradient(180deg, #0F2535 0%, #1A3345 50%, #0F2535 100%);
+      position: relative;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 120px;
+      background: linear-gradient(transparent, #0F2535);
+    }
+    .logo {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      box-shadow: 0 20px 60px rgba(42, 175, 198, 0.3);
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #3CC4DB, #2AAFC6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+    .hero .tagline {
+      font-size: 1.25rem;
+      color: #8BB5C9;
+      margin-bottom: 32px;
+    }
+    .hero .desc {
+      max-width: 520px;
+      font-size: 1rem;
+      color: #8BB5C9;
+      margin-bottom: 40px;
+      line-height: 1.8;
+    }
+    .cta-btn {
+      display: inline-block;
+      padding: 16px 40px;
+      background: linear-gradient(135deg, #2AAFC6, #3CC4DB);
+      color: #0F2535;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 12px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 8px 30px rgba(42, 175, 198, 0.3);
+    }
+    .cta-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(42, 175, 198, 0.5);
+    }
+
+    /* ===== 숫자 통계 ===== */
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      padding: 60px 24px;
+      background: #1A3345;
+    }
+    .stat-item {
+      text-align: center;
+    }
+    .stat-num {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #3CC4DB;
+    }
+    .stat-label {
+      font-size: 0.85rem;
+      color: #8BB5C9;
+      margin-top: 4px;
+    }
+
+    /* ===== 기능 섹션 공통 ===== */
+    .section {
+      padding: 80px 24px;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .section-title {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .section-title h2 {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .section-title p {
+      color: #8BB5C9;
+      font-size: 1rem;
+    }
+
+    /* ===== 기능 카드 그리드 ===== */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .feature-card {
+      background: #1A3345;
+      border: 1px solid rgba(60, 196, 219, 0.1);
+      border-radius: 16px;
+      padding: 28px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(60, 196, 219, 0.3);
+    }
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 16px;
+    }
+    .feature-card h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .feature-card p {
+      font-size: 0.9rem;
+      color: #8BB5C9;
+      line-height: 1.6;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    .badge-live { background: #2AAFC620; color: #3CC4DB; }
+    .badge-ai { background: #8B5CF620; color: #A78BFA; }
+    .badge-new { background: #FF8C4220; color: #FF8C42; }
+
+    /* ===== 차별점 섹션 ===== */
+    .diff-section {
+      background: linear-gradient(180deg, #0F2535, #1A3345, #0F2535);
+      padding: 80px 24px;
+    }
+    .diff-grid {
+      max-width: 960px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .diff-card {
+      background: rgba(60, 196, 219, 0.05);
+      border: 1px solid rgba(60, 196, 219, 0.15);
+      border-radius: 16px;
+      padding: 28px;
+      text-align: center;
+    }
+    .diff-card .emoji {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+    }
+    .diff-card h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #3CC4DB;
+    }
+    .diff-card p {
+      font-size: 0.85rem;
+      color: #8BB5C9;
+      line-height: 1.6;
+    }
+
+    /* ===== 가이드 프리뷰 ===== */
+    .guide-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 24px;
+    }
+    .guide-tag {
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    /* ===== 설문 CTA ===== */
+    .survey-section {
+      text-align: center;
+      padding: 80px 24px;
+      background: #1A3345;
+    }
+    .survey-section h2 {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+    .survey-section p {
+      color: #8BB5C9;
+      margin-bottom: 32px;
+      font-size: 1rem;
+    }
+    .survey-btn {
+      display: inline-block;
+      padding: 16px 48px;
+      background: linear-gradient(135deg, #FF8C42, #FFa862);
+      color: #0F2535;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 12px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 8px 30px rgba(255, 140, 66, 0.3);
+    }
+    .survey-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(255, 140, 66, 0.5);
+    }
+
+    /* ===== 푸터 ===== */
+    footer {
+      text-align: center;
+      padding: 40px 24px;
+      font-size: 0.8rem;
+      color: #6B8A99;
+    }
+
+    /* ===== 반응형 ===== */
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 2.2rem; }
+      .stats { flex-direction: column; gap: 24px; }
+      .stat-num { font-size: 2rem; }
+      .section-title h2 { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== 히어로 ===== -->
+  <section class="hero">
+    <img src="https://raw.githubusercontent.com/poungkee/whale_log/main/surf-wave-frontend/public/logo.png" alt="Whale Log" class="logo" />
+    <h1>Whale Log</h1>
+    <p class="tagline">나만의 서핑 코치</p>
+    <p class="desc">
+      내 레벨과 보드에 딱 맞는 파도를 추천받고,<br>
+      서핑 기록을 남기고, 자세를 분석하고,<br>
+      초보 서퍼도 혼자 성장할 수 있는 앱.
+    </p>
+    <a href="#features" class="cta-btn">기능 살펴보기</a>
+  </section>
+
+  <!-- ===== 숫자 통계 ===== -->
+  <section class="stats">
+    <div class="stat-item">
+      <div class="stat-num">124</div>
+      <div class="stat-label">서핑 스팟</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">9</div>
+      <div class="stat-label">보드 타입</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">32</div>
+      <div class="stat-label">가이드 항목</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">30분</div>
+      <div class="stat-label">예보 갱신 주기</div>
+    </div>
+  </section>
+
+  <!-- ===== 주요 기능 ===== -->
+  <section class="section" id="features">
+    <div class="section-title">
+      <h2>주요 기능</h2>
+      <p>초보 서퍼가 바다에 나가기 전부터 성장까지, 한 앱에서</p>
+    </div>
+
+    <div class="features-grid">
+      <!-- 1. 맞춤 파도 추천 -->
+      <div class="feature-card">
+        <div class="feature-icon" style="background: #3CC4DB15;">🌊</div>
+        <h3>맞춤 파도 추천 <span class="badge badge-live">핵심</span></h3>
+        <p>내 레벨(초급~전문가)과 보드(9종류)에 맞는 파도 점수를 0~10점으로 알려드려요. "왜 좋은지/나쁜지" 한국어로 설명까지.</p>
+      </div>
+
+      <!-- 2. 스팟 탐색 -->
+      <div class="feature-card">
+        <div class="feature-icon" style="background: #22C55E15;">🗺️</div>
+        <h3>124개 스팟 탐색</h3>
+        <p>한국 23곳 + 발리 101곳. 지도 클러스터링, 지역 필터, 한국어 검색. 스팟별 시간대 차트와 날씨 타임라인까지.</p>
+      </div>
+
+      <!-- 3. 서핑 다이어리 -->
+      <div class="feature-card">
+        <div class="feature-icon" style="background: #F59E0B15;">📝</div>
+        <h3>서핑 다이어리 <span class="badge badge-new">NEW</span></h3>
+        <p>서핑한 날 기록하면 그 시간의 파도·바람 데이터가 자동으로 붙어요. 사진 첨부, 캘린더 뷰, 보드 피트 입력까지.</p>
+      </div>
+
+      <!-- 4. 후기 피드 -->
+      <div class="feature-card">
+        <div class="feature-icon" style="background: #EC489915;">💬</div>
+        <h3>서퍼 후기 피드 <span class="badge badge-new">NEW</span></h3>
+        <p>다른 서퍼의 공개 다이어리를 홈에서 바로 확인. 지역별 필터로 "오늘 양양 어땠어?" 실시간 확인.</p>
+      </div>
+
+      <!-- 5. AI 자세 감지 -->
+      <div class="feature-card">
+        <div class="feature-icon" style="background: #8B5CF615;">🤖</div>
+        <h3>AI 자세 감지 <span class="badge badge-ai">AI</span></h3>
+        <p>카메라를 켜면 실시간 스켈레톤 오버레이. 무릎 각도, 스탠스 너비, 상체 정렬을 측정해 자세를 확인할 수 있어요.</p>
+      </div>
+
+      <!-- 6. 서핑 가이드 -->
+      <div class="feature-card">
+        <div class="feature-icon" style="background: #EF444415;">📖</div>
+        <h3>서핑 가이드 (32항목)</h3>
+        <p>바다 규칙, 안전 상식, 용어 사전, 기본 자세, 장비 가이드. 드롭인부터 세트파도(귀신파도) 대처까지 초보 필수 지식.</p>
+      </div>
+
+      <!-- 7. 안전 필터 -->
+      <div class="feature-card">
+        <div class="feature-icon" style="background: #EF444415;">🛡️</div>
+        <h3>안전 필터 (BLOCKED)</h3>
+        <p>초급자에게 위험한 파도·바람·수온 조건이면 자동 차단. "왜 위험한지" 사유도 한국어로 표시.</p>
+      </div>
+
+      <!-- 8. 보드 시스템 -->
+      <div class="feature-card">
+        <div class="feature-icon" style="background: #FF8C4215;">🏄</div>
+        <h3>보드 9종류 + 피트 입력</h3>
+        <p>숏보드·롱보드·펀보드·피쉬·미드렝스·SUP·바디보드·포일·기타. 보드 길이(ft)까지 입력하면 더 정확한 추천.</p>
+      </div>
+
+      <!-- 9. 스냅샷 -->
+      <div class="feature-card">
+        <div class="feature-icon" style="background: #3CC4DB15;">📸</div>
+        <h3>자세 스냅샷 캡처</h3>
+        <p>자세 연습 중 마음에 드는 순간을 캡처. 갤러리에서 비교하고, 다운로드해서 코치에게 공유할 수 있어요.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 차별점 ===== -->
+  <section class="diff-section">
+    <div class="section-title">
+      <h2>다른 서핑앱과 뭐가 다른가요?</h2>
+      <p>다른 서핑앱이 안 하는 것을 합니다</p>
+    </div>
+
+    <div class="diff-grid">
+      <div class="diff-card">
+        <div class="emoji">🎯</div>
+        <h3>개인화 추천</h3>
+        <p>다른 앱은 모든 사용자에게 같은 등급을 보여줘요. Whale Log는 내 레벨+보드에 맞는 점수를 계산해요.</p>
+      </div>
+      <div class="diff-card">
+        <div class="emoji">💡</div>
+        <h3>한국어 설명</h3>
+        <p>"오프쇼어 바람이라 파도면이 깨끗해요" — 숫자만 보여주는 대신, 왜 좋은지 한국어로 알려드려요.</p>
+      </div>
+      <div class="diff-card">
+        <div class="emoji">🤖</div>
+        <h3>AI 자세 감지</h3>
+        <p>세계 어떤 서핑앱에도 없는 기능. 카메라로 내 서핑 스탠스를 실시간 분석하고 측정값을 확인하세요.</p>
+      </div>
+      <div class="diff-card">
+        <div class="emoji">📚</div>
+        <h3>초보 맞춤</h3>
+        <p>타사 앱은 프로 서퍼 도구이거나 커뮤니티 중심. Whale Log는 "초보가 혼자 성장할 수 있는 코치"예요.</p>
+      </div>
+      <div class="diff-card">
+        <div class="emoji">🆓</div>
+        <h3>완전 무료</h3>
+        <p>타사 앱 프리미엄은 월 수만원. Whale Log는 모든 기능이 무료예요.</p>
+      </div>
+      <div class="diff-card">
+        <div class="emoji">🌏</div>
+        <h3>한국 + 발리</h3>
+        <p>한국 동해/남해/제주 23곳 + 발리 101곳. 한국 서퍼가 가장 많이 가는 스팟을 커버해요.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 가이드 프리뷰 ===== -->
+  <section class="section">
+    <div class="section-title">
+      <h2>초보 서핑 가이드</h2>
+      <p>바다에 나가기 전에 꼭 알아야 할 것들, 32가지</p>
+    </div>
+    <div class="guide-tags">
+      <span class="guide-tag" style="background: #3B82F620; color: #60A5FA;">드롭인 금지</span>
+      <span class="guide-tag" style="background: #3B82F620; color: #60A5FA;">피크 우선권</span>
+      <span class="guide-tag" style="background: #3B82F620; color: #60A5FA;">채널(길) 찾기</span>
+      <span class="guide-tag" style="background: #EF444420; color: #F87171;">이안류 대처</span>
+      <span class="guide-tag" style="background: #EF444420; color: #F87171;">세트파도(귀신파도)</span>
+      <span class="guide-tag" style="background: #EF444420; color: #F87171;">베일 아웃</span>
+      <span class="guide-tag" style="background: #EF444420; color: #F87171;">커버 업</span>
+      <span class="guide-tag" style="background: #22C55E20; color: #4ADE80;">오프쇼어/온쇼어</span>
+      <span class="guide-tag" style="background: #22C55E20; color: #4ADE80;">파도 용어</span>
+      <span class="guide-tag" style="background: #22C55E20; color: #4ADE80;">보드 용어</span>
+      <span class="guide-tag" style="background: #F59E0B20; color: #FBBF24;">팝업 5단계</span>
+      <span class="guide-tag" style="background: #F59E0B20; color: #FBBF24;">덕다이브/터틀롤</span>
+      <span class="guide-tag" style="background: #F59E0B20; color: #FBBF24;">패들링 자세</span>
+      <span class="guide-tag" style="background: #8B5CF620; color: #A78BFA;">보드 선택법</span>
+      <span class="guide-tag" style="background: #8B5CF620; color: #A78BFA;">웻슈트</span>
+      <span class="guide-tag" style="background: #8B5CF620; color: #A78BFA;">왁스 바르기</span>
+    </div>
+  </section>
+
+  <!-- ===== 설문 CTA ===== -->
+  <section class="survey-section">
+    <h2>서퍼의 솔직한 의견이 필요합니다</h2>
+    <p>3~5분 설문에 참여하시면 베타 테스트에 초대해드려요!</p>
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLScj5AIpAJSV_wWtU5XI5SugFQ5IK92e97qGjtfL3xwaWM8lJQ/viewform" target="_blank" class="survey-btn">
+      설문 참여하기
+    </a>
+  </section>
+
+  <!-- ===== 푸터 ===== -->
+  <footer>
+    <p>&copy; 2026 Whale Log. All rights reserved.</p>
+    <p style="margin-top: 8px;">초보 서퍼를 위한 서핑 코치 앱</p>
+  </footer>
+
+</body>
+</html>
