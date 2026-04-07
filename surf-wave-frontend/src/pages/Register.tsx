@@ -20,6 +20,7 @@
 import { ArrowLeft, Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
 import { useState } from 'react';
 import type { AuthResponse } from '../types';
+import { api } from '../lib/api';
 
 interface RegisterProps {
   /** 뒤로 가기 (welcome 화면으로) */
@@ -88,7 +89,7 @@ export function Register({ onBack, onAuthSuccess, onGoLogin }: RegisterProps) {
 
     try {
       /** 회원가입 API 호출 - 이메일, 비밀번호, 닉네임 전송 */
-      const res = await fetch('/api/v1/auth/register', {
+      const res = await fetch(api('/api/v1/auth/register'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, nickname }),

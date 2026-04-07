@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react';
 import type { SurfLevel, SpotForecast, DashboardResponse } from '../types';
 import { SpotMap } from '../components/SpotMap';
 import { SpotDetailModal } from '../components/SpotDetailModal';
+import { api } from '../lib/api';
 
 interface ExploreProps {
   /** 사용자 서핑 레벨 - API 쿼리 파라미터 */
@@ -33,7 +34,7 @@ export function Explore({ surfLevel }: ExploreProps) {
       setLoading(true);
       try {
         /** 지도에서는 전체 스팟 표시 (레벨 필터 없음) */
-        const res = await fetch(`/api/v1/dashboard/forecasts`);
+        const res = await fetch(api(`/api/v1/dashboard/forecasts`));
         if (res.ok) {
           const data: DashboardResponse = await res.json();
           setSpots(data.spots);

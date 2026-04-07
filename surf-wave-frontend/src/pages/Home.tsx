@@ -23,6 +23,7 @@ import { SpotCard } from '../components/SpotCard';
 import { SpotDetailModal } from '../components/SpotDetailModal';
 import { Header, matchRegionFilter, DOMESTIC_GROUPS, BALI_GROUPS } from '../components/Header';
 import { CommunityFeed } from '../components/community/CommunityFeed';
+import { api } from '../lib/api';
 
 /** 홈 뷰 모드 — 스팟 목록 / 소통 게시판 */
 type HomeViewMode = 'spots' | 'community';
@@ -92,7 +93,7 @@ export function Home({ surfLevel, boardType, favoriteIds, onToggleFavorite }: Ho
     setError(null);
     try {
       const boardParam = boardType && boardType !== 'UNSET' ? `&boardType=${boardType}` : '';
-      const res = await fetch(`/api/v1/dashboard/forecasts?level=${surfLevel}${boardParam}`);
+      const res = await fetch(api(`/api/v1/dashboard/forecasts?level=${surfLevel}${boardParam}`));
       if (!res.ok) throw new Error('API error');
       const json: DashboardResponse = await res.json();
       /** surfRating 높은 순으로 정렬 */

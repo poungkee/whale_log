@@ -18,6 +18,7 @@
 import { useState, useEffect } from 'react';
 import { X, Loader2, MapPin, Search, Calendar, Clock, Eye, EyeOff, Sunrise, ImagePlus, Trash2 } from 'lucide-react';
 import type { BoardType } from '../types';
+import { api } from '../lib/api';
 
 /**
  * 다이어리 보드 타입 — 백엔드 BoardType enum과 1:1 대응
@@ -191,7 +192,7 @@ export function DiaryFormModal({ editEntry, defaultBoardType, onClose, onSaved }
     const fetchSpots = async () => {
       try {
         /** limit=150으로 전체 스팟 조회 (124개 스팟 전부 커버) */
-        const res = await fetch('/api/v1/spots?limit=150');
+        const res = await fetch(api('/api/v1/spots?limit=150'));
         if (!res.ok) return;
         const data = await res.json();
         /** 배열 형태로 오든 data 프로퍼티로 오든 처리 */
@@ -284,7 +285,7 @@ export function DiaryFormModal({ editEntry, defaultBoardType, onClose, onSaved }
       /** 백엔드 FilesInterceptor 필드명: 'files' */
       needUpload.forEach(img => formData.append('files', img.file));
 
-      const res = await fetch('/api/v1/upload/images', {
+      const res = await fetch(api('/api/v1/upload/images'), {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
@@ -339,7 +340,7 @@ export function DiaryFormModal({ editEntry, defaultBoardType, onClose, onSaved }
       }
 
       const isEdit = !!editEntry;
-      const url = isEdit ? `/api/v1/diary/${editEntry.id}` : '/api/v1/diary';
+      const url = isEdit ? api(`/api/v1/diary/${editEntry.id}`) : api('/api/v1/diary');
       const method = isEdit ? 'PATCH' : 'POST';
 
       /**

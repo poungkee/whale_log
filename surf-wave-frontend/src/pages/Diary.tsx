@@ -23,6 +23,7 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { BoardType } from '../types';
 import { DiaryFormModal } from '../components/DiaryFormModal';
+import { api } from '../lib/api';
 import type { DiaryFullEntry } from '../components/DiaryFormModal';
 
 interface DiaryProps {
@@ -156,7 +157,7 @@ export function Diary({ defaultBoardType, onBack }: DiaryProps) {
     setChartLoading(true);
     try {
       const res = await fetch(
-        `/api/v1/spots/${entry.spot.id}/forecast?date=${entry.surfDate}T00:00:00&hours=24`
+        api(`/api/v1/spots/${entry.spot.id}/forecast?date=${entry.surfDate}T00:00:00&hours=24`)
       );
       if (!res.ok) throw new Error('forecast fetch failed');
       const forecasts = await res.json();
@@ -189,7 +190,7 @@ export function Diary({ defaultBoardType, onBack }: DiaryProps) {
 
     setListLoading(true);
     try {
-      const res = await fetch(`/api/v1/diary?page=${pageNum}&limit=10`, {
+      const res = await fetch(api(`/api/v1/diary?page=${pageNum}&limit=10`), {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('목록 조회 실패');
@@ -214,7 +215,7 @@ export function Diary({ defaultBoardType, onBack }: DiaryProps) {
 
     setCalLoading(true);
     try {
-      const res = await fetch(`/api/v1/diary/calendar?year=${year}&month=${month}`, {
+      const res = await fetch(api(`/api/v1/diary/calendar?year=${year}&month=${month}`), {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('캘린더 조회 실패');
@@ -255,7 +256,7 @@ export function Diary({ defaultBoardType, onBack }: DiaryProps) {
 
     setDeleting(true);
     try {
-      const res = await fetch(`/api/v1/diary/${deleteTargetId}`, {
+      const res = await fetch(api(`/api/v1/diary/${deleteTargetId}`), {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
       });

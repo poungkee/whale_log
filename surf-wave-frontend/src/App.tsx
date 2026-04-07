@@ -31,6 +31,7 @@ import { Guide } from './pages/Guide';
 import { Diary } from './pages/Diary';
 import { PoseTraining } from './pages/PoseTraining';
 import { BottomNav } from './components/BottomNav';
+import { api } from './lib/api';
 
 export default function App() {
   /** 현재 표시 중인 화면 상태 */
@@ -55,7 +56,7 @@ export default function App() {
    */
   const fetchFavorites = async (token: string) => {
     try {
-      const res = await fetch('/api/v1/spots/favorites', {
+      const res = await fetch(api('/api/v1/spots/favorites'), {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!res.ok) return;
@@ -124,7 +125,7 @@ export default function App() {
     /** 백엔드에 인가코드 전달하여 로그인 처리 */
     const processKakaoCallback = async () => {
       try {
-        const res = await fetch('/api/v1/auth/kakao/callback', {
+        const res = await fetch(api('/api/v1/auth/kakao/callback'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -206,7 +207,7 @@ export default function App() {
 
     try {
       const method = isCurrentlyFavorited ? 'DELETE' : 'POST';
-      const res = await fetch(`/api/v1/spots/${spotId}/favorite`, {
+      const res = await fetch(api(`/api/v1/spots/${spotId}/favorite`), {
         method,
         headers: { 'Authorization': `Bearer ${token}` },
       });
@@ -282,7 +283,7 @@ export default function App() {
     const token = localStorage.getItem('accessToken');
     if (token) {
       try {
-        await fetch('/api/v1/users/me', {
+        await fetch(api('/api/v1/users/me'), {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -319,7 +320,7 @@ export default function App() {
     const token = localStorage.getItem('accessToken');
     if (token) {
       try {
-        await fetch('/api/v1/users/me', {
+        await fetch(api('/api/v1/users/me'), {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -359,7 +360,7 @@ export default function App() {
     const token = localStorage.getItem('accessToken');
     if (token) {
       try {
-        const res = await fetch('/api/v1/users/me', {
+        const res = await fetch(api('/api/v1/users/me'), {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -397,7 +398,7 @@ export default function App() {
     const token = localStorage.getItem('accessToken');
     if (token) {
       try {
-        await fetch('/api/v1/users/me', {
+        await fetch(api('/api/v1/users/me'), {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',

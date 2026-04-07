@@ -14,6 +14,7 @@ import {
   Heart, MessageCircle, MapPin, Loader2,
   Plus, Send, X, ImagePlus,
 } from 'lucide-react';
+import { api } from '../../lib/api';
 
 /** 게시글 타입 */
 interface Post {
@@ -112,7 +113,7 @@ export function CommunityFeed({ spotId, regionFilter }: CommunityFeedProps) {
       const params = new URLSearchParams({ page: String(pageNum), limit: '15' });
       if (spotId) params.set('spotId', spotId);
 
-      const res = await fetch(`/api/v1/community/posts?${params}`, {
+      const res = await fetch(api(`/api/v1/community/posts?${params}`), {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('posts fetch failed');
@@ -144,7 +145,7 @@ export function CommunityFeed({ spotId, regionFilter }: CommunityFeedProps) {
     if (!token) return;
 
     try {
-      const res = await fetch(`/api/v1/community/posts/${postId}/like`, {
+      const res = await fetch(api(`/api/v1/community/posts/${postId}/like`), {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
       });
@@ -169,7 +170,7 @@ export function CommunityFeed({ spotId, regionFilter }: CommunityFeedProps) {
 
     setCommentsLoading(true);
     try {
-      const res = await fetch(`/api/v1/community/posts/${postId}/comments`, {
+      const res = await fetch(api(`/api/v1/community/posts/${postId}/comments`), {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!res.ok) throw new Error();
@@ -200,7 +201,7 @@ export function CommunityFeed({ spotId, regionFilter }: CommunityFeedProps) {
 
     setCommentSending(true);
     try {
-      const res = await fetch(`/api/v1/community/posts/${selectedPost.id}/comments`, {
+      const res = await fetch(api(`/api/v1/community/posts/${selectedPost.id}/comments`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ content: newComment.trim() }),
@@ -233,7 +234,7 @@ export function CommunityFeed({ spotId, regionFilter }: CommunityFeedProps) {
       if (writeImages.length > 0) {
         const formData = new FormData();
         writeImages.forEach(img => formData.append('files', img.file));
-        const uploadRes = await fetch('/api/v1/upload/images', {
+        const uploadRes = await fetch(api('/api/v1/upload/images'), {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` },
           body: formData,
@@ -249,7 +250,7 @@ export function CommunityFeed({ spotId, regionFilter }: CommunityFeedProps) {
       if (writeSpotId) body.spotId = writeSpotId;
       if (imageUrls.length > 0) body.imageUrls = imageUrls;
 
-      const res = await fetch('/api/v1/community/posts', {
+      const res = await fetch(api('/api/v1/community/posts'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(body),
@@ -270,7 +271,7 @@ export function CommunityFeed({ spotId, regionFilter }: CommunityFeedProps) {
   useEffect(() => {
     if (!showWriteForm) return;
     /** limit=150으로 전체 스팟 조회 (124개 전부) */
-    fetch('/api/v1/spots?limit=150').then(r => r.json()).then(data => {
+    fetch(api('/api/v1/spots?limit=150')).then(r => r.json()).then(data => {
       const list = (Array.isArray(data) ? data : data.data || []).map(
         (s: { id: string; name: string; region: string }) => ({ id: s.id, name: s.name, region: s.region })
       );

@@ -13,6 +13,7 @@
 import { Settings, ChevronRight, Waves, Clock, MapPin, Star, BookOpen, Camera } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import type { SurfLevel, BoardType, UserInfo } from '../types';
+import { api } from '../lib/api';
 
 interface MyPageProps {
   /** 현재 서핑 레벨 */
@@ -169,7 +170,7 @@ export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange, onBoardTy
 
       try {
         /** limit 최대 100 (백엔드 PaginationDto @Max(100) 제한) */
-        const res = await fetch('/api/v1/diary?limit=100', {
+        const res = await fetch(api('/api/v1/diary?limit=100'), {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         if (!res.ok) {
@@ -569,7 +570,7 @@ export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange, onBoardTy
                       if (!token) return;
                       const ft = boardFtInput.trim() ? parseFloat(boardFtInput) : null;
                       try {
-                        await fetch('/api/v1/users/me', {
+                        await fetch(api('/api/v1/users/me'), {
                           method: 'PATCH',
                           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                           body: JSON.stringify({ boardSizeFt: ft }),

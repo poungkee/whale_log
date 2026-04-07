@@ -14,6 +14,7 @@
 
 import { useState, useEffect } from 'react';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
+import { api } from '../lib/api';
 
 interface VoteDistribution {
   spotId: string;
@@ -43,7 +44,7 @@ export function SpotVote({ spotId, compact = false }: SpotVoteProps) {
         const headers: Record<string, string> = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
 
-        const res = await fetch(`/api/v1/spots/${spotId}/votes`, { headers });
+        const res = await fetch(api(`/api/v1/spots/${spotId}/votes`), { headers });
         if (res.ok) {
           const data = await res.json();
           setVoteData(data);
@@ -62,7 +63,7 @@ export function SpotVote({ spotId, compact = false }: SpotVoteProps) {
 
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/v1/spots/${spotId}/vote`, {
+      const res = await fetch(api(`/api/v1/spots/${spotId}/vote`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -73,7 +74,7 @@ export function SpotVote({ spotId, compact = false }: SpotVoteProps) {
 
       if (res.ok) {
         /** 투표 성공 → 분포 데이터 다시 조회 */
-        const votesRes = await fetch(`/api/v1/spots/${spotId}/votes`, {
+        const votesRes = await fetch(api(`/api/v1/spots/${spotId}/votes`), {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         if (votesRes.ok) {

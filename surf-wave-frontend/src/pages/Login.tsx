@@ -23,6 +23,7 @@
 import { ArrowLeft, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { AuthResponse } from '../types';
+import { api } from '../lib/api';
 
 interface LoginProps {
   /** 뒤로 가기 (welcome 화면으로) */
@@ -64,7 +65,7 @@ export function Login({ onBack, onAuthSuccess, onGoRegister }: LoginProps) {
 
     try {
       /** 백엔드 Google 소셜 로그인 API 호출 */
-      const res = await fetch('/api/v1/auth/google', {
+      const res = await fetch(api('/api/v1/auth/google'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ credential: response.credential }),
@@ -205,7 +206,7 @@ export function Login({ onBack, onAuthSuccess, onGoRegister }: LoginProps) {
 
     try {
       /** 로그인 API 호출 - 이메일과 비밀번호 전송 */
-      const res = await fetch('/api/v1/auth/login', {
+      const res = await fetch(api('/api/v1/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

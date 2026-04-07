@@ -17,6 +17,7 @@ import { Heart, RefreshCw } from 'lucide-react';
 import type { SurfLevel, BoardType, SpotForecast, DashboardResponse } from '../types';
 import { SpotCard } from '../components/SpotCard';
 import { SpotDetailModal } from '../components/SpotDetailModal';
+import { api } from '../lib/api';
 
 interface FavoritesProps {
   /** 사용자 서핑 레벨 - 대시보드 API 필터에 사용 */
@@ -48,7 +49,7 @@ export function Favorites({ surfLevel, boardType, favoriteIds, onToggleFavorite 
     setError(null);
     try {
       const boardParam = boardType && boardType !== 'UNSET' ? `&boardType=${boardType}` : '';
-      const res = await fetch(`/api/v1/dashboard/forecasts?level=${surfLevel}${boardParam}`);
+      const res = await fetch(api(`/api/v1/dashboard/forecasts?level=${surfLevel}${boardParam}`));
       if (!res.ok) throw new Error('API error');
       const json: DashboardResponse = await res.json();
       setAllSpots(json.spots || []);

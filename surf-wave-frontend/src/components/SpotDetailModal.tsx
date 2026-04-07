@@ -22,6 +22,7 @@ import {
   Thermometer, Droplets, Cloud, BookOpen, MapPin, Clock,
   Star, Sunrise, ChevronDown, Loader2, MessageCircle,
 } from 'lucide-react';
+import { api } from '../lib/api';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend,
@@ -219,7 +220,7 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
     const fetchHourly = async () => {
       setChartLoading(true);
       try {
-        const res = await fetch(`/api/v1/spots/${spot.id}/forecast?hours=24`);
+        const res = await fetch(api(`/api/v1/spots/${spot.id}/forecast?hours=24`));
         if (res.ok) {
           const json = await res.json();
           setHourlyData(Array.isArray(json) ? json : []);
@@ -244,7 +245,7 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
     try {
       /** @Public() 엔드포인트 - 인증 불필요, 비로그인도 조회 가능 */
       const res = await fetch(
-        `/api/v1/diary/public?spotId=${spot.id}&page=${pageNum}&limit=10`,
+        api(`/api/v1/diary/public?spotId=${spot.id}&page=${pageNum}&limit=10`),
       );
       if (!res.ok) throw new Error('공개 다이어리 조회 실패');
 
