@@ -45,7 +45,8 @@ export const getDatabaseConfig = (
     database: configService.get<string>('DB_DATABASE', DEFAULT_DB_DATABASE),
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
     migrations: [__dirname + '/../migrations/*{.ts,.js}'],
-    synchronize: !isProduction,
+    /** DB_SYNCHRONIZE=true면 프로덕션에서도 테이블 자동 생성 (초기 배포용) */
+    synchronize: configService.get<string>('DB_SYNCHRONIZE') === 'true' || !isProduction,
     logging: !isProduction,
     /**
      * SSL 설정
