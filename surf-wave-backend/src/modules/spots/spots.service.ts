@@ -39,6 +39,16 @@ export class SpotsService {
     private readonly voteRepository: Repository<SpotVote>,
   ) {}
 
+  /** 스팟 upsert — 이름 기준으로 있으면 업데이트, 없으면 생성 (시드용) */
+  async upsertSpot(data: Partial<Spot>): Promise<void> {
+    const existing = await this.spotRepository.findOne({ where: { name: data.name } });
+    if (existing) {
+      await this.spotRepository.update(existing.id, data);
+    } else {
+      await this.spotRepository.save(this.spotRepository.create(data));
+    }
+  }
+
   async findAll(query: SpotQueryDto, userId?: string) {
     const { region, difficulty, search, page = 1, limit = 20 } = query;
 

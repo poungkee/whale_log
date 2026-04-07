@@ -21,7 +21,10 @@ import {
   Query,
   Body,
   ParseUUIDPipe,
+  InternalServerErrorException,
 } from '@nestjs/common';
+import * as fs from 'fs';
+import * as path from 'path';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SpotsService } from './spots.service';
 import { CurrentUser, RequestUser } from '../../common/decorators/current-user.decorator';
@@ -34,6 +37,28 @@ import { VoteDto } from './dto/vote.dto';
 @Controller('spots')
 export class SpotsController {
   constructor(private readonly spotsService: SpotsService) {}
+
+  /**
+   * 임시 시드 엔드포인트 — 스팟 데이터를 DB에 삽입
+   * 프로덕션 초기 배포용, 나중에 제거 가능
+   */
+  @Post('seed')
+  @Public()
+  @ApiOperation({ summary: 'Seed spots data (임시)' })
+  async seedSpots() {
+    try {
+      const dataPath = path.join(__dirname, '..', '..', 'database', 'seeds', 'spots-data.json');
+      const spots = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+      let count = 0;
+      for (const spot of spots) {
+        await this.spotsService.upsertSpot(spot);
+        count++;
+      }
+      return { message: `${count}개 스팟 시드 완료` };
+    } catch (e) {
+      throw new InternalServerErrorException(`시드 실패: ${(e as Error).message}`);
+    }
+  }
 
   @Get()
   @Public()
