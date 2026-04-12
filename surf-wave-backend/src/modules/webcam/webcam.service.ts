@@ -9,7 +9,9 @@
  */
 
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
+import { firstValueFrom } from 'rxjs';
 
 /** Windy API 이미지 응답 구조 */
 interface WindyImageSet {
@@ -29,6 +31,11 @@ interface WindyWebcam {
   };
 }
 
+/** Windy API 응답 전체 구조 */
+interface WindyApiResponse {
+  webcams: WindyWebcam[];
+}
+
 /** 프론트엔드에 반환하는 웹캠 정보 */
 export interface WebcamSnapshot {
   /** 웹캠 스팟 이름 */
@@ -45,7 +52,10 @@ export class WebcamService {
   private readonly windyApiKey: string;
   private readonly windyBaseUrl = 'https://api.windy.com/webcams/api/v3';
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
+  ) {
     this.windyApiKey = this.configService.get<string>('WINDY_API_KEY') ?? '';
   }
 
@@ -61,19 +71,15 @@ export class WebcamService {
     const url = `${this.windyBaseUrl}/webcams/${webcamId}?include=images`;
 
     try {
-      const response = await fetch(url, {
-        headers: {
-          'x-windy-api-key': this.windyApiKey,
-        },
-      });
+      const response = await firstValueFrom(
+        this.httpService.get<WindyApiResponse>(url, {
+          headers: {
+            'x-windy-api-key': this.windyApiKey,
+          },
+        }),
+      );
 
-      if (!response.ok) {
-        this.logger.warn(`Windy API 오류 [${response.status}]: webcamId=${webcamId}`);
-        throw new NotFoundException(`웹캠 ID ${webcamId}를 찾을 수 없습니다.`);
-      }
-
-      const data = await response.json() as { webcams: WindyWebcam[] };
-      const webcam = data.webcams?.[0];
+      const webcam = response.data.webcams?.[0];
 
       if (!webcam) {
         throw new NotFoundException(`웹캠 ID ${webcamId} 응답이 비어있습니다.`);
