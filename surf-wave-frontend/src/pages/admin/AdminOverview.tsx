@@ -102,14 +102,14 @@ export function AdminOverview({ token }: AdminOverviewProps) {
 
   /** 통계 카드 정의 */
   const statCards = [
-    { label: '전체 유저', value: stats?.totalUsers ?? 0, icon: Users, color: 'text-blue-400' },
-    { label: '이번 주 신규', value: stats?.newUsersThisWeek ?? 0, icon: TrendingUp, color: 'text-green-400' },
-    { label: '오늘 활성 유저', value: stats?.activeUsersToday ?? 0, icon: Activity, color: 'text-cyan-400' },
-    { label: '정지된 유저', value: stats?.suspendedUsers ?? 0, icon: AlertTriangle, color: 'text-red-400' },
-    { label: '전체 스팟', value: stats?.totalSpots ?? 0, icon: MapPin, color: 'text-yellow-400' },
-    { label: '전체 게시글', value: stats?.totalPosts ?? 0, icon: FileText, color: 'text-purple-400' },
-    { label: '전체 다이어리', value: stats?.totalDiaries ?? 0, icon: FileText, color: 'text-orange-400' },
-    { label: '미처리 신고', value: stats?.pendingReports ?? 0, icon: AlertTriangle, color: 'text-red-500' },
+    { label: '전체 유저', value: Number(stats?.totalUsers ?? 0), icon: Users, color: 'text-blue-400' },
+    { label: '이번 주 신규', value: Number(stats?.newUsersThisWeek ?? 0), icon: TrendingUp, color: 'text-green-400' },
+    { label: '오늘 활성 유저', value: Number(stats?.activeUsersToday ?? 0), icon: Activity, color: 'text-cyan-400' },
+    { label: '정지된 유저', value: Number(stats?.suspendedUsers ?? 0), icon: AlertTriangle, color: 'text-red-400' },
+    { label: '전체 스팟', value: Number(stats?.totalSpots ?? 0), icon: MapPin, color: 'text-yellow-400' },
+    { label: '전체 게시글', value: Number(stats?.totalPosts ?? 0), icon: FileText, color: 'text-purple-400' },
+    { label: '전체 다이어리', value: Number(stats?.totalDiaries ?? 0), icon: FileText, color: 'text-orange-400' },
+    { label: '미처리 신고', value: Number(stats?.pendingReports ?? 0), icon: AlertTriangle, color: 'text-red-500' },
   ];
 
   return (

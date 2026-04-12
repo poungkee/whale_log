@@ -78,8 +78,11 @@ export function AdminUsers({ token }: AdminUsersProps) {
       }
 
       const data: UsersResponse = await res.json();
-      setUsers(data.data);
-      setTotal(data.total);
+      /** 배열 직접 반환 또는 { data, total } 래핑 두 형식 모두 대응 */
+      const list = Array.isArray(data) ? (data as unknown as AdminUser[]) : (data.data ?? []);
+      const count = Array.isArray(data) ? list.length : (data.total ?? list.length);
+      setUsers(list);
+      setTotal(count);
     } catch {
       console.error('서버 연결 실패');
     } finally {
