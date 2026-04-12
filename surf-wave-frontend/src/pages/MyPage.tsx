@@ -10,7 +10,7 @@
  * 3. 설정 목록: 레벨 변경, 보드 변경, 알림 토글, 앱 정보, 로그아웃
  */
 
-import { Settings, ChevronRight, Waves, Clock, MapPin, Star, BookOpen, Camera } from 'lucide-react';
+import { Settings, ChevronRight, Waves, Clock, MapPin, Star, BookOpen, Camera, Shield } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import type { SurfLevel, BoardType, UserInfo } from '../types';
 import { api } from '../lib/api';
@@ -32,6 +32,8 @@ interface MyPageProps {
   onNavigateToDiary: () => void;
   /** 자세 연습 페이지로 이동 핸들러 */
   onNavigateToPoseTraining?: () => void;
+  /** 관리자 패널로 이동 핸들러 — role=ADMIN인 경우에만 표시 */
+  onNavigateToAdmin?: () => void;
 }
 
 /**
@@ -138,7 +140,7 @@ const BOARD_COLORS: Record<BoardType, string> = {
 /** 선택 가능한 보드 타입 목록 (UNSET 제외, 프로필 변경 드롭다운에 표시) */
 const ALL_BOARDS: BoardType[] = ['LONGBOARD', 'FUNBOARD', 'MIDLENGTH', 'FISH', 'SHORTBOARD', 'SUP', 'BODYBOARD', 'FOIL', 'OTHER'];
 
-export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange, onBoardTypeChange, onNotificationToggle, onNavigateToDiary, onNavigateToPoseTraining }: MyPageProps) {
+export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange, onBoardTypeChange, onNotificationToggle, onNavigateToDiary, onNavigateToPoseTraining, onNavigateToAdmin }: MyPageProps) {
   /** 레벨 변경 드롭다운 열림/닫힘 상태 */
   const [showLevelPicker, setShowLevelPicker] = useState(false);
   /** 보드 타입 변경 드롭다운 열림/닫힘 상태 */
@@ -612,6 +614,20 @@ export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange, onBoardTy
             <span>앱 정보</span>
             <span className="text-sm text-muted-foreground">v1.4.2</span>
           </button>
+
+          {/* 관리자 패널 진입 버튼 — role=ADMIN인 계정에만 표시 */}
+          {userInfo?.role === 'ADMIN' && (
+            <button
+              onClick={onNavigateToAdmin}
+              className="w-full flex items-center justify-between p-4 hover:bg-secondary transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-red-400" />
+                <span className="text-red-400 font-medium">관리자 패널</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </button>
+          )}
 
           {/* 로그아웃 버튼 */}
           <button

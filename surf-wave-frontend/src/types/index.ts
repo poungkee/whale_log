@@ -12,8 +12,68 @@ export type SurfLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT';
 /** 보드 타입 - 서핑 보드 종류 (프로필 + 다이어리 공용, 백엔드 BoardType/UserBoardType 통일) */
 export type BoardType = 'SHORTBOARD' | 'LONGBOARD' | 'FUNBOARD' | 'FISH' | 'SUP' | 'BODYBOARD' | 'FOIL' | 'OTHER' | 'MIDLENGTH' | 'UNSET';
 
-/** 앱 화면 상태 - 현재 표시 중인 화면 */
-export type AppScreen = 'splash' | 'welcome' | 'login' | 'register' | 'level-select' | 'main';
+/** 앱 화면 상태 - 현재 표시 중인 화면 ('admin' 추가: 관리자 대시보드) */
+export type AppScreen = 'splash' | 'welcome' | 'login' | 'register' | 'level-select' | 'main' | 'admin';
+
+/** 관리자 대시보드 탭 */
+export type AdminTab = 'overview' | 'users' | 'content' | 'spots' | 'traffic' | 'logs';
+
+/** 관리자 대시보드 통계 — GET /api/v1/admin/dashboard 응답 */
+export interface AdminStats {
+  totalUsers: number;
+  newUsersThisWeek: number;
+  activeUsersToday: number;
+  suspendedUsers: number;
+  totalSpots: number;
+  totalPosts: number;
+  totalDiaries: number;
+  pendingReports: number;
+}
+
+/** 7일 트래픽 통계 1개 항목 — GET /api/v1/admin/stats/traffic 응답의 배열 요소 */
+export interface TrafficDay {
+  date: string;         // 'YYYY-MM-DD'
+  newUsers: number;     // 신규 가입자
+  activeUsers: number;  // 일별 활성 사용자 (DAU)
+  newDiaries: number;   // 신규 다이어리
+  newPosts: number;     // 신규 게시글
+}
+
+/** 관리자 유저 목록 항목 — GET /api/v1/admin/users 응답의 data[] 요소 */
+export interface AdminUser {
+  id: string;
+  email: string;
+  nickname: string;
+  role: string;
+  isSuspended: boolean;
+  suspendedUntil: string | null;
+  lastLoginAt: string | null;
+  createdAt: string;
+}
+
+/** 신고 항목 — GET /api/v1/admin/reports 응답의 data[] 요소 */
+export interface AdminReport {
+  id: string;
+  reason: string;
+  description: string | null;
+  status: string;
+  adminNote: string | null;
+  createdAt: string;
+  reporter: { id: string; nickname: string } | null;
+  post: { id: string; content: string } | null;
+}
+
+/** 감사 로그 항목 — GET /api/v1/admin/logs 응답의 data[] 요소 */
+export interface AdminLog {
+  id: string;
+  actionType: string;
+  targetType: string | null;
+  targetId: string | null;
+  description: string | null;
+  ipAddress: string | null;
+  createdAt: string;
+  admin: { id: string; nickname: string; email: string } | null;
+}
 
 /** 메인 탭 - 하단 네비게이션의 탭 종류 (guide: 초보 서핑 가이드) */
 export type MainTab = 'home' | 'explore' | 'guide' | 'profile';

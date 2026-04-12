@@ -49,9 +49,37 @@ export class UsersService {
     return this.userRepository.findOne({ where: { firebaseUid } });
   }
 
-  /** findByEmail - 이메일로 사용자 조회 */
-  async findByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { email } });
+  /**
+   * findByEmail - 이메일로 사용자 조회 (SEC-9 수정: 필요 필드만 선택적 조회)
+   *
+   * 기존 문제: select 없이 전체 필드 조회 → passwordHash가 항상 메모리에 로드됨
+   * 수정: 호출 목적에 따라 두 가지 오버로드 제공
+   *   - withPassword=false (기본): 인증 불필요한 조회 (중복 확인 등)
+   *   - withPassword=true: 로그인 시 비밀번호 비교가 필요한 조회
+   *
+   * @param email - 조회할 이메일 주소
+   * @param withPassword - true이면 passwordHash 포함 반환 (로그인용, 기본 false)
+   */
+  async findByEmail(email: string, withPassword = false): Promise<User | null> {
+    if (withPassword) {
+      /**
+       * 로그인 시 사용 — passwordHash 포함 조회
+       * bcrypt.compare에 필요한 passwordHash + 인증 처리에 필요한 필드만 선택
+       */
+      return this.userRepository.findOne({
+        where: { email },
+        select: ['id', 'email', 'passwordHash', 'nickname', 'role', 'isSuspended', 'provider', 'avatarUrl', 'notificationsEnabled'],
+      });
+    }
+
+    /**
+     * 중복 확인 등 일반 조회 — passwordHash 제외
+     * 불필요한 민감 데이터를 메모리에 로드하지 않음
+     */
+    return this.userRepository.findOne({
+      where: { email },
+      select: ['id', 'email', 'nickname', 'role', 'isSuspended', 'firebaseUid', 'provider', 'avatarUrl', 'notificationsEnabled'],
+    });
   }
 
   /** findByNickname - 닉네임으로 사용자 조회 (닉네임 중복 확인에 사용) */

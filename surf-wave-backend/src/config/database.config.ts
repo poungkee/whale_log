@@ -45,8 +45,20 @@ export const getDatabaseConfig = (
     database: configService.get<string>('DB_DATABASE', DEFAULT_DB_DATABASE),
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
     migrations: [__dirname + '/../migrations/*{.ts,.js}'],
-    /** DB_SYNCHRONIZE=true면 프로덕션에서도 테이블 자동 생성 (초기 배포용) */
-    synchronize: configService.get<string>('DB_SYNCHRONIZE') === 'true' || !isProduction,
+    /**
+     * synchronize 설정 (SEC-2 수정: 프로덕션에서 자동 동기화 금지)
+     *
+     * [보안] 프로덕션에서 synchronize=true는 코드 변경 시 테이블/컬럼이 자동 수정·삭제되어
+     *        데이터 유실 위험이 있습니다. Railway 환경변수에서도 반드시 false로 설정해야 합니다.
+     *
+     * 결정 우선순위:
+     * 1. 프로덕션(NODE_ENV=production)이면 → DB_SYNCHRONIZE 환경변수 무시하고 항상 false
+     *    (Railway 환경변수를 실수로 true로 놔둬도 안전하게 차단)
+     * 2. 개발 환경(NODE_ENV≠production)이면 → DB_SYNCHRONIZE 환경변수 값 사용 (기본 true)
+     */
+    synchronize: isProduction
+      ? false   // 프로덕션: 항상 false — DB_SYNCHRONIZE 환경변수 값을 무시
+      : configService.get<string>('DB_SYNCHRONIZE') !== 'false', // 개발: 기본 true
     logging: !isProduction,
     /**
      * SSL 설정

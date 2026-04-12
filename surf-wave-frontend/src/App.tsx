@@ -30,6 +30,7 @@ import { MyPage } from './pages/MyPage';
 import { Guide } from './pages/Guide';
 import { Diary } from './pages/Diary';
 import { PoseTraining } from './pages/PoseTraining';
+import { AdminPage } from './pages/admin/AdminPage';
 import { BottomNav } from './components/BottomNav';
 import { api } from './lib/api';
 
@@ -507,6 +508,18 @@ export default function App() {
     );
   }
 
+  /** 관리자 대시보드 - role=ADMIN인 경우에만 접근 가능 */
+  if (screen === 'admin') {
+    return (
+      <div className="dark min-h-screen bg-background text-foreground">
+        <AdminPage
+          userInfo={userInfo}
+          onBack={() => setScreen('main')}
+        />
+      </div>
+    );
+  }
+
   /** 메인 화면 - 탭별 컨텐츠 + 하단 네비게이션 */
   const renderMainPage = () => {
     switch (mainTab) {
@@ -548,6 +561,7 @@ export default function App() {
             onNotificationToggle={handleNotificationToggle}
             onNavigateToDiary={() => setProfileSubPage('diary')}
             onNavigateToPoseTraining={() => setProfileSubPage('poseTraining')}
+            onNavigateToAdmin={() => setScreen('admin')}
           />
         );
       case 'explore':

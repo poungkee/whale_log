@@ -115,8 +115,11 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
 
-    /** 이메일로 사용자 조회 - users 테이블에서 email 일치하는 레코드 */
-    const user = await this.usersService.findByEmail(email);
+    /**
+     * 이메일로 사용자 조회 (withPassword=true: passwordHash 포함 조회)
+     * 로그인 시에는 bcrypt.compare를 위해 passwordHash가 필요하므로 true 전달 (SEC-9)
+     */
+    const user = await this.usersService.findByEmail(email, true);
     if (!user) {
       throw new UnauthorizedException('가입되지 않은 이메일입니다');
     }
@@ -235,9 +238,22 @@ export class AuthService {
    */
   async googleLogin(credential: string, nickname?: string) {
     try {
-      /** Google tokeninfo API 호출 - ID 토큰의 유효성 검증 및 사용자 정보 반환 */
+      /**
+       * Google ID 토큰 검증 (SEC-5 수정: URL 파라미터 → POST body 전환)
+       *
+       * 기존 문제: GET ?id_token={credential} — URL에 토큰이 노출되어
+       *           서버 액세스 로그, 프록시, 브라우저 히스토리에 토큰이 기록됨
+       *
+       * 수정 방법: POST body에 토큰을 담아 전송 → 로그에 노출되지 않음
+       *           Content-Type: application/x-www-form-urlencoded 형식 사용
+       *           (Google tokeninfo API가 POST body를 지원함)
+       */
       const { data } = await firstValueFrom(
-        this.httpService.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`),
+        this.httpService.post(
+          'https://oauth2.googleapis.com/tokeninfo',
+          `id_token=${encodeURIComponent(credential)}`,
+          { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
+        ),
       );
 
       /** Google 고유 ID 생성 - "google_" 접두사 + Google sub 값 */

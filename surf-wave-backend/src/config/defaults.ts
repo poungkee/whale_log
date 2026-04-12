@@ -29,9 +29,15 @@ export const DEFAULT_DB_DATABASE = 'surfwave';
 export const DEFAULT_JWT_SECRET = 'surfwave-jwt-secret-dev-2026';
 
 /**
- * 프로덕션 환경 필수 환경변수 검증
- * 앱 시작 시 호출하여 보안에 민감한 환경변수가 설정되었는지 확인
- * 미설정 시 앱 시작을 차단하여 보안 사고 방지
+ * 프로덕션 환경 필수 환경변수 검증 (P2-5 강화: JWT_SECRET 최소 길이 추가)
+ *
+ * 앱 시작 시 호출하여 보안에 민감한 환경변수가 올바르게 설정되었는지 확인합니다.
+ * 검증 실패 시 앱 시작을 완전 차단하여 보안 사고를 사전에 방지합니다.
+ *
+ * 검증 항목:
+ * 1. 필수 환경변수 존재 여부 (JWT_SECRET, DB_PASSWORD, DB_HOST, KAKAO_REST_API_KEY)
+ * 2. JWT_SECRET이 개발용 기본값과 동일한지 확인 → 동일하면 차단
+ * 3. JWT_SECRET 최소 길이 32자 미달 시 차단 (너무 짧은 시크릿은 brute force 위험)
  */
 export function validateProductionEnv(): void {
   const isProduction = process.env.NODE_ENV === 'production';
@@ -44,6 +50,7 @@ export function validateProductionEnv(): void {
     'KAKAO_REST_API_KEY',
   ];
 
+  /** 1. 필수 환경변수 존재 확인 */
   const missing = requiredVars.filter((v) => !process.env[v]);
   if (missing.length > 0) {
     throw new Error(
@@ -52,10 +59,24 @@ export function validateProductionEnv(): void {
     );
   }
 
-  /** JWT_SECRET이 개발용 기본값과 동일하면 차단 */
-  if (process.env.JWT_SECRET === DEFAULT_JWT_SECRET) {
+  const jwtSecret = process.env.JWT_SECRET!;
+
+  /** 2. JWT_SECRET이 개발용 기본값과 동일하면 차단 */
+  if (jwtSecret === DEFAULT_JWT_SECRET) {
     throw new Error(
       '[보안] 프로덕션에서 개발용 JWT_SECRET을 사용할 수 없습니다. 강력한 비밀키를 설정하세요.',
+    );
+  }
+
+  /**
+   * 3. JWT_SECRET 최소 길이 검증 (P2-5 추가)
+   * 32자 미만은 brute force 공격에 취약합니다.
+   * 권장: openssl rand -base64 48 로 생성한 64자 이상의 랜덤 문자열
+   */
+  if (jwtSecret.length < 32) {
+    throw new Error(
+      `[보안] JWT_SECRET이 너무 짧습니다 (${jwtSecret.length}자). ` +
+      `최소 32자 이상이어야 합니다. openssl rand -base64 48 로 생성하세요.`,
     );
   }
 }
