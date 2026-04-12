@@ -201,6 +201,16 @@ export class AdminController {
     return this.adminService.deleteGuide(guideId);
   }
 
+  /**
+   * 감사 로그 목록 조회 — 관리자 액션 이력
+   * 최신순 정렬, 페이지네이션 지원
+   */
+  @Get('logs')
+  @ApiOperation({ summary: '감사 로그 목록 조회' })
+  async getLogs(@Query() query: PaginationDto) {
+    return this.adminService.getLogs(query);
+  }
+
   @Post('notifications/broadcast')
   @ApiOperation({ summary: 'Send broadcast notification to all users' })
   async broadcast(@Body() dto: BroadcastDto) {

@@ -516,6 +516,26 @@ export class AdminService {
     return { message: '가이드가 삭제되었습니다' };
   }
 
+  /**
+   * 감사 로그 목록 조회
+   * 최신순 정렬, 페이지네이션 지원
+   * 관리자 정보 join 포함 (닉네임, 이메일)
+   */
+  async getLogs(query: PaginationDto) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await this.adminLogRepository.findAndCount({
+      order: { createdAt: 'DESC' },
+      skip,
+      take: limit,
+      relations: ['admin'],
+    });
+
+    return { data, total, page, limit };
+  }
+
   async broadcast(dto: BroadcastDto) {
     const users = await this.userRepository.find({
       where: { notificationsEnabled: true, fcmToken: Not(IsNull()) },
