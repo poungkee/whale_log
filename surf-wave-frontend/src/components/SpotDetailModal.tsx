@@ -20,7 +20,7 @@ import {
   ArrowLeft, AlertTriangle, Waves, Wind,
   ArrowUp, ArrowDown, Navigation,
   Thermometer, Droplets, Cloud, BookOpen, MapPin, Clock,
-  Star, Sunrise, ChevronDown, Loader2, MessageCircle, Video,
+  Star, Sunrise, ChevronDown, Loader2, MessageCircle,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import {
@@ -41,39 +41,8 @@ interface SpotDetailModalProps {
   onClose: () => void;
 }
 
-/** 상세 모달의 탭 종류 - 파도(적합도+시간별 통합) / 소통 / 기록 / 라이브캠 */
-type DetailTab = 'wave' | 'community' | 'diary' | 'cam';
-
-/**
- * 라이브캠 소스 타입
- * - skyline: SkylineWebcams (embed.skylinewebcams.com/#ID)
- * - windy:   Windy 웹캠 (embed.windy.com/embed.html?type=webcam&id=ID)
- */
-type CamSource = 'skyline' | 'windy';
-
-interface LiveCam {
-  source: CamSource;
-  id: number;
-}
-
-/**
- * 스팟명 → 라이브캠 정보 매핑
- * - 한국: SkylineWebcams (속초, 강릉 강문, 제주) + Windy (부산 송정)
- * - 발리: Windy 웹캠 (Echo Beach, Seminyak, Canggu, Berawa)
- * - 해당 스팟만 "라이브" 탭 표시
- */
-const LIVECAM_MAP: Record<string, LiveCam> = {
-  // 한국 - SkylineWebcams
-  '속초해변':              { source: 'skyline', id: 4090 },
-  '강릉 경포해변':         { source: 'skyline', id: 4092 }, // 강문해변 인근
-  '제주 이호테우해변':     { source: 'skyline', id: 3253 },
-  '부산 송정해변':         { source: 'windy',   id: 1639518826 },
-  // 발리 - Windy 서프캠
-  'Echo Beach':            { source: 'windy',   id: 1333096978 },
-  'Seminyak Beach':        { source: 'windy',   id: 1341946217 },
-  'Canggu - Batu Bolong':  { source: 'windy',   id: 1503785462 },
-  'Berawa':                { source: 'windy',   id: 1575921075 },
-};
+/** 상세 모달의 탭 종류 - 파도(적합도+시간별 통합) / 소통 / 기록 */
+type DetailTab = 'wave' | 'community' | 'diary';
 
 /**
  * 스팟별 공개 다이어리 항목 타입
@@ -214,16 +183,6 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
 export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModalProps) {
   const { spot, forecast, surfRating, detail, safetyReasons, levelFit } = data;
   const fitResult = levelFit?.[currentLevel] || 'PASS';
-
-  /** 이 스팟에 라이브캠이 있는지 여부 */
-  const livecam = LIVECAM_MAP[spot.name] ?? null;
-
-  /** 소스별 embed URL 생성 */
-  const livecamEmbedUrl = livecam
-    ? livecam.source === 'skyline'
-      ? `https://embed.skylinewebcams.com/#${livecam.id}`
-      : `https://embed.windy.com/embed.html?type=webcam&id=${livecam.id}&zoom=5`
-    : null;
 
   /** 현재 선택된 탭 */
   const [activeTab, setActiveTab] = useState<DetailTab>('wave');
@@ -435,20 +394,6 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
               <BookOpen className="w-3 h-3" />
               기록
             </button>
-            {/* 라이브캠 탭 - 캠이 있는 스팟만 표시 */}
-            {livecam && (
-              <button
-                onClick={() => setActiveTab('cam')}
-                className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                  activeTab === 'cam'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Video className="w-3 h-3" />
-                라이브
-              </button>
-            )}
           </div>
         </div>
 
@@ -978,40 +923,6 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
                 </p>
               </div>
             )}
-          </div>
-        )}
-
-        {/* ====== 라이브캠 탭 - SkylineWebcams / Windy 임베드 ====== */}
-        {activeTab === 'cam' && livecam && livecamEmbedUrl && (
-          <div className="space-y-3">
-            {/* 헤더 */}
-            <div className="flex items-center gap-2">
-              <Video className="w-4 h-4 text-blue-400" />
-              <span className="text-sm font-bold">라이브 카메라</span>
-              <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded font-bold">LIVE</span>
-            </div>
-
-            {/* 라이브캠 iframe 임베드 - 16:9 비율 */}
-            <div className="bg-card rounded-xl border border-border overflow-hidden">
-              <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
-                <iframe
-                  className="absolute inset-0 w-full h-full"
-                  src={livecamEmbedUrl}
-                  title={`${spot.name} 라이브캠`}
-                  allowFullScreen
-                  scrolling="no"
-                />
-              </div>
-            </div>
-
-            {/* 소스 표시 + 안내 메시지 */}
-            <div className="bg-secondary/50 rounded-lg p-3 text-xs text-muted-foreground space-y-1">
-              <p>
-                📡 {livecam.source === 'skyline' ? 'SkylineWebcams' : 'Windy'} 네트워크 기반 해변 카메라입니다.
-              </p>
-              <p>⚠️ 야간/우천 시 화면이 어둡거나 일시 중단될 수 있습니다.</p>
-              <p>🌊 파도 상태, 바람, 해변 혼잡도를 실시간으로 확인하세요.</p>
-            </div>
           </div>
         )}
 
