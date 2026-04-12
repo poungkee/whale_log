@@ -104,8 +104,12 @@ export class WebcamService {
       };
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
-      this.logger.error(`Windy API 호출 실패: ${error}`);
-      throw new NotFoundException('웹캠 데이터를 가져오는 데 실패했습니다.');
+      // axios 에러인 경우 실제 Windy API 응답 상태/메시지 포함
+      const axiosError = error as any;
+      const status = axiosError?.response?.status;
+      const detail = axiosError?.response?.data ?? axiosError?.message ?? String(error);
+      this.logger.error(`Windy API 호출 실패 [${status}]: ${JSON.stringify(detail)}`);
+      throw new NotFoundException(`Windy API 오류 [${status}]: ${JSON.stringify(detail)}`);
     }
   }
 }
