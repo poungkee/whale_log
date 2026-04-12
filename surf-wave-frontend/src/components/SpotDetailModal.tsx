@@ -20,7 +20,7 @@ import {
   ArrowLeft, AlertTriangle, Waves, Wind,
   ArrowUp, ArrowDown, Navigation,
   Thermometer, Droplets, Cloud, BookOpen, MapPin, Clock,
-  Star, Sunrise, ChevronDown, Loader2, MessageCircle,
+  Star, Sunrise, ChevronDown, Loader2, MessageCircle, Video,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import {
@@ -41,8 +41,21 @@ interface SpotDetailModalProps {
   onClose: () => void;
 }
 
-/** 상세 모달의 탭 종류 - 파도(적합도+시간별 통합) / 소통 / 기록 */
-type DetailTab = 'wave' | 'community' | 'diary';
+/** 상세 모달의 탭 종류 - 파도(적합도+시간별 통합) / 소통 / 기록 / 라이브캠 */
+type DetailTab = 'wave' | 'community' | 'diary' | 'cam';
+
+/**
+ * 스팟명 → YouTube 라이브 스트림 영상 ID 매핑
+ * - 국내 해변 CCTV/라이브캠 유튜브 채널 기반
+ * - 해당 스팟만 라이브캠 탭 표시 (다른 스팟은 탭 숨김)
+ */
+const LIVECAM_MAP: Record<string, string> = {
+  '속초해변':       '80OT9PgWG-k',   // 속초 해변 라이브캠
+  '제주 함덕해변':  'IXbjJP_d5Tg',   // 제주 함덕 해수욕장 라이브캠
+  '강릉 경포해변':  '009kOq0x4ZI',   // 강릉 강문해변 라이브캠 (경포 인근)
+  '포항 칠포해변':  'jTQjbPOwv24',   // 포항 해변 라이브캠
+  '부산 해운대해변': 'uHdl_9hsHqw',  // 부산 해운대 라이브캠
+};
 
 /**
  * 스팟별 공개 다이어리 항목 타입
@@ -183,6 +196,9 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
 export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModalProps) {
   const { spot, forecast, surfRating, detail, safetyReasons, levelFit } = data;
   const fitResult = levelFit?.[currentLevel] || 'PASS';
+
+  /** 이 스팟에 라이브캠이 있는지 여부 */
+  const livecamId = LIVECAM_MAP[spot.name] ?? null;
 
   /** 현재 선택된 탭 */
   const [activeTab, setActiveTab] = useState<DetailTab>('wave');
@@ -394,6 +410,20 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
               <BookOpen className="w-3 h-3" />
               기록
             </button>
+            {/* 라이브캠 탭 - 캠이 있는 스팟만 표시 */}
+            {livecamId && (
+              <button
+                onClick={() => setActiveTab('cam')}
+                className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  activeTab === 'cam'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Video className="w-3 h-3" />
+                라이브
+              </button>
+            )}
           </div>
         </div>
 
@@ -923,6 +953,38 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
                 </p>
               </div>
             )}
+          </div>
+        )}
+
+        {/* ====== 라이브캠 탭 - YouTube 실시간 스트리밍 ====== */}
+        {activeTab === 'cam' && livecamId && (
+          <div className="space-y-3">
+            {/* 헤더 */}
+            <div className="flex items-center gap-2">
+              <Video className="w-4 h-4 text-red-400" />
+              <span className="text-sm font-bold">라이브 카메라</span>
+              <span className="text-[10px] px-1.5 py-0.5 bg-red-500/20 text-red-400 rounded font-bold">LIVE</span>
+            </div>
+
+            {/* YouTube 임베드 - 16:9 비율 */}
+            <div className="bg-card rounded-xl border border-border overflow-hidden">
+              <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
+                <iframe
+                  className="absolute inset-0 w-full h-full"
+                  src={`https://www.youtube.com/embed/${livecamId}?autoplay=1&mute=1&playsinline=1`}
+                  title={`${spot.name} 라이브캠`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </div>
+
+            {/* 안내 메시지 */}
+            <div className="bg-secondary/50 rounded-lg p-3 text-xs text-muted-foreground space-y-1">
+              <p>📡 YouTube 라이브 스트리밍 기반 해변 카메라입니다.</p>
+              <p>⚠️ 야간/우천 시 화면이 어둡거나 스트리밍이 중단될 수 있습니다.</p>
+              <p>🌊 파도 상태, 바람, 해변 혼잡도를 실시간으로 확인하세요.</p>
+            </div>
           </div>
         )}
 
