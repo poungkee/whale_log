@@ -45,16 +45,34 @@ interface SpotDetailModalProps {
 type DetailTab = 'wave' | 'community' | 'diary' | 'cam';
 
 /**
- * 스팟명 → YouTube 라이브 스트림 영상 ID 매핑
- * - 국내 해변 CCTV/라이브캠 유튜브 채널 기반
- * - 해당 스팟만 라이브캠 탭 표시 (다른 스팟은 탭 숨김)
+ * 라이브캠 소스 타입
+ * - skyline: SkylineWebcams (embed.skylinewebcams.com/#ID)
+ * - windy:   Windy 웹캠 (embed.windy.com/embed.html?type=webcam&id=ID)
  */
-const LIVECAM_MAP: Record<string, string> = {
-  '속초해변':       '80OT9PgWG-k',   // 속초 해변 라이브캠
-  '제주 함덕해변':  'IXbjJP_d5Tg',   // 제주 함덕 해수욕장 라이브캠
-  '강릉 경포해변':  '009kOq0x4ZI',   // 강릉 강문해변 라이브캠 (경포 인근)
-  '포항 칠포해변':  'jTQjbPOwv24',   // 포항 해변 라이브캠
-  '부산 해운대해변': 'uHdl_9hsHqw',  // 부산 해운대 라이브캠
+type CamSource = 'skyline' | 'windy';
+
+interface LiveCam {
+  source: CamSource;
+  id: number;
+}
+
+/**
+ * 스팟명 → 라이브캠 정보 매핑
+ * - 한국: SkylineWebcams (속초, 강릉 강문, 제주) + Windy (부산 송정)
+ * - 발리: Windy 웹캠 (Echo Beach, Seminyak, Canggu, Berawa)
+ * - 해당 스팟만 "라이브" 탭 표시
+ */
+const LIVECAM_MAP: Record<string, LiveCam> = {
+  // 한국 - SkylineWebcams
+  '속초해변':              { source: 'skyline', id: 4090 },
+  '강릉 경포해변':         { source: 'skyline', id: 4092 }, // 강문해변 인근
+  '제주 이호테우해변':     { source: 'skyline', id: 3253 },
+  '부산 송정해변':         { source: 'windy',   id: 1639518826 },
+  // 발리 - Windy 서프캠
+  'Echo Beach':            { source: 'windy',   id: 1333096978 },
+  'Seminyak Beach':        { source: 'windy',   id: 1341946217 },
+  'Canggu - Batu Bolong':  { source: 'windy',   id: 1503785462 },
+  'Berawa':                { source: 'windy',   id: 1575921075 },
 };
 
 /**
@@ -198,7 +216,14 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
   const fitResult = levelFit?.[currentLevel] || 'PASS';
 
   /** 이 스팟에 라이브캠이 있는지 여부 */
-  const livecamId = LIVECAM_MAP[spot.name] ?? null;
+  const livecam = LIVECAM_MAP[spot.name] ?? null;
+
+  /** 소스별 embed URL 생성 */
+  const livecamEmbedUrl = livecam
+    ? livecam.source === 'skyline'
+      ? `https://embed.skylinewebcams.com/#${livecam.id}`
+      : `https://embed.windy.com/embed.html?type=webcam&id=${livecam.id}&zoom=5`
+    : null;
 
   /** 현재 선택된 탭 */
   const [activeTab, setActiveTab] = useState<DetailTab>('wave');
@@ -411,7 +436,7 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
               기록
             </button>
             {/* 라이브캠 탭 - 캠이 있는 스팟만 표시 */}
-            {livecamId && (
+            {livecam && (
               <button
                 onClick={() => setActiveTab('cam')}
                 className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
@@ -956,33 +981,35 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
           </div>
         )}
 
-        {/* ====== 라이브캠 탭 - YouTube 실시간 스트리밍 ====== */}
-        {activeTab === 'cam' && livecamId && (
+        {/* ====== 라이브캠 탭 - SkylineWebcams / Windy 임베드 ====== */}
+        {activeTab === 'cam' && livecam && livecamEmbedUrl && (
           <div className="space-y-3">
             {/* 헤더 */}
             <div className="flex items-center gap-2">
-              <Video className="w-4 h-4 text-red-400" />
+              <Video className="w-4 h-4 text-blue-400" />
               <span className="text-sm font-bold">라이브 카메라</span>
-              <span className="text-[10px] px-1.5 py-0.5 bg-red-500/20 text-red-400 rounded font-bold">LIVE</span>
+              <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded font-bold">LIVE</span>
             </div>
 
-            {/* YouTube 임베드 - 16:9 비율 */}
+            {/* 라이브캠 iframe 임베드 - 16:9 비율 */}
             <div className="bg-card rounded-xl border border-border overflow-hidden">
               <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
                 <iframe
                   className="absolute inset-0 w-full h-full"
-                  src={`https://www.youtube.com/embed/${livecamId}?autoplay=1&mute=1&playsinline=1`}
+                  src={livecamEmbedUrl}
                   title={`${spot.name} 라이브캠`}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
+                  scrolling="no"
                 />
               </div>
             </div>
 
-            {/* 안내 메시지 */}
+            {/* 소스 표시 + 안내 메시지 */}
             <div className="bg-secondary/50 rounded-lg p-3 text-xs text-muted-foreground space-y-1">
-              <p>📡 YouTube 라이브 스트리밍 기반 해변 카메라입니다.</p>
-              <p>⚠️ 야간/우천 시 화면이 어둡거나 스트리밍이 중단될 수 있습니다.</p>
+              <p>
+                📡 {livecam.source === 'skyline' ? 'SkylineWebcams' : 'Windy'} 네트워크 기반 해변 카메라입니다.
+              </p>
+              <p>⚠️ 야간/우천 시 화면이 어둡거나 일시 중단될 수 있습니다.</p>
               <p>🌊 파도 상태, 바람, 해변 혼잡도를 실시간으로 확인하세요.</p>
             </div>
           </div>
