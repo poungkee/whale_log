@@ -20,7 +20,7 @@ import {
   ArrowLeft, AlertTriangle, Waves, Wind,
   ArrowUp, ArrowDown, Navigation,
   Thermometer, Droplets, Cloud, BookOpen, MapPin, Clock,
-  Star, Sunrise, ChevronDown, Loader2, MessageCircle,
+  Star, Sunrise, ChevronDown, Loader2, MessageCircle, Camera,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import {
@@ -41,8 +41,21 @@ interface SpotDetailModalProps {
   onClose: () => void;
 }
 
-/** 상세 모달의 탭 종류 - 파도(적합도+시간별 통합) / 소통 / 기록 */
-type DetailTab = 'wave' | 'community' | 'diary';
+/** 상세 모달의 탭 종류 - 파도(적합도+시간별 통합) / 소통 / 기록 / 라이브캠 */
+type DetailTab = 'wave' | 'community' | 'diary' | 'cam';
+
+/**
+ * 스팟명 → Windy 웹캠 ID 매핑
+ * - 발리 서프캠: Windy.com 웹캠 네트워크
+ * - 백엔드 프록시(/api/v1/webcam/:id)를 통해 스냅샷 이미지 URL 조회
+ */
+const WINDY_CAM_MAP: Record<string, number> = {
+  'Echo Beach':           1333096978,
+  'Seminyak Beach':       1341946217,
+  'Canggu - Batu Bolong': 1503785462,
+  'Berawa':               1575921075,
+  '부산 송정해변':        1639518826,
+};
 
 /**
  * 스팟별 공개 다이어리 항목 타입
@@ -184,6 +197,14 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
   const { spot, forecast, surfRating, detail, safetyReasons, levelFit } = data;
   const fitResult = levelFit?.[currentLevel] || 'PASS';
 
+  /** 이 스팟의 Windy 웹캠 ID (없으면 null → 탭 숨김) */
+  const windyCamId = WINDY_CAM_MAP[spot.name] ?? null;
+
+  /** 웹캠 스냅샷 이미지 URL (백엔드에서 조회, 9분마다 갱신) */
+  const [camImageUrl, setCamImageUrl] = useState<string | null>(null);
+  /** 웹캠 로딩 상태 */
+  const [camLoading, setCamLoading] = useState(false);
+
   /** 현재 선택된 탭 */
   const [activeTab, setActiveTab] = useState<DetailTab>('wave');
   /** 시간별 예보 데이터 (API에서 가져옴) */
@@ -271,6 +292,35 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
       fetchPublicDiaries(1);
     }
   }, [activeTab, publicDiaries.length, diaryTotal, fetchPublicDiaries]);
+
+  /**
+   * 라이브캠 탭 진입 시 Windy 웹캠 스냅샷 URL 조회
+   * - 백엔드 프록시(/api/v1/webcam/:id)에서 이미지 URL 가져옴
+   * - 9분마다 자동 갱신 (free tier 10분 만료 전에 갱신)
+   */
+  useEffect(() => {
+    if (activeTab !== 'cam' || !windyCamId) return;
+
+    const fetchCamImage = async () => {
+      setCamLoading(true);
+      try {
+        const res = await fetch(api(`/api/v1/webcam/${windyCamId}`));
+        if (res.ok) {
+          const data = await res.json();
+          setCamImageUrl(data.imageUrl ?? null);
+        }
+      } catch {
+        console.warn('웹캠 스냅샷 조회 실패');
+      } finally {
+        setCamLoading(false);
+      }
+    };
+
+    fetchCamImage();
+    /** 9분마다 이미지 URL 갱신 (10분 만료 전) */
+    const interval = setInterval(fetchCamImage, 9 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [activeTab, windyCamId]);
 
   /** 차트용 데이터 변환 - 시간별 파고/풍속/조석/기온/수온 */
   const chartData = hourlyData.map(h => ({
@@ -394,6 +444,20 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
               <BookOpen className="w-3 h-3" />
               기록
             </button>
+            {/* 라이브캠 탭 - 발리/한국 Windy 웹캠 있는 스팟만 표시 */}
+            {windyCamId && (
+              <button
+                onClick={() => setActiveTab('cam')}
+                className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  activeTab === 'cam'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Camera className="w-3 h-3" />
+                캠
+              </button>
+            )}
           </div>
         </div>
 
@@ -923,6 +987,43 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
                 </p>
               </div>
             )}
+          </div>
+        )}
+
+        {/* ====== 라이브캠 탭 - Windy 웹캠 스냅샷 ====== */}
+        {activeTab === 'cam' && windyCamId && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Camera className="w-4 h-4 text-cyan-400" />
+              <span className="text-sm font-bold">라이브 해변 캠</span>
+              <span className="text-[10px] px-1.5 py-0.5 bg-cyan-500/20 text-cyan-400 rounded font-bold">LIVE</span>
+            </div>
+
+            {/* 스냅샷 이미지 영역 */}
+            <div className="bg-card rounded-xl border border-border overflow-hidden">
+              {camLoading && !camImageUrl ? (
+                <div className="flex items-center justify-center h-48">
+                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : camImageUrl ? (
+                <img
+                  src={camImageUrl}
+                  alt={`${spot.name} 라이브 해변`}
+                  className="w-full object-cover"
+                  style={{ aspectRatio: '4/3' }}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-48 text-muted-foreground text-sm">
+                  이미지를 불러올 수 없습니다
+                </div>
+              )}
+            </div>
+
+            <div className="bg-secondary/50 rounded-lg p-3 text-xs text-muted-foreground space-y-1">
+              <p>📡 Windy 웹캠 네트워크 기반 해변 스냅샷입니다.</p>
+              <p>🔄 이미지는 약 10분마다 자동 갱신됩니다.</p>
+              <p>🌊 파도 상태와 날씨를 실시간으로 확인하세요.</p>
+            </div>
           </div>
         )}
 
