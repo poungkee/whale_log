@@ -32,6 +32,7 @@ import {
 } from './utils/surf-rating.util';
 import { generatePublicHints, generateHints, type Hints } from './utils/hints.util';
 import { UserBoardType } from '../../common/enums/user-board-type.enum';
+import { KhoaSurfingService } from '../khoa/khoa-surfing.service';
 
 @Injectable()
 export class ForecastsService {
@@ -44,6 +45,8 @@ export class ForecastsService {
     private readonly forecastRepository: Repository<Forecast>,
     private readonly openMeteoProvider: OpenMeteoProvider,
     private readonly spotsService: SpotsService,
+    /** KHOA 서핑지수 서비스 - 한국 스팟 파도 데이터 보강 */
+    private readonly khoaSurfingService: KhoaSurfingService,
   ) {}
 
   // ============================================================
@@ -402,6 +405,26 @@ export class ForecastsService {
         ? Math.round((Number(forecast.windGusts) / 3.6) * 10) / 10
         : null;
 
+      /**
+       * KHOA 서핑지수 보강 데이터 (한국 스팟 전용)
+       *
+       * 📡 데이터 흐름:
+       *   KHOA API (1시간 캐시) → khoaSurfingService.getEnrichment()
+       *   → 우리 스팟명을 KHOA 스팟명으로 변환
+       *   → 현재 시간대(오전/오후) + 사용자 레벨에 맞는 서핑지수 반환
+       *
+       * 🔄 Open-Meteo와 교차검증:
+       *   forecast.waveHeight (Open-Meteo offshore) vs khoaEnrichment.khoaWaveHeight (연안 실측)
+       *   waveHeightRatio = KHOA ÷ Open-Meteo → 1.5~2.0이면 연안 증폭 확인
+       *
+       * 발리 등 해외 스팟은 null 반환 (KHOA는 한국 전용)
+       */
+      const khoaEnrichment = this.khoaSurfingService.getEnrichment(
+        spot.name,
+        level,
+        forecast.waveHeight != null ? Number(forecast.waveHeight) : undefined,
+      );
+
       return {
         spot,
         forecast,
@@ -414,6 +437,14 @@ export class ForecastsService {
         safetyReasons: ratingResult.safetyReasons,
         simpleCondition,
         hints,
+        /**
+         * KHOA 서핑지수 보강 데이터
+         * - khoaIndex: "매우좋음"|"좋음"|"보통"|"나쁨"|"매우나쁨" | null
+         * - khoaWaveHeight: 연안 보정 파고(m) — Open-Meteo보다 정확
+         * - waveHeightRatio: KHOA/Open-Meteo 비율 (1.5~2.0이면 연안 증폭)
+         * - 한국 스팟 9개만 제공, 발리는 null
+         */
+        khoaEnrichment,
       };
     });
 

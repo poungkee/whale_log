@@ -10,12 +10,15 @@ import { ForecastsService } from './forecasts.service';
 import { Forecast } from './entities/forecast.entity';
 import { OpenMeteoProvider } from './providers/open-meteo.provider';
 import { SpotsModule } from '../spots/spots.module';
+import { KhoaModule } from '../khoa/khoa.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Forecast]),
     HttpModule,
     SpotsModule,
+    /** KHOA 서핑지수 모듈 - 한국 스팟 파도 데이터 보강 */
+    KhoaModule,
   ],
   controllers: [ForecastsController, ForecastAdminController],
   providers: [ForecastsService, OpenMeteoProvider],
