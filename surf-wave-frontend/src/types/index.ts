@@ -245,6 +245,25 @@ export interface RegionGroup {
   regions: string[];
 }
 
+/**
+ * 기상청 기상특보 정보
+ * 풍랑/강풍/태풍 특보 발령 시 서퍼에게 위험 경고 표시
+ */
+export interface WeatherAlert {
+  /** 특보 종류 (풍랑 | 강풍 | 태풍 | null) */
+  type: '풍랑' | '강풍' | '태풍' | '호우' | '대설' | null;
+  /** 특보 수준 (주의보 | 경보 | null) */
+  level: '주의보' | '경보' | null;
+  /** 전체 특보명 (예: "풍랑주의보" | null) */
+  alertName: string | null;
+  /** 특보 발효 시각 */
+  issuedAt: string | null;
+  /** 위험 여부 — true면 빨간 경고 배너 표시 (풍랑/태풍) */
+  isDangerous: boolean;
+  /** 서퍼용 경고 메시지 */
+  message: string | null;
+}
+
 export interface SpotForecast {
   /** 스팟 기본 정보 */
   spot: SpotInfo;
@@ -264,4 +283,6 @@ export interface SpotForecast {
   simpleCondition: SimpleCondition | null;
   /** C-7 hints - 점수 보조 설명 메시지 + 배지 태그 */
   hints?: Hints;
+  /** 기상청 기상특보 - 한국 스팟 전용, 특보 없으면 isDangerous: false */
+  weatherAlert?: WeatherAlert | null;
 }

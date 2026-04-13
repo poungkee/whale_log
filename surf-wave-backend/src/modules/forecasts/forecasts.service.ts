@@ -33,6 +33,7 @@ import {
 import { generatePublicHints, generateHints, type Hints } from './utils/hints.util';
 import { UserBoardType } from '../../common/enums/user-board-type.enum';
 import { KhoaSurfingService } from '../khoa/khoa-surfing.service';
+import { WeatherAlertService } from '../weather-alert/weather-alert.service';
 
 @Injectable()
 export class ForecastsService {
@@ -47,6 +48,8 @@ export class ForecastsService {
     private readonly spotsService: SpotsService,
     /** KHOA 서핑지수 서비스 - 한국 스팟 파도 데이터 보강 */
     private readonly khoaSurfingService: KhoaSurfingService,
+    /** 기상청 기상특보 서비스 - 풍랑/강풍/태풍 특보 실시간 조회 */
+    private readonly weatherAlertService: WeatherAlertService,
   ) {}
 
   // ============================================================
@@ -445,6 +448,22 @@ export class ForecastsService {
          * - 한국 스팟 9개만 제공, 발리는 null
          */
         khoaEnrichment,
+        /**
+         * 기상청 기상특보 (한국 스팟 전용)
+         *
+         * 📡 데이터 흐름:
+         *   기상청 특보 API (15분 캐시) → weatherAlertService.getSpotAlert()
+         *   → 스팟 위치에 해당하는 특보구역 확인
+         *   → 발효 중인 특보 반환 (없으면 isDangerous: false)
+         *
+         * ⚠️ 특보 발령 시 프론트엔드 표시:
+         *   isDangerous: true  → 빨간 경고 배너 (풍랑/태풍)
+         *   isDangerous: false + alertName 있음 → 주황 주의 배너 (강풍)
+         *   isDangerous: false + alertName null → 특보 없음
+         *
+         * 발리 등 해외 스팟은 null 반환 (한국 기상청 전용)
+         */
+        weatherAlert: this.weatherAlertService.getSpotAlert(spot.name),
       };
     });
 

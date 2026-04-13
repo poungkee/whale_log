@@ -10,9 +10,9 @@
  * - BLOCKED 카드: opacity-50 grayscale 처리
  */
 
-import { Wind, Clock, ArrowDown, ArrowUp, Sun, CloudRain, Cloud, Droplets, Heart } from 'lucide-react';
+import { Wind, Clock, ArrowDown, ArrowUp, Sun, CloudRain, Cloud, Droplets, Heart, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { getRatingGrade, getRatingColor, getLevelFitColor, getLevelFitLabel } from '../lib/utils';
-import type { SpotForecast, SurfLevel, HintTag } from '../types';
+import type { SpotForecast, SurfLevel, HintTag, WeatherAlert } from '../types';
 
 /** 날씨 상태 → lucide 아이콘 + 라벨 반환 */
 function getWeatherIcon(condition: string | null): { icon: React.ReactNode; label: string } {
@@ -56,8 +56,49 @@ function getTideLabel(status: string | null): { label: string; rising: boolean }
   }
 }
 
+/**
+ * 기상특보 배너 컴포넌트
+ * isDangerous: true  → 빨간 경고 (풍랑/태풍)
+ * isDangerous: false → 주황 주의 (강풍)
+ */
+function WeatherAlertBanner({ alert }: { alert: WeatherAlert }) {
+  if (!alert.alertName) return null;
+
+  const isDangerous = alert.isDangerous;
+
+  return (
+    <div
+      className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 mb-2 ${
+        isDangerous
+          ? 'bg-red-500/15 border border-red-500/30'
+          : 'bg-orange-500/15 border border-orange-500/30'
+      }`}
+    >
+      {isDangerous ? (
+        <ShieldAlert className="w-3.5 h-3.5 shrink-0 text-red-500" />
+      ) : (
+        <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-orange-500" />
+      )}
+      <span
+        className={`text-[11px] font-bold ${isDangerous ? 'text-red-500' : 'text-orange-500'}`}
+      >
+        {alert.alertName} 발령 중
+      </span>
+      {alert.level === '경보' && (
+        <span className="ml-auto text-[10px] font-semibold text-red-400">입수 금지</span>
+      )}
+      {alert.level === '주의보' && isDangerous && (
+        <span className="ml-auto text-[10px] font-semibold text-orange-400">입수 위험</span>
+      )}
+    </div>
+  );
+}
+
 export function SpotCard({ data, currentLevel, onClick, isFavorited, onToggleFavorite }: SpotCardProps) {
   const { spot, forecast, surfRating, levelFit, recommendationKo, safetyReasons } = data;
+
+  /** 기상특보 — 발령 중인 경우만 배너 표시 */
+  const weatherAlert = data.weatherAlert;
 
   /** 현재 레벨의 적합도 판정 */
   const fitResult = levelFit?.[currentLevel] || 'PASS';
@@ -155,6 +196,11 @@ export function SpotCard({ data, currentLevel, onClick, isFavorited, onToggleFav
           )}
         </div>
       </div>
+
+      {/* ── 기상청 특보 배너 (풍랑/강풍/태풍 발령 시) ── */}
+      {weatherAlert?.alertName && (
+        <WeatherAlertBanner alert={weatherAlert} />
+      )}
 
       {/* ── BLOCKED 차단 사유 / WARNING 주의 / PASS 안전 배지 ── */}
       {isBlocked && (

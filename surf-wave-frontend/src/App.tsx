@@ -18,7 +18,7 @@
  * - 'surfLevel': 서핑 레벨 (대시보드 필터에 사용)
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { AppScreen, MainTab, SurfLevel, BoardType, AuthResponse, UserInfo } from './types';
 import { Welcome } from './pages/Welcome';
 import { Login } from './pages/Login';
@@ -32,6 +32,8 @@ import { Diary } from './pages/Diary';
 import { PoseTraining } from './pages/PoseTraining';
 import { AdminPage } from './pages/admin/AdminPage';
 import { BottomNav } from './components/BottomNav';
+import { GlobalAlertBanner, AlertEntryModal } from './components/WeatherAlertBanner';
+import type { SurfAlertSummary } from './components/WeatherAlertBanner';
 import { api } from './lib/api';
 
 export default function App() {
@@ -49,6 +51,54 @@ export default function App() {
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   /** 프로필 탭 서브 페이지 - 'main'(마이페이지) / 'diary'(서핑 다이어리) / 'poseTraining'(자세 연습) */
   const [profileSubPage, setProfileSubPage] = useState<'main' | 'diary' | 'poseTraining'>('main');
+
+  /** 기상청 기상특보 — 서핑 관련 특보 요약 */
+  const [surfAlert, setSurfAlert] = useState<SurfAlertSummary | null>(null);
+  /** 특보 모달 표시 여부 — 세션당 1회만 표시 */
+  const [showAlertModal, setShowAlertModal] = useState(false);
+  /** 특보 상세 모달 (배너 클릭 시) */
+  const [showAlertDetail, setShowAlertDetail] = useState(false);
+  /** 특보 모달 이미 표시했는지 여부 (세션 중 재표시 방지) */
+  const alertShownRef = useRef(false);
+
+  /**
+   * 기상청 서핑 관련 특보 조회
+   * GET /api/v1/weather-alerts/surf — 인증 불필요 (Public)
+   * 15분마다 자동 갱신 (특보는 빠른 반영 필요)
+   */
+  const fetchSurfAlerts = async () => {
+    // ⚠️ UI 테스트용 mock 데이터 — 확인 후 아래 실제 API 호출로 교체
+    const mockData: SurfAlertSummary = {
+      hasSurfAlert: true,
+      isDangerous: true,
+      alerts: [{
+        alertName: '풍랑경보',
+        areaNm: '강원동해안바다',
+        level: '경보',
+        isDangerous: true,
+      }],
+      lastUpdated: new Date().toISOString(),
+    };
+    setSurfAlert(mockData);
+    if (!alertShownRef.current) {
+      setShowAlertModal(true);
+      alertShownRef.current = true;
+    }
+
+    // TODO: 테스트 완료 후 위 mock 제거하고 아래 주석 해제
+    // try {
+    //   const res = await fetch(api('/api/v1/weather-alerts/surf'));
+    //   if (!res.ok) return;
+    //   const data: SurfAlertSummary = await res.json();
+    //   setSurfAlert(data);
+    //   if (data.hasSurfAlert && data.isDangerous && !alertShownRef.current) {
+    //     setShowAlertModal(true);
+    //     alertShownRef.current = true;
+    //   }
+    // } catch {
+    //   console.warn('기상특보 조회 실패');
+    // }
+  };
 
   /**
    * 서버에서 즐겨찾기 목록 가져오기
@@ -103,6 +153,16 @@ export default function App() {
         localStorage.removeItem('surfLevel');
       }
     }
+  }, []);
+
+  /**
+   * 기상특보 초기 조회 + 15분 주기 폴링
+   * 인증 여부 무관하게 항상 조회 (Public API)
+   */
+  useEffect(() => {
+    fetchSurfAlerts();
+    const interval = setInterval(fetchSurfAlerts, 15 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   /**
@@ -575,6 +635,30 @@ export default function App() {
 
   return (
     <div className="dark min-h-screen bg-background text-foreground">
+      {/* ── 기상청 특보 진입 모달 (풍랑/태풍 발령 시 세션 1회) ── */}
+      {showAlertModal && surfAlert && (
+        <AlertEntryModal
+          summary={surfAlert}
+          onClose={() => setShowAlertModal(false)}
+        />
+      )}
+
+      {/* ── 기상청 특보 상세 모달 (배너 클릭 시) ── */}
+      {showAlertDetail && surfAlert && (
+        <AlertEntryModal
+          summary={surfAlert}
+          onClose={() => setShowAlertDetail(false)}
+        />
+      )}
+
+      {/* ── 앱 최상단 고정 특보 배너 ── */}
+      {surfAlert && (
+        <GlobalAlertBanner
+          summary={surfAlert}
+          onDetailClick={() => setShowAlertDetail(true)}
+        />
+      )}
+
       <div className="page-transition">
         {renderMainPage()}
       </div>

@@ -11,6 +11,7 @@ import { Forecast } from './entities/forecast.entity';
 import { OpenMeteoProvider } from './providers/open-meteo.provider';
 import { SpotsModule } from '../spots/spots.module';
 import { KhoaModule } from '../khoa/khoa.module';
+import { WeatherAlertModule } from '../weather-alert/weather-alert.module';
 
 @Module({
   imports: [
@@ -19,6 +20,8 @@ import { KhoaModule } from '../khoa/khoa.module';
     SpotsModule,
     /** KHOA 서핑지수 모듈 - 한국 스팟 파도 데이터 보강 */
     KhoaModule,
+    /** 기상청 기상특보 모듈 - 풍랑/강풍/태풍 특보 실시간 조회 */
+    WeatherAlertModule,
   ],
   controllers: [ForecastsController, ForecastAdminController],
   providers: [ForecastsService, OpenMeteoProvider],
