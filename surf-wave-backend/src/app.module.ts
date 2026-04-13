@@ -38,7 +38,6 @@ import { UploadModule } from './modules/upload/upload.module';     // 파일 업
 import { TermsModule } from './modules/terms/terms.module';        // 이용약관 관리 및 동의
 import { AdminModule } from './modules/admin/admin.module';        // 관리자 기능 (스팟/가이드 관리, 사용자 제재, 신고 처리)
 import { DashboardModule } from './modules/dashboard/dashboard.module'; // 대시보드 (공개 예보 현황)
-import { WebcamModule } from './modules/webcam/webcam.module';    // Windy 웹캠 프록시 (발리 서프캠 스냅샷)
 import { KhoaModule } from './modules/khoa/khoa.module';          // KHOA 서핑지수 (해양수산부 국립해양조사원)
 
 /**
@@ -114,7 +113,6 @@ import { KhoaModule } from './modules/khoa/khoa.module';          // KHOA 서핑
     TermsModule,          // 약관 모듈: 이용약관 조회 및 동의 처리
     AdminModule,          // 관리자 모듈: 관리자 전용 CRUD, 사용자 제재
     DashboardModule,      // 대시보드 모듈: 공개 예보 현황 조회
-    WebcamModule,         // Windy 웹캠 프록시 모듈: 발리 서프캠 스냅샷 이미지 URL 제공
     KhoaModule,           // KHOA 서핑지수 모듈: 해양수산부 연안 파도 데이터 보강 (한국 스팟 전용)
   ],
   controllers: [],
