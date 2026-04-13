@@ -246,6 +246,25 @@ export interface RegionGroup {
 }
 
 /**
+ * KHOA(국립해양조사원) 서핑지수 보강 데이터
+ * 한국 15개 스팟 전용, 해외 스팟은 null
+ */
+export interface KhoaEnrichment {
+  /** 현재 레벨 서핑지수: 매우좋음 | 좋음 | 보통 | 나쁨 | 매우나쁨 | null */
+  khoaIndex: string | null;
+  /** KHOA 연안 파고 (m) — Open-Meteo보다 정확 */
+  khoaWaveHeight: number | null;
+  /** KHOA 수온 (°C) */
+  khoaWaterTemperature: number | null;
+  /** KHOA 풍속 (m/s) */
+  khoaWindSpeed: number | null;
+  /** KHOA 파주기 (s) */
+  khoaWavePeriod: number | null;
+  /** Open-Meteo 대비 KHOA 파고 비율 (1.6이면 KHOA가 60% 높음) */
+  waveHeightRatio: number | null;
+}
+
+/**
  * 기상청 기상특보 정보
  * 풍랑/강풍/태풍 특보 발령 시 서퍼에게 위험 경고 표시
  */
@@ -285,4 +304,6 @@ export interface SpotForecast {
   hints?: Hints;
   /** 기상청 기상특보 - 한국 스팟 전용, 특보 없으면 isDangerous: false */
   weatherAlert?: WeatherAlert | null;
+  /** KHOA 서핑지수 - 한국 15개 스팟 전용, 해외는 null */
+  khoaEnrichment?: KhoaEnrichment | null;
 }

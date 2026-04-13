@@ -10,6 +10,7 @@
  * - BLOCKED 카드: opacity-50 grayscale 처리
  */
 
+import { useState } from 'react';
 import { Wind, Clock, ArrowDown, ArrowUp, Sun, CloudRain, Cloud, Droplets, Heart, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { getRatingGrade, getRatingColor, getLevelFitColor, getLevelFitLabel } from '../lib/utils';
 import type { SpotForecast, SurfLevel, HintTag, WeatherAlert } from '../types';
@@ -304,10 +305,78 @@ export function SpotCard({ data, currentLevel, onClick, isFavorited, onToggleFav
         </div>
       )}
 
+      {/* KHOA 정부 서핑지수 뱃지 (한국 스팟 전용) */}
+      {data.khoaEnrichment?.khoaIndex && (
+        <KhoaBadge index={data.khoaEnrichment.khoaIndex} />
+      )}
+
       {/* hints 메시지 또는 기존 추천 문구 */}
       <p className="text-xs text-muted-foreground leading-relaxed">
         {data.hints?.message || recommendationKo}
       </p>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────
+// KHOA 정부 서핑지수 뱃지
+// ────────────────────────────────────────────
+
+/** KHOA 지수 → 색상 */
+function getKhoaColor(index: string): string {
+  switch (index) {
+    case '매우좋음': return '#2ECC71';
+    case '좋음':     return '#27AE60';
+    case '보통':     return '#F1C40F';
+    case '나쁨':     return '#E67E22';
+    case '매우나쁨': return '#E74C3C';
+    default:         return '#95A5A6';
+  }
+}
+
+/**
+ * KhoaBadge
+ * SpotCard 하단에 표시되는 정부 서핑지수 뱃지
+ * ⓘ 탭하면 설명 펼쳐짐
+ */
+function KhoaBadge({ index }: { index: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const color = getKhoaColor(index);
+
+  return (
+    <div className="mb-1.5">
+      {/* 뱃지 행 */}
+      <div className="flex items-center gap-1.5">
+        <div
+          className="flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-bold"
+          style={{ borderColor: `${color}50`, backgroundColor: `${color}15`, color }}
+        >
+          <span>🏛</span>
+          <span>정부 서핑지수</span>
+          <span className="font-black">{index}</span>
+        </div>
+        {/* ⓘ 설명 토글 버튼 */}
+        <button
+          onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
+          className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+          aria-label="정부 서핑지수 설명"
+        >
+          ⓘ
+        </button>
+      </div>
+
+      {/* 펼쳐지는 설명 */}
+      {expanded && (
+        <div
+          className="mt-1.5 text-[11px] text-muted-foreground leading-relaxed px-2 py-1.5 rounded-lg"
+          style={{ backgroundColor: `${color}08`, borderLeft: `2px solid ${color}40` }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <p className="font-semibold text-foreground/70 mb-0.5">🏛 국립해양조사원 공식 서핑지수</p>
+          <p>해양수산부 산하 국립해양조사원이 한국 연안 해양 관측 데이터를 기반으로 산출한 공식 지수입니다.</p>
+          <p className="mt-0.5 text-muted-foreground/60">초급·중급·상급 레벨별 제공 · 매일 오전 9시 업데이트</p>
+        </div>
+      )}
     </div>
   );
 }

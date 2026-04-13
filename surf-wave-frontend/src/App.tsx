@@ -67,37 +67,18 @@ export default function App() {
    * 15분마다 자동 갱신 (특보는 빠른 반영 필요)
    */
   const fetchSurfAlerts = async () => {
-    // ⚠️ UI 테스트용 mock 데이터 — 확인 후 아래 실제 API 호출로 교체
-    const mockData: SurfAlertSummary = {
-      hasSurfAlert: true,
-      isDangerous: true,
-      alerts: [{
-        alertName: '풍랑경보',
-        areaNm: '강원동해안바다',
-        level: '경보',
-        isDangerous: true,
-      }],
-      lastUpdated: new Date().toISOString(),
-    };
-    setSurfAlert(mockData);
-    if (!alertShownRef.current) {
-      setShowAlertModal(true);
-      alertShownRef.current = true;
+    try {
+      const res = await fetch(api('/api/v1/weather-alerts/surf'));
+      if (!res.ok) return;
+      const data: SurfAlertSummary = await res.json();
+      setSurfAlert(data);
+      if (data.hasSurfAlert && data.isDangerous && !alertShownRef.current) {
+        setShowAlertModal(true);
+        alertShownRef.current = true;
+      }
+    } catch {
+      console.warn('기상특보 조회 실패');
     }
-
-    // TODO: 테스트 완료 후 위 mock 제거하고 아래 주석 해제
-    // try {
-    //   const res = await fetch(api('/api/v1/weather-alerts/surf'));
-    //   if (!res.ok) return;
-    //   const data: SurfAlertSummary = await res.json();
-    //   setSurfAlert(data);
-    //   if (data.hasSurfAlert && data.isDangerous && !alertShownRef.current) {
-    //     setShowAlertModal(true);
-    //     alertShownRef.current = true;
-    //   }
-    // } catch {
-    //   console.warn('기상특보 조회 실패');
-    // }
   };
 
   /**
