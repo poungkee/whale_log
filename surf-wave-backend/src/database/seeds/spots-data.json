@@ -470,6 +470,120 @@
     "bestSwellSpreadDeg": 45
   },
   {
+    "name": "강릉 금진해변",
+    "description": "강릉 남쪽 조용한 서핑 포인트. 경포보다 한적하고 파도가 고르게 들어옴. 동해 스웰을 직접 받는 오픈 비치.",
+    "latitude": 37.6374,
+    "longitude": 129.0456,
+    "address": "강원도 강릉시 옥계면 금진리",
+    "region": "강릉",
+    "difficulty": "INTERMEDIATE",
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true
+    },
+    "breakType": "beach_break",
+    "bestSwellDirection": "E",
+    "season": "6월~10월",
+    "coastFacingDeg": 90,
+    "bestSwellSpreadDeg": 45
+  },
+  {
+    "name": "동해 망상해변",
+    "description": "강원도 동해시 망상해변. 동해안 비치 브레이크로 꾸준한 파도. 여름 시즌 서핑 인구가 많으며 렌탈샵 운영.",
+    "latitude": 37.5945,
+    "longitude": 129.0911,
+    "address": "강원도 동해시 망상동",
+    "region": "동해",
+    "difficulty": "BEGINNER",
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true,
+      "lesson": true
+    },
+    "breakType": "beach_break",
+    "bestSwellDirection": "E",
+    "season": "6월~10월",
+    "coastFacingDeg": 90,
+    "bestSwellSpreadDeg": 45
+  },
+  {
+    "name": "고성 송지호해변",
+    "description": "강원도 최북단 고성 서핑 포인트. 한적하고 깨끗한 해변. 북동쪽 스웰을 직접 받아 가을·겨울 파도가 좋음.",
+    "latitude": 38.3313,
+    "longitude": 128.5283,
+    "address": "강원도 고성군 죽왕면 송지호로",
+    "region": "고성",
+    "difficulty": "INTERMEDIATE",
+    "amenities": {
+      "parking": true,
+      "shower": true
+    },
+    "breakType": "beach_break",
+    "bestSwellDirection": "NE",
+    "season": "6월~10월",
+    "coastFacingDeg": 70,
+    "bestSwellSpreadDeg": 45
+  },
+  {
+    "name": "포항 월포해변",
+    "description": "포항 북쪽 월포해변. 동해 스웰을 잘 받는 비치 브레이크. 칠포와 함께 포항 서핑의 양대 포인트.",
+    "latitude": 36.2042,
+    "longitude": 129.3727,
+    "address": "경상북도 포항시 북구 청하면 월포리",
+    "region": "포항",
+    "difficulty": "INTERMEDIATE",
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true
+    },
+    "breakType": "beach_break",
+    "bestSwellDirection": "E",
+    "season": "6월~10월",
+    "coastFacingDeg": 90,
+    "bestSwellSpreadDeg": 45
+  },
+  {
+    "name": "울산 진하해변",
+    "description": "울산 서생면 진하해변. 동해남부 비치 브레이크로 일관된 파도. 부산과 울산 서퍼들이 즐겨 찾는 포인트.",
+    "latitude": 35.3833,
+    "longitude": 129.3461,
+    "address": "울산광역시 울주군 서생면 진하리",
+    "region": "울산",
+    "difficulty": "INTERMEDIATE",
+    "amenities": {
+      "parking": true,
+      "shower": true,
+      "rental": true,
+      "lesson": true
+    },
+    "breakType": "beach_break",
+    "bestSwellDirection": "SE",
+    "season": "6월~10월",
+    "coastFacingDeg": 120,
+    "bestSwellSpreadDeg": 45
+  },
+  {
+    "name": "완도 명사십리해변",
+    "description": "전남 완도 명사십리. 서남해안 특유의 파도가 형성되는 해변. 봄·가을 시즌에 서핑 가능.",
+    "latitude": 34.3265,
+    "longitude": 126.8091,
+    "address": "전라남도 완도군 군외면 삼두리",
+    "region": "완도",
+    "difficulty": "BEGINNER",
+    "amenities": {
+      "parking": true,
+      "shower": true
+    },
+    "breakType": "beach_break",
+    "bestSwellDirection": "S",
+    "season": "5월~10월",
+    "coastFacingDeg": 180,
+    "bestSwellSpreadDeg": 45
+  },
+  {
     "name": "Uluwatu",
     "description": "세계적으로 유명한 레프트 핸드 리프 브레이크. 절벽 아래 동굴을 통해 진입. 5개 섹션(Racetrack, Peak, Temples, Outside Corner, Bombie)으로 구성. 상급자 전용.",
     "latitude": -8.8166,
