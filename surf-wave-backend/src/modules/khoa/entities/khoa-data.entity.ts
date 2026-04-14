@@ -39,7 +39,7 @@ export class KhoaData {
   spot: Spot;
 
   /** KHOA API 기준 스팟명 (예: "죽도해수욕장") — 디버깅용 */
-  @Column({ name: 'khoa_name', length: 100 })
+  @Column({ name: 'khoa_name', type: 'varchar', length: 100 })
   khoaName: string;
 
   /** 예보 날짜 (YYYY-MM-DD) — forecasts.forecast_time의 DATE와 JOIN */
@@ -47,7 +47,7 @@ export class KhoaData {
   recordedDate: string;
 
   /** 시간대 구분: 오전(AM) / 오후(PM) */
-  @Column({ name: 'time_slot', length: 10 })
+  @Column({ name: 'time_slot', type: 'varchar', length: 10 })
   timeSlot: string;
 
   // ────────────────────────────────────────────
@@ -79,15 +79,15 @@ export class KhoaData {
   // ────────────────────────────────────────────
 
   /** 초급 서핑지수: 매우좋음 | 좋음 | 보통 | 나쁨 | 매우나쁨 */
-  @Column({ name: 'beginner_index', length: 20, nullable: true })
+  @Column({ name: 'beginner_index', type: 'varchar', length: 20, nullable: true })
   beginnerIndex: string | null;
 
   /** 중급 서핑지수 */
-  @Column({ name: 'intermediate_index', length: 20, nullable: true })
+  @Column({ name: 'intermediate_index', type: 'varchar', length: 20, nullable: true })
   intermediateIndex: string | null;
 
   /** 상급 서핑지수 */
-  @Column({ name: 'advanced_index', length: 20, nullable: true })
+  @Column({ name: 'advanced_index', type: 'varchar', length: 20, nullable: true })
   advancedIndex: string | null;
 
   /** 레코드 생성 시각 (실제 저장된 시각) */
