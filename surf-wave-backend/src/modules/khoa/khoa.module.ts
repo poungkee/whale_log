@@ -7,10 +7,16 @@
 
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { KhoaSurfingService } from './khoa-surfing.service';
+import { KhoaData } from './entities/khoa-data.entity';
+import { Spot } from '../spots/entities/spot.entity';
 
 @Module({
-  imports: [HttpModule],
+  imports: [
+    HttpModule,
+    TypeOrmModule.forFeature([KhoaData, Spot]),
+  ],
   providers: [KhoaSurfingService],
   exports: [KhoaSurfingService],
 })

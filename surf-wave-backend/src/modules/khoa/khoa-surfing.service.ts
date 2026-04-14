@@ -32,7 +32,11 @@ import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import { firstValueFrom } from 'rxjs';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { Difficulty } from '../../common/enums/difficulty.enum';
+import { KhoaData } from './entities/khoa-data.entity';
+import { Spot } from '../spots/entities/spot.entity';
 
 // ────────────────────────────────────────────
 // 타입 정의
@@ -172,13 +176,17 @@ export class KhoaSurfingService {
 
   /**
    * 메모리 캐시: KHOA 스팟명 → 오늘 서핑 데이터
-   * (DB 저장 없음 - 매 시간 KHOA API 재호출로 최신 유지)
+   * (빠른 조회를 위해 캐시 유지 + DB에도 히스토리 저장)
    */
   private cache = new Map<string, KhoaSpotData>();
 
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
+    @InjectRepository(KhoaData)
+    private readonly khoaDataRepo: Repository<KhoaData>,
+    @InjectRepository(Spot)
+    private readonly spotRepo: Repository<Spot>,
   ) {
     this.apiKey = this.configService.get<string>('KHOA_SURFING_API_KEY') ?? '';
   }
@@ -371,8 +379,78 @@ export class KhoaSurfingService {
       this.cache = newCache;
       this.logger.log(`KHOA 서핑지수 캐시 갱신 완료: ${newCache.size}개 스팟 (${todayStr} ${currentSlot})`);
 
+      /** DB에 히스토리 저장 (보정 계수 계산용) */
+      await this.saveToDatabase(newCache, todayStr);
+
     } catch (error) {
       this.logger.error(`KHOA API 호출 실패: ${error}`);
     }
+  }
+
+  // ────────────────────────────────────────────
+  // 내부: DB 저장
+  // ────────────────────────────────────────────
+
+  /**
+   * KHOA 캐시 데이터를 khoa_data 테이블에 저장
+   *
+   * - KHOA 스팟명 → 우리 DB spot_id 역방향 조회
+   * - 같은 (spot_id, recorded_date, time_slot) 이미 있으면 UPDATE (upsert)
+   * - 오전/오후 각각 별도 행으로 저장
+   *
+   * @param cache - 방금 갱신된 KHOA 캐시
+   * @param todayStr - 저장할 날짜 (YYYY-MM-DD)
+   */
+  private async saveToDatabase(
+    cache: Map<string, KhoaSpotData>,
+    todayStr: string,
+  ): Promise<void> {
+    /** KHOA 스팟명 → 우리 DB 스팟명 역방향 매핑 */
+    const khoaToOurName: Record<string, string> = Object.fromEntries(
+      Object.entries(OUR_NAME_TO_KHOA).map(([ourName, khoaName]) => [khoaName, ourName]),
+    );
+
+    /** 우리 DB 스팟명 → spot_id 캐시 (N번 SELECT 방지) */
+    const spotIds = new Map<string, string>();
+
+    let savedCount = 0;
+
+    for (const [khoaName, spotData] of cache.entries()) {
+      const ourName = khoaToOurName[khoaName];
+      if (!ourName) continue; // 우리 DB에 없는 스팟 스킵
+
+      /** spot_id 조회 (이미 캐시에 있으면 재사용) */
+      if (!spotIds.has(ourName)) {
+        const spot = await this.spotRepo.findOne({ where: { name: ourName }, select: ['id'] });
+        if (!spot) continue;
+        spotIds.set(ourName, spot.id);
+      }
+      const spotId = spotIds.get(ourName)!;
+
+      /** 오전/오후 각각 저장 */
+      for (const [slot, timeData] of [['오전', spotData.am], ['오후', spotData.pm]] as const) {
+        if (!timeData) continue;
+
+        await this.khoaDataRepo.upsert(
+          {
+            spotId,
+            khoaName,
+            recordedDate: todayStr,
+            timeSlot:     slot,
+            waveHeight:        timeData.waveHeight,
+            wavePeriod:        timeData.wavePeriod,
+            windSpeed:         timeData.windSpeed,
+            waterTemperature:  timeData.waterTemperature,
+            beginnerIndex:     timeData.levelIndex.beginner,
+            intermediateIndex: timeData.levelIndex.intermediate,
+            advancedIndex:     timeData.levelIndex.advanced,
+          },
+          ['spotId', 'recordedDate', 'timeSlot'], // UNIQUE 키 (충돌 시 UPDATE)
+        );
+        savedCount++;
+      }
+    }
+
+    this.logger.log(`KHOA DB 저장 완료: ${savedCount}행 (${todayStr})`);
   }
 }
