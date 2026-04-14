@@ -41,16 +41,19 @@ function ExploreIcon({ className }: { className?: string }) {
   );
 }
 
-/** 가이드 아이콘 (서프보드 + 파도) */
+/** 가이드 아이콘 (열린 책) */
 function GuideIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      {/* 서프보드 세로 */}
-      <path d="M12 3 Q16 5 16 12 Q16 18 12 21 Q8 18 8 12 Q8 5 12 3Z" />
-      {/* 핀 */}
-      <path d="M12 18 L10.5 21.5 L12 20.5 L13.5 21.5 Z" fill="currentColor" stroke="none" />
-      {/* 중앙선 */}
-      <line x1="12" y1="6" x2="12" y2="16" strokeWidth="1" opacity="0.5" />
+      {/* 왼쪽 페이지 */}
+      <path d="M3 5 C3 5 6 4 9 5 L9 19 C6 18 3 19 3 19 Z" />
+      {/* 오른쪽 페이지 */}
+      <path d="M21 5 C21 5 18 4 15 5 L15 19 C18 18 21 19 21 19 Z" />
+      {/* 책등 (중앙) */}
+      <line x1="9" y1="5" x2="9" y2="19" />
+      <line x1="15" y1="5" x2="15" y2="19" />
+      <path d="M9 5 Q12 4 15 5" />
+      <path d="M9 19 Q12 20 15 19" />
     </svg>
   );
 }
