@@ -28,6 +28,18 @@ import {
   Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 import { getRatingGrade, getRatingColor } from '../lib/utils';
+
+/** KHOA 서핑지수 → 색상 (SpotCard의 getKhoaColor와 동일) */
+function getKhoaIndexColor(index: string): string {
+  switch (index) {
+    case '매우좋음': return '#2ECC71';
+    case '좋음':     return '#27AE60';
+    case '보통':     return '#F1C40F';
+    case '나쁨':     return '#E67E22';
+    case '매우나쁨': return '#E74C3C';
+    default:         return '#95A5A6';
+  }
+}
 import type { SpotForecast, SurfLevel, RatingDetail, ForecastInfo } from '../types';
 import { SpotVote } from './SpotVote';
 import { CommunityFeed } from './community/CommunityFeed';
@@ -678,6 +690,93 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
                           </div>
                         );
                       })}
+                    </div>
+                  </div>
+                )}
+
+                {/* KHOA 국립해양조사원 실측 비교 (한국 스팟 전용) */}
+                {data.khoaEnrichment?.khoaWaveHeight != null && (
+                  <div className="bg-card rounded-xl border border-border p-4">
+                    {/* 헤더 */}
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-xs font-bold text-muted-foreground flex items-center gap-1">
+                        🏛 국립해양조사원 실측 데이터
+                      </h3>
+                      {/* 서핑지수 레벨별 표시 */}
+                      <div className="flex gap-1">
+                        {[
+                          { label: '초급', value: data.khoaEnrichment.beginnerIndex },
+                          { label: '중급', value: data.khoaEnrichment.intermediateIndex },
+                          { label: '상급', value: data.khoaEnrichment.advancedIndex },
+                        ].filter(l => l.value).map(l => (
+                          <span
+                            key={l.label}
+                            className="text-[10px] px-1.5 py-0.5 rounded font-bold"
+                            style={{
+                              backgroundColor: getKhoaIndexColor(l.value!) + '20',
+                              color: getKhoaIndexColor(l.value!),
+                            }}
+                          >
+                            {l.label} {l.value}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 파고 비교 - 핵심 */}
+                    <div className="bg-secondary/40 rounded-lg p-3 mb-3">
+                      <p className="text-[11px] text-muted-foreground mb-2">파고 비교 (연안 보정)</p>
+                      <div className="flex items-center gap-3">
+                        {/* Open-Meteo */}
+                        <div className="flex-1 text-center">
+                          <p className="text-[10px] text-muted-foreground">Open-Meteo</p>
+                          <p className="text-lg font-black text-foreground/60">
+                            {Number(forecast.waveHeight).toFixed(1)}
+                            <span className="text-xs font-normal ml-0.5">m</span>
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">외해 예보</p>
+                        </div>
+                        {/* 화살표 + 보정 비율 */}
+                        <div className="flex flex-col items-center">
+                          <span className="text-lg">→</span>
+                          {data.khoaEnrichment.waveHeightRatio != null && (
+                            <span className="text-[10px] font-bold text-[#2ECC71]">
+                              ×{data.khoaEnrichment.waveHeightRatio.toFixed(2)}
+                            </span>
+                          )}
+                        </div>
+                        {/* KHOA */}
+                        <div className="flex-1 text-center">
+                          <p className="text-[10px] text-muted-foreground">KHOA 실측</p>
+                          <p className="text-lg font-black text-[#2ECC71]">
+                            {data.khoaEnrichment.khoaWaveHeight.toFixed(1)}
+                            <span className="text-xs font-normal ml-0.5">m</span>
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">연안 실측</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 기타 KHOA 수치 */}
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      {data.khoaEnrichment.khoaWavePeriod != null && (
+                        <div className="bg-secondary/30 rounded-lg p-2">
+                          <p className="text-[10px] text-muted-foreground">파주기</p>
+                          <p className="text-sm font-bold">{data.khoaEnrichment.khoaWavePeriod.toFixed(1)}s</p>
+                        </div>
+                      )}
+                      {data.khoaEnrichment.khoaWindSpeed != null && (
+                        <div className="bg-secondary/30 rounded-lg p-2">
+                          <p className="text-[10px] text-muted-foreground">풍속</p>
+                          <p className="text-sm font-bold">{data.khoaEnrichment.khoaWindSpeed.toFixed(1)}m/s</p>
+                        </div>
+                      )}
+                      {data.khoaEnrichment.khoaWaterTemperature != null && (
+                        <div className="bg-secondary/30 rounded-lg p-2">
+                          <p className="text-[10px] text-muted-foreground">수온</p>
+                          <p className="text-sm font-bold">{data.khoaEnrichment.khoaWaterTemperature.toFixed(1)}°C</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

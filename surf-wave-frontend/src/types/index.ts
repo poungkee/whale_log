@@ -262,6 +262,12 @@ export interface KhoaEnrichment {
   khoaWavePeriod: number | null;
   /** Open-Meteo 대비 KHOA 파고 비율 (1.6이면 KHOA가 60% 높음) */
   waveHeightRatio: number | null;
+  /** 초급 서핑지수 */
+  beginnerIndex?: string | null;
+  /** 중급 서핑지수 */
+  intermediateIndex?: string | null;
+  /** 상급 서핑지수 */
+  advancedIndex?: string | null;
 }
 
 /**

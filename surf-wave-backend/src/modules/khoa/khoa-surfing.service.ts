@@ -112,6 +112,12 @@ export interface KhoaEnrichment {
    * 예: 1.6 → KHOA가 60% 더 높음 (연안 보정 반영)
    */
   waveHeightRatio: number | null;
+  /** 초급 서핑지수 */
+  beginnerIndex: string | null;
+  /** 중급 서핑지수 */
+  intermediateIndex: string | null;
+  /** 상급 서핑지수 */
+  advancedIndex: string | null;
 }
 
 // ────────────────────────────────────────────
@@ -233,13 +239,13 @@ export class KhoaSurfingService {
 
     if (!khoaName) {
       /** 매핑 없는 스팟 (발리, 한국 비매핑 스팟) - KHOA 데이터 없음 */
-      return { khoaIndex: null, khoaWaveHeight: null, khoaWaterTemperature: null, khoaWindSpeed: null, khoaWavePeriod: null, waveHeightRatio: null };
+      return { khoaIndex: null, khoaWaveHeight: null, khoaWaterTemperature: null, khoaWindSpeed: null, khoaWavePeriod: null, waveHeightRatio: null, beginnerIndex: null, intermediateIndex: null, advancedIndex: null };
     }
 
     const spotData = this.cache.get(khoaName);
     if (!spotData?.current) {
       /** 캐시 미스 (API 미호출 또는 네트워크 오류) */
-      return { khoaIndex: null, khoaWaveHeight: null, khoaWaterTemperature: null, khoaWindSpeed: null, khoaWavePeriod: null, waveHeightRatio: null };
+      return { khoaIndex: null, khoaWaveHeight: null, khoaWaterTemperature: null, khoaWindSpeed: null, khoaWavePeriod: null, waveHeightRatio: null, beginnerIndex: null, intermediateIndex: null, advancedIndex: null };
     }
 
     /** 사용자 레벨에 맞는 KHOA 서핑지수 선택 */
@@ -264,6 +270,10 @@ export class KhoaSurfingService {
       khoaWindSpeed:         spotData.current.windSpeed,
       khoaWavePeriod:        spotData.current.wavePeriod,
       waveHeightRatio,
+      /** 레벨별 서핑지수 전체 (프론트 상세 모달 표시용) */
+      beginnerIndex:     spotData.current.levelIndex.beginner     ?? null,
+      intermediateIndex: spotData.current.levelIndex.intermediate ?? null,
+      advancedIndex:     spotData.current.levelIndex.advanced     ?? null,
     };
   }
 
