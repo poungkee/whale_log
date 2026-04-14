@@ -17,10 +17,10 @@ import type { SpotForecast, SurfLevel, HintTag, WeatherAlert } from '../types';
 
 /** 날씨 상태 → lucide 아이콘 + 라벨 반환 */
 function getWeatherIcon(condition: string | null): { icon: React.ReactNode; label: string } {
-  if (!condition) return { icon: <Cloud className="w-3.5 h-3.5" />, label: '' };
+  if (!condition) return { icon: <Cloud className="w-3.5 h-3.5 text-muted-foreground" />, label: '' };
   if (condition.includes('맑음')) return { icon: <Sun className="w-3.5 h-3.5 text-amber-400" />, label: condition };
   if (condition.includes('비') || condition.includes('소나기')) return { icon: <CloudRain className="w-3.5 h-3.5 text-blue-400" />, label: condition };
-  return { icon: <Cloud className="w-3.5 h-3.5 text-gray-400" />, label: condition };
+  return { icon: <Cloud className="w-3.5 h-3.5 text-muted-foreground" />, label: condition };
 }
 
 interface SpotCardProps {
@@ -136,7 +136,7 @@ export function SpotCard({ data, currentLevel, onClick, isFavorited, onToggleFav
   return (
     <div
       onClick={onClick}
-      className={`bg-card rounded-xl border border-border p-4 cursor-pointer hover:border-primary/40 transition-all active:scale-[0.99] ${
+      className={`bg-card rounded-xl border border-border shadow-sm p-4 cursor-pointer hover:border-primary/40 hover:shadow-md transition-all active:scale-[0.99] ${
         isBlocked ? 'opacity-50 grayscale' : ''
       }`}
     >

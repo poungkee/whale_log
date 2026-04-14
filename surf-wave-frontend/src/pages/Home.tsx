@@ -279,7 +279,7 @@ export function Home({ surfLevel, boardType, favoriteIds, onToggleFavorite }: Ho
                   <div
                     key={spotData.spot.id}
                     onClick={() => setSelectedSpot(spotData)}
-                    className="min-w-[200px] flex-shrink-0 snap-start bg-card rounded-xl border border-border p-3 cursor-pointer hover:border-primary/40 transition-all"
+                    className="min-w-[200px] flex-shrink-0 snap-start bg-card rounded-xl border border-border shadow-sm p-3 cursor-pointer hover:border-primary/40 hover:shadow-md transition-all"
                   >
                     {/* 등급 dot + 등급 텍스트 */}
                     <div className="flex items-center gap-1.5 mb-1">

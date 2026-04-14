@@ -482,12 +482,12 @@ export default function App() {
   /** 스플래시 화면 - 앱 로고 + 로딩 애니메이션 (2초) */
   if (screen === 'splash') {
     return (
-      <div className="dark min-h-screen bg-background text-foreground">
-        <div className="min-h-screen bg-gradient-to-b from-[#0D1B2A] via-[#1A2332] to-[#0D1B2A] flex items-center justify-center">
+      <div className="min-h-screen bg-background text-foreground">
+        <div className="min-h-screen bg-gradient-to-b from-[#e8f7fb] via-[#f0fafe] to-[#ffffff] flex items-center justify-center">
           <div className="text-center animate-pulse">
             {/* Whale Log 스플래시 로고 */}
             <img src="/logo.png" alt="Whale Log" className="w-28 h-28 mx-auto mb-6 rounded-full shadow-2xl shadow-primary/20" />
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-[#26C6DA] to-[#00BCD4] bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-[#2AAFC6] to-[#1a8fa8] bg-clip-text text-transparent">
               Whale Log
             </h1>
           </div>
@@ -499,7 +499,7 @@ export default function App() {
   /** 시작 화면 - 앱 소개 + 로그인/회원가입 버튼 */
   if (screen === 'welcome') {
     return (
-      <div className="dark min-h-screen bg-background text-foreground">
+      <div className="min-h-screen bg-background text-foreground">
         <Welcome
           onLoginClick={() => setScreen('login')}
           onRegisterClick={() => setScreen('register')}
@@ -511,7 +511,7 @@ export default function App() {
   /** 로그인 화면 - 이메일/비밀번호 입력 + 소셜 로그인 버튼 */
   if (screen === 'login') {
     return (
-      <div className="dark min-h-screen bg-background text-foreground">
+      <div className="min-h-screen bg-background text-foreground">
         <Login
           onBack={() => setScreen('welcome')}
           onAuthSuccess={handleAuthSuccess}
@@ -524,7 +524,7 @@ export default function App() {
   /** 회원가입 화면 - 닉네임/이메일/비밀번호 입력 */
   if (screen === 'register') {
     return (
-      <div className="dark min-h-screen bg-background text-foreground">
+      <div className="min-h-screen bg-background text-foreground">
         <Register
           onBack={() => setScreen('welcome')}
           onAuthSuccess={handleAuthSuccess}
@@ -540,7 +540,7 @@ export default function App() {
     const existingLevel = userInfo?.surfLevel as SurfLevel | null;
 
     return (
-      <div className="dark min-h-screen bg-background text-foreground">
+      <div className="min-h-screen bg-background text-foreground">
         <LevelSelect
           existingLevel={existingLevel}
           onComplete={handleOnboardingComplete}
@@ -552,7 +552,7 @@ export default function App() {
   /** 관리자 대시보드 - role=ADMIN인 경우에만 접근 가능 */
   if (screen === 'admin') {
     return (
-      <div className="dark min-h-screen bg-background text-foreground">
+      <div className="min-h-screen bg-background text-foreground">
         <AdminPage
           userInfo={userInfo}
           onBack={() => setScreen('main')}
@@ -615,7 +615,7 @@ export default function App() {
   };
 
   return (
-    <div className="dark min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground">
       {/* ── 기상청 특보 진입 모달 (풍랑/태풍 발령 시 세션 1회) ── */}
       {showAlertModal && surfAlert && (
         <AlertEntryModal
