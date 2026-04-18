@@ -32,6 +32,10 @@ export class User extends BaseEntity {
   @Column({ name: 'firebase_uid', type: 'varchar', unique: true, nullable: true })
   firebaseUid: string | null;
 
+  /** 로그인 아이디 - 사용자가 직접 설정하는 고유 아이디 (최대 20자) */
+  @Column({ type: 'varchar', length: 20, unique: true, nullable: true })
+  username: string | null;
+
   /** 사용자 이메일 */
   @Column({ type: 'varchar', unique: true })
   email: string;

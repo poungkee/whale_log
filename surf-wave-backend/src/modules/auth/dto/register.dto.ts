@@ -14,7 +14,15 @@ import { IsString, IsNotEmpty, IsEmail, MinLength, MaxLength, Matches } from 'cl
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterDto {
-  /** 사용자 이메일 - 로그인 ID로 사용, users 테이블에서 unique */
+  /** 로그인 아이디 - 영문/숫자/언더스코어 조합, 4~20자, 고유값 */
+  @ApiProperty({ description: '로그인 아이디 (4~20자, 영문/숫자/언더스코어)', example: 'surfer_kim' })
+  @IsString({ message: '아이디는 문자열이어야 합니다' })
+  @MinLength(4, { message: '아이디는 최소 4자 이상이어야 합니다' })
+  @MaxLength(20, { message: '아이디는 최대 20자까지 가능합니다' })
+  @Matches(/^[a-zA-Z0-9_]+$/, { message: '아이디는 영문, 숫자, 언더스코어(_)만 사용 가능합니다' })
+  username: string;
+
+  /** 사용자 이메일 - 비밀번호 찾기용 */
   @ApiProperty({ description: '사용자 이메일', example: 'surfer@example.com' })
   @IsEmail({}, { message: '올바른 이메일 형식이 아닙니다' })
   @IsNotEmpty({ message: '이메일은 필수 입력값입니다' })

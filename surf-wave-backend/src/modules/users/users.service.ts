@@ -15,6 +15,7 @@ import { SocialProvider } from '../../common/enums/social-provider.enum';
 
 /** 사용자 생성 시 필요한 데이터 인터페이스 (내부용) */
 interface CreateUserDto {
+  username?: string | null;
   firebaseUid?: string | null;
   email: string;
   nickname: string;
@@ -85,6 +86,20 @@ export class UsersService {
   /** findByNickname - 닉네임으로 사용자 조회 (닉네임 중복 확인에 사용) */
   async findByNickname(nickname: string): Promise<User | null> {
     return this.userRepository.findOne({ where: { nickname } });
+  }
+
+  /** findByUsername - 아이디로 사용자 조회 (로그인 및 아이디 중복 확인에 사용) */
+  async findByUsername(username: string, withPassword = false): Promise<User | null> {
+    if (withPassword) {
+      /** 비밀번호 해시까지 포함해서 조회 (로그인 시) */
+      return this.userRepository
+        .createQueryBuilder('user')
+        .addSelect('user.password_hash')
+        .where('user.username = :username', { username })
+        .andWhere('user.deleted_at IS NULL')
+        .getOne();
+    }
+    return this.userRepository.findOne({ where: { username } });
   }
 
   /** update - 사용자 정보 부분 업데이트 (프로필 수정) */

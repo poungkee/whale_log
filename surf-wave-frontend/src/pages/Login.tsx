@@ -20,7 +20,7 @@
  * 5. App.tsx에서 code를 감지하여 POST /api/v1/auth/kakao/callback 호출
  */
 
-import { ArrowLeft, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, AtSign, Lock, Eye, EyeOff } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { AuthResponse } from '../types';
 import { api } from '../lib/api';
@@ -32,11 +32,13 @@ interface LoginProps {
   onAuthSuccess: (data: AuthResponse) => void;
   /** 회원가입 화면으로 이동 */
   onGoRegister: () => void;
+  /** 비밀번호 찾기 화면으로 이동 */
+  onGoForgotPassword: () => void;
 }
 
-export function Login({ onBack, onAuthSuccess, onGoRegister }: LoginProps) {
-  /** 이메일 입력값 */
-  const [email, setEmail] = useState('');
+export function Login({ onBack, onAuthSuccess, onGoRegister, onGoForgotPassword }: LoginProps) {
+  /** 아이디 입력값 */
+  const [username, setUsername] = useState('');
   /** 비밀번호 입력값 */
   const [password, setPassword] = useState('');
   /** 비밀번호 보기/숨기기 토글 */
@@ -205,11 +207,11 @@ export function Login({ onBack, onAuthSuccess, onGoRegister }: LoginProps) {
     setIsLoading(true);
 
     try {
-      /** 로그인 API 호출 - 이메일과 비밀번호 전송 */
+      /** 로그인 API 호출 - 아이디와 비밀번호 전송 */
       const res = await fetch(api('/api/v1/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       });
 
       if (!res.ok) {
@@ -262,19 +264,19 @@ export function Login({ onBack, onAuthSuccess, onGoRegister }: LoginProps) {
             </div>
           )}
 
-          {/* 이메일 입력 필드 */}
+          {/* 아이디 입력 필드 */}
           <div>
-            <label htmlFor="email" className="block mb-2 text-sm font-medium">
-              이메일
+            <label htmlFor="username" className="block mb-2 text-sm font-medium">
+              아이디
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="이메일을 입력하세요"
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="아이디를 입력하세요"
                 className="w-full pl-11 pr-4 py-3 bg-card border border-border rounded-lg focus:outline-none focus:border-primary transition-colors text-foreground placeholder:text-muted-foreground"
                 required
               />
@@ -319,7 +321,7 @@ export function Login({ onBack, onAuthSuccess, onGoRegister }: LoginProps) {
               />
               <span className="text-sm">로그인 상태 유지</span>
             </label>
-            <button type="button" className="text-sm text-primary hover:underline">
+            <button type="button" onClick={onGoForgotPassword} className="text-sm text-primary hover:underline">
               비밀번호 찾기
             </button>
           </div>

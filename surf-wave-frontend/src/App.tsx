@@ -23,6 +23,7 @@ import type { AppScreen, MainTab, SurfLevel, BoardType, AuthResponse, UserInfo }
 import { Welcome } from './pages/Welcome';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { ForgotPassword } from './pages/ForgotPassword';
 import { LevelSelect } from './pages/LevelSelect';
 import { Home } from './pages/Home';
 import { Explore } from './pages/Explore';
@@ -508,7 +509,7 @@ export default function App() {
     );
   }
 
-  /** 로그인 화면 - 이메일/비밀번호 입력 + 소셜 로그인 버튼 */
+  /** 로그인 화면 - 아이디/비밀번호 입력 + 소셜 로그인 버튼 */
   if (screen === 'login') {
     return (
       <div className="min-h-screen bg-background text-foreground">
@@ -516,12 +517,13 @@ export default function App() {
           onBack={() => setScreen('welcome')}
           onAuthSuccess={handleAuthSuccess}
           onGoRegister={() => setScreen('register')}
+          onGoForgotPassword={() => setScreen('forgot-password')}
         />
       </div>
     );
   }
 
-  /** 회원가입 화면 - 닉네임/이메일/비밀번호 입력 */
+  /** 회원가입 화면 - 아이디/닉네임/이메일/비밀번호 입력 */
   if (screen === 'register') {
     return (
       <div className="min-h-screen bg-background text-foreground">
@@ -529,6 +531,18 @@ export default function App() {
           onBack={() => setScreen('welcome')}
           onAuthSuccess={handleAuthSuccess}
           onGoLogin={() => setScreen('login')}
+        />
+      </div>
+    );
+  }
+
+  /** 비밀번호 찾기 화면 - 이메일 인증코드 발송 → 새 비밀번호 설정 */
+  if (screen === 'forgot-password') {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <ForgotPassword
+          onBack={() => setScreen('login')}
+          onDone={() => setScreen('login')}
         />
       </div>
     );

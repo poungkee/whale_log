@@ -13,7 +13,7 @@ export type SurfLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT';
 export type BoardType = 'SHORTBOARD' | 'LONGBOARD' | 'FUNBOARD' | 'FISH' | 'SUP' | 'BODYBOARD' | 'FOIL' | 'OTHER' | 'MIDLENGTH' | 'UNSET';
 
 /** 앱 화면 상태 - 현재 표시 중인 화면 ('admin' 추가: 관리자 대시보드) */
-export type AppScreen = 'splash' | 'welcome' | 'login' | 'register' | 'level-select' | 'main' | 'admin';
+export type AppScreen = 'splash' | 'welcome' | 'login' | 'register' | 'forgot-password' | 'level-select' | 'main' | 'admin';
 
 /** 관리자 대시보드 탭 */
 export type AdminTab = 'overview' | 'users' | 'content' | 'spots' | 'traffic' | 'logs';
