@@ -23,10 +23,10 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { HttpService } from '@nestjs/axios';
-import { MailerService } from '@nestjs-modules/mailer';
 import * as bcrypt from 'bcrypt';
 import { firstValueFrom } from 'rxjs';
 import Redis from 'ioredis';
+import { Resend } from 'resend';
 import { UsersService } from '../users/users.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -42,16 +42,20 @@ const RESET_CODE_TTL = 300;
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
+  /** Resend 이메일 클라이언트 - 비밀번호 찾기 인증코드 발송용 */
+  private readonly resend: Resend;
 
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
-    private readonly mailerService: MailerService,
     /** Redis 클라이언트 - 인증코드 임시 저장용 */
     @Inject(REDIS_CLIENT) private readonly redisClient: Redis,
-  ) {}
+  ) {
+    /** RESEND_API_KEY 환경변수로 Resend 클라이언트 초기화 */
+    this.resend = new Resend(this.configService.get<string>('RESEND_API_KEY'));
+  }
 
   /**
    * 아이디 중복 확인
@@ -182,9 +186,10 @@ export class AuthService {
     /** Redis에 5분 TTL로 저장 */
     await this.redisClient.set(`${PASSWORD_RESET_PREFIX}${email}`, code, 'EX', RESET_CODE_TTL);
 
-    /** Gmail로 인증코드 이메일 발송 (실패해도 500 반환하지 않고 로그만 기록) */
+    /** Resend API로 인증코드 이메일 발송 */
     try {
-      await this.mailerService.sendMail({
+      const { error } = await this.resend.emails.send({
+        from: 'Whale Log <onboarding@resend.dev>',
         to: email,
         subject: '[Whale Log] 비밀번호 재설정 인증코드',
         html: `
@@ -200,10 +205,13 @@ export class AuthService {
           </div>
         `,
       });
-      this.logger.log(`비밀번호 재설정 인증코드 발송 완료: ${email}`);
+      if (error) {
+        this.logger.error(`Resend 이메일 발송 실패: ${error.message}`);
+      } else {
+        this.logger.log(`비밀번호 재설정 인증코드 발송 완료: ${email}`);
+      }
     } catch (mailError) {
-      /** 이메일 발송 실패 시 로그만 기록 (코드는 Redis에 저장됨) */
-      this.logger.error(`이메일 발송 실패: ${(mailError as Error).message}`);
+      this.logger.error(`이메일 발송 오류: ${(mailError as Error).message}`);
     }
 
     return { message: '인증코드가 이메일로 발송되었습니다. 5분 내로 입력해주세요.' };
