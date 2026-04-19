@@ -182,25 +182,30 @@ export class AuthService {
     /** Redis에 5분 TTL로 저장 */
     await this.redisClient.set(`${PASSWORD_RESET_PREFIX}${email}`, code, 'EX', RESET_CODE_TTL);
 
-    /** Gmail로 인증코드 이메일 발송 */
-    await this.mailerService.sendMail({
-      to: email,
-      subject: '[Whale Log] 비밀번호 재설정 인증코드',
-      html: `
-        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
-          <h2 style="color: #0ea5e9;">🐋 Whale Log 비밀번호 재설정</h2>
-          <p>안녕하세요, <strong>${user.nickname}</strong>님!</p>
-          <p>비밀번호 재설정을 요청하셨습니다. 아래 인증코드를 입력해주세요.</p>
-          <div style="background: #f0f9ff; border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0;">
-            <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #0ea5e9;">${code}</span>
+    /** Gmail로 인증코드 이메일 발송 (실패해도 500 반환하지 않고 로그만 기록) */
+    try {
+      await this.mailerService.sendMail({
+        to: email,
+        subject: '[Whale Log] 비밀번호 재설정 인증코드',
+        html: `
+          <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
+            <h2 style="color: #0ea5e9;">🐋 Whale Log 비밀번호 재설정</h2>
+            <p>안녕하세요, <strong>${user.nickname}</strong>님!</p>
+            <p>비밀번호 재설정을 요청하셨습니다. 아래 인증코드를 입력해주세요.</p>
+            <div style="background: #f0f9ff; border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0;">
+              <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #0ea5e9;">${code}</span>
+            </div>
+            <p style="color: #64748b; font-size: 14px;">⏱ 이 인증코드는 <strong>5분간</strong> 유효합니다.</p>
+            <p style="color: #64748b; font-size: 14px;">본인이 요청하지 않았다면 이 이메일을 무시하세요.</p>
           </div>
-          <p style="color: #64748b; font-size: 14px;">⏱ 이 인증코드는 <strong>5분간</strong> 유효합니다.</p>
-          <p style="color: #64748b; font-size: 14px;">본인이 요청하지 않았다면 이 이메일을 무시하세요.</p>
-        </div>
-      `,
-    });
+        `,
+      });
+      this.logger.log(`비밀번호 재설정 인증코드 발송 완료: ${email}`);
+    } catch (mailError) {
+      /** 이메일 발송 실패 시 로그만 기록 (코드는 Redis에 저장됨) */
+      this.logger.error(`이메일 발송 실패: ${(mailError as Error).message}`);
+    }
 
-    this.logger.log(`비밀번호 재설정 인증코드 발송 완료: ${email}`);
     return { message: '인증코드가 이메일로 발송되었습니다. 5분 내로 입력해주세요.' };
   }
 
