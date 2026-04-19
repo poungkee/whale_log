@@ -13,7 +13,7 @@
 
 import { Module, Global } from '@nestjs/common';
 import { ConfigModule as NestConfigModule } from '@nestjs/config';
-import { getRedisConfig, RedisProvider } from './redis.config';
+import { RedisProvider } from './redis.config';
 import { getFirebaseConfig, FirebaseProvider } from './firebase.config';
 import { getAwsS3Config, S3Provider } from './aws.config';
 
@@ -65,4 +65,4 @@ import { getAwsS3Config, S3Provider } from './aws.config';
 })
 export class AppConfigModule {}
 
-export { getRedisConfig, getFirebaseConfig, getAwsS3Config };
+export { getFirebaseConfig, getAwsS3Config };
