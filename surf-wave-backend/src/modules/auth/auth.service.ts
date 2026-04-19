@@ -164,8 +164,8 @@ export class AuthService {
   async forgotPassword(dto: ForgotPasswordDto) {
     const { email } = dto;
 
-    /** 이메일로 사용자 조회 (없어도 동일한 성공 응답 → 이메일 존재 여부 노출 방지) */
-    const user = await this.usersService.findByEmail(email);
+    /** 이메일로 사용자 조회 (withPassword=true: passwordHash 포함 조회) */
+    const user = await this.usersService.findByEmail(email, true);
     if (!user) {
       /** 보안: 실제로는 없는 이메일이어도 동일한 메시지 반환 */
       return { message: '인증코드가 이메일로 발송되었습니다. 5분 내로 입력해주세요.' };
