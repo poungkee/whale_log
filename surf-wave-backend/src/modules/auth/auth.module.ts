@@ -49,8 +49,8 @@ import { RedisProvider } from '../../config/redis.config';
       useFactory: (configService: ConfigService) => ({
         transport: {
           host: 'smtp.gmail.com',
-          port: 587,
-          secure: false,
+          port: 465,
+          secure: true, // SSL (465 포트)
           auth: {
             user: configService.get<string>('MAIL_USER', 'whale.log.story@gmail.com'),
             pass: configService.get<string>('MAIL_PASS'),
