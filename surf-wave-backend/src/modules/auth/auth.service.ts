@@ -28,6 +28,7 @@ import { firstValueFrom } from 'rxjs';
 import Redis from 'ioredis';
 import { Resend } from 'resend';
 import { UsersService } from '../users/users.service';
+import { BadgesService } from '../badges/badges.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto';
@@ -52,6 +53,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     /** Redis 클라이언트 - 인증코드 임시 저장용 */
     @Inject(REDIS_CLIENT) private readonly redisClient: Redis,
+    private readonly badgesService: BadgesService,
   ) {
     /** RESEND_API_KEY 환경변수로 Resend 클라이언트 초기화 */
     this.resend = new Resend(this.configService.get<string>('RESEND_API_KEY'));
@@ -151,6 +153,9 @@ export class AuthService {
 
     /** 마지막 로그인 시각 갱신 */
     await this.usersService.updateLastLogin(user.id);
+
+    /** 뱃지 체크 — 로그인 시 개근상(기념일) 체크 */
+    this.badgesService.checkAndAward({ userId: user.id, trigger: 'LOGIN' }).catch(() => {});
 
     const token = this.generateToken(user);
     return { accessToken: token, user: this.sanitizeUser(user) };

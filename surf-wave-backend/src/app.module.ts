@@ -40,6 +40,7 @@ import { AdminModule } from './modules/admin/admin.module';        // 관리자 
 import { DashboardModule } from './modules/dashboard/dashboard.module'; // 대시보드 (공개 예보 현황)
 import { KhoaModule } from './modules/khoa/khoa.module';          // KHOA 서핑지수 (해양수산부 국립해양조사원)
 import { WeatherAlertModule } from './modules/weather-alert/weather-alert.module'; // 기상청 기상특보 (풍랑/강풍/태풍)
+import { BadgesModule } from './modules/badges/badges.module';    // 뱃지/업적 시스템
 
 /**
  * @class AppModule
@@ -116,6 +117,7 @@ import { WeatherAlertModule } from './modules/weather-alert/weather-alert.module
     DashboardModule,      // 대시보드 모듈: 공개 예보 현황 조회
     KhoaModule,           // KHOA 서핑지수 모듈: 해양수산부 연안 파도 데이터 보강 (한국 스팟 전용)
     WeatherAlertModule,   // 기상청 기상특보 모듈: 풍랑/강풍/태풍 특보 실시간 조회 (15분 갱신)
+    BadgesModule,         // 뱃지 모듈: 서핑 업적 59개 자동 수여 시스템
   ],
   controllers: [],
   providers: [

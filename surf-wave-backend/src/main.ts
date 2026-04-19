@@ -19,6 +19,7 @@ import * as path from 'path';
 import { AppModule } from './app.module';
 import { setupSwagger } from './config/swagger.config';
 import { validateProductionEnv } from './config/defaults';
+import { BadgesService } from './modules/badges/badges.service';
 
 /**
  * bootstrap - 애플리케이션 부트스트랩 함수
@@ -111,6 +112,10 @@ async function bootstrap() {
     setupSwagger(app);
     logger.log(`Swagger documentation available at: http://localhost:${port}/docs`);
   }
+
+  /** 뱃지 시드 — 앱 시작 시 badges 테이블에 정의 삽입 (없는 것만) */
+  const badgesService = app.get(BadgesService);
+  await badgesService.seedBadges();
 
   /** 지정된 포트에서 HTTP 서버 시작 */
   await app.listen(port);

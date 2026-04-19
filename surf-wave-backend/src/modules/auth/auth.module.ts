@@ -12,12 +12,14 @@ import { AuthService } from './auth.service';
 import { UsersModule } from '../users/users.module';
 import { DEFAULT_JWT_SECRET } from '../../config/defaults';
 import { RedisProvider } from '../../config/redis.config';
+import { BadgesModule } from '../badges/badges.module';
 
 @Module({
   imports: [
     ConfigModule,
     UsersModule,
     HttpModule,
+    BadgesModule,
 
     /** JwtModule - JWT 토큰 생성 및 검증 (7일 만료) */
     JwtModule.registerAsync({

@@ -12,9 +12,10 @@ import { SpotsService } from './spots.service';
 import { Spot } from './entities/spot.entity';
 import { SpotFavorite } from './entities/spot-favorite.entity';
 import { SpotVote } from './entities/spot-vote.entity';
+import { BadgesModule } from '../badges/badges.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Spot, SpotFavorite, SpotVote])],
+  imports: [TypeOrmModule.forFeature([Spot, SpotFavorite, SpotVote]), BadgesModule],
   controllers: [SpotsController],
   providers: [SpotsService],
   exports: [SpotsService],

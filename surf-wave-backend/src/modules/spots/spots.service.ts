@@ -27,6 +27,7 @@ import { VoteType } from '../../common/enums/vote-type.enum';
 import { Difficulty } from '../../common/enums/difficulty.enum';
 import { getBoundingBox } from '../../common/utils/geo.util';
 import { formatDate } from '../../common/utils/date.util';
+import { BadgesService } from '../badges/badges.service';
 
 @Injectable()
 export class SpotsService {
@@ -37,6 +38,8 @@ export class SpotsService {
     private readonly favoriteRepository: Repository<SpotFavorite>,
     @InjectRepository(SpotVote)
     private readonly voteRepository: Repository<SpotVote>,
+    /** 뱃지 서비스 - 즐겨찾기/투표 후 뱃지 조건 체크용 */
+    private readonly badgesService: BadgesService,
   ) {}
 
   /** 스팟 upsert — 이름 기준으로 있으면 업데이트, 없으면 생성 (시드용) */
@@ -192,6 +195,15 @@ export class SpotsService {
     });
 
     await this.voteRepository.save(vote);
+
+    /** 뱃지 체크 — 투표 후 총 투표 수 조회 */
+    const voteCount = await this.voteRepository.count({ where: { userId } });
+    this.badgesService.checkAndAward({
+      userId,
+      trigger: 'VOTE',
+      voteCount,
+    }).catch(() => {});
+
     return { message: 'Vote recorded successfully' };
   }
 
@@ -220,6 +232,15 @@ export class SpotsService {
 
     const favorite = this.favoriteRepository.create({ spotId, userId });
     await this.favoriteRepository.save(favorite);
+
+    /** 뱃지 체크 — 즐겨찾기 추가 후 현재 즐겨찾기 수 조회 */
+    const favCount = await this.favoriteRepository.count({ where: { userId } });
+    this.badgesService.checkAndAward({
+      userId,
+      trigger: 'FAVORITE_ADD',
+      favoriteCount: favCount,
+    }).catch(() => {});
+
     return { message: 'Added to favorites' };
   }
 

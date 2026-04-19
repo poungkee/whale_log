@@ -28,6 +28,7 @@ import { Visibility } from '../../common/enums/visibility.enum';
 import { WindDirection } from '../../common/enums/wind-direction.enum';
 import { getMonthRange } from '../../common/utils/date.util';
 import { ForecastsService } from '../forecasts/forecasts.service';
+import { BadgesService } from '../badges/badges.service';
 
 /**
  * 바람 각도(0~360)를 16방위 WindDirection enum으로 변환
@@ -57,6 +58,8 @@ export class DiaryService {
     private readonly imageRepository: Repository<DiaryImage>,
     /** forecast 서비스 - 다이어리 생성 시 해당 시점 파도 데이터 자동 조회용 */
     private readonly forecastsService: ForecastsService,
+    /** 뱃지 서비스 - 다이어리 작성 후 뱃지 조건 체크용 */
+    private readonly badgesService: BadgesService,
   ) {}
 
   async findByUser(userId: string, query: DiaryQueryDto) {
@@ -274,7 +277,26 @@ export class DiaryService {
       await this.imageRepository.save(images);
     }
 
-    return this.findById(savedDiary.id, userId);
+    const result = await this.findById(savedDiary.id, userId);
+
+    /** 뱃지 조건 체크 — 비동기로 처리 (실패해도 다이어리 생성에 영향 없음) */
+    this.badgesService.checkAndAward({
+      userId,
+      trigger: 'DIARY_CREATE',
+      diary: {
+        id: savedDiary.id,
+        spotId: dto.spotId,
+        spotRegion: (result as any).spot?.region ?? '',
+        surfDate: dto.surfDate,
+        surfTime: dto.surfTime || null,
+        boardType: dto.boardType,
+        satisfaction: dto.satisfaction,
+        hasImages: !!(dto.imageUrls?.length),
+        waveHeight: diaryData.waveHeight ? Number(diaryData.waveHeight) : undefined,
+      },
+    }).catch((err) => this.logger.warn(`뱃지 체크 실패: ${err.message}`));
+
+    return result;
   }
 
   async update(diaryId: string, userId: string, dto: UpdateDiaryDto) {

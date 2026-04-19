@@ -10,12 +10,14 @@ import { SurfDiary } from './entities/surf-diary.entity';
 import { DiaryImage } from './entities/diary-image.entity';
 import { SpotsModule } from '../spots/spots.module';
 import { ForecastsModule } from '../forecasts/forecasts.module';
+import { BadgesModule } from '../badges/badges.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([SurfDiary, DiaryImage]),
     SpotsModule,
     ForecastsModule,
+    BadgesModule,
   ],
   controllers: [DiaryController],
   providers: [DiaryService],
