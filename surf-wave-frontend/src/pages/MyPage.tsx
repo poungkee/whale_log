@@ -108,6 +108,36 @@ const BADGE_CATEGORIES = [
   { key: 'LIMITED', label: '한정' },
 ] as const;
 
+/**
+ * 뱃지 아이콘 컴포넌트 — 이미지 로드 실패 시 이모지로 fallback
+ */
+function BadgeIcon({ imgSrc, emoji, isEarned, large }: {
+  imgSrc: string;
+  emoji: string;
+  isEarned: boolean;
+  large?: boolean;
+}) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const size = large ? 'text-4xl w-20 h-20' : 'text-2xl w-14 h-14';
+
+  if (imgFailed) {
+    return (
+      <div className={`${size} flex items-center justify-center bg-secondary`}>
+        {emoji}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={imgSrc}
+      alt=""
+      className="w-full h-full object-cover"
+      onError={() => setImgFailed(true)}
+    />
+  );
+}
+
 /** 획득일을 "YYYY.MM.DD" 형식으로 포맷 */
 function formatBadgeDate(isoStr: string): string {
   const d = new Date(isoStr);
@@ -577,38 +607,42 @@ export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange, onBoardTy
           {/* 뱃지 그리드 */}
           {!badgesLoading && filteredBadges.length > 0 && (
             <div className="grid grid-cols-4 gap-x-2 gap-y-4 px-4 pb-5">
-              {filteredBadges.map((badge) => (
-                <button
-                  key={badge.key}
-                  onClick={() => setSelectedBadge(badge)}
-                  className="flex flex-col items-center gap-1 group"
-                >
-                  {/* 뱃지 아이콘 원형 */}
-                  <div
-                    className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl transition-transform group-active:scale-95 ${
-                      badge.isEarned
-                        ? 'bg-gradient-to-br from-yellow-100 to-amber-100 border-2 border-yellow-300 shadow-sm'
-                        : 'bg-secondary border-2 border-border opacity-40'
-                    }`}
+              {filteredBadges.map((badge) => {
+                /** /badges/KEY.png 이미지 존재 여부 — 43개는 실제 이미지, 나머지는 이모지 */
+                const imgSrc = `/badges/${badge.key}.png`;
+                return (
+                  <button
+                    key={badge.key}
+                    onClick={() => setSelectedBadge(badge)}
+                    className="flex flex-col items-center gap-1 group"
                   >
-                    {badge.icon}
-                  </div>
-                  {/* 뱃지 이름 */}
-                  <span
-                    className={`text-[10px] text-center leading-tight font-medium line-clamp-2 w-full ${
-                      badge.isEarned ? 'text-foreground' : 'text-muted-foreground'
-                    }`}
-                  >
-                    {badge.nameKo}
-                  </span>
-                  {/* 획득일 */}
-                  {badge.isEarned && badge.earnedAt && (
-                    <span className="text-[9px] text-primary font-medium">
-                      {formatBadgeDate(badge.earnedAt)}
+                    {/* 뱃지 아이콘 원형 */}
+                    <div
+                      className={`w-14 h-14 rounded-full overflow-hidden flex items-center justify-center transition-transform group-active:scale-95 ${
+                        badge.isEarned
+                          ? 'ring-2 ring-yellow-300 shadow-sm'
+                          : 'opacity-35 grayscale'
+                      }`}
+                    >
+                      <BadgeIcon imgSrc={imgSrc} emoji={badge.icon} isEarned={badge.isEarned} />
+                    </div>
+                    {/* 뱃지 이름 */}
+                    <span
+                      className={`text-[10px] text-center leading-tight font-medium line-clamp-2 w-full ${
+                        badge.isEarned ? 'text-foreground' : 'text-muted-foreground'
+                      }`}
+                    >
+                      {badge.nameKo}
                     </span>
-                  )}
-                </button>
-              ))}
+                    {/* 획득일 */}
+                    {badge.isEarned && badge.earnedAt && (
+                      <span className="text-[9px] text-primary font-medium">
+                        {formatBadgeDate(badge.earnedAt)}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           )}
 
@@ -634,13 +668,18 @@ export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange, onBoardTy
               {/* 뱃지 아이콘 + 이름 */}
               <div className="flex flex-col items-center gap-3 mb-4">
                 <div
-                  className={`w-20 h-20 rounded-full flex items-center justify-center text-4xl ${
+                  className={`w-20 h-20 rounded-full overflow-hidden ${
                     selectedBadge.isEarned
-                      ? 'bg-gradient-to-br from-yellow-100 to-amber-100 border-2 border-yellow-300 shadow-md'
-                      : 'bg-secondary border-2 border-border opacity-50'
+                      ? 'ring-2 ring-yellow-300 shadow-md'
+                      : 'opacity-40 grayscale'
                   }`}
                 >
-                  {selectedBadge.icon}
+                  <BadgeIcon
+                    imgSrc={`/badges/${selectedBadge.key}.png`}
+                    emoji={selectedBadge.icon}
+                    isEarned={selectedBadge.isEarned}
+                    large
+                  />
                 </div>
                 <div className="text-center">
                   <h4 className="text-lg font-bold">{selectedBadge.nameKo}</h4>
