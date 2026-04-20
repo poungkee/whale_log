@@ -10,7 +10,7 @@
  * 3. 설정 목록: 레벨 변경, 보드 변경, 알림 토글, 앱 정보, 로그아웃
  */
 
-import { Settings, ChevronRight, Waves, Clock, MapPin, Star, BookOpen, Camera, Shield } from 'lucide-react';
+import { Settings, ChevronRight, Waves, Clock, MapPin, Star, BookOpen, Camera, Shield, Trophy } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import type { SurfLevel, BoardType, UserInfo } from '../types';
 import { api } from '../lib/api';
@@ -68,6 +68,53 @@ interface DiaryResponse {
   meta: {
     totalItems: number;
   };
+}
+
+/**
+ * 뱃지 항목 타입 - GET /api/v1/badges/me API 응답의 각 항목
+ */
+interface BadgeItem {
+  /** 뱃지 고유 키 (WELCOME, FIRST_DIARY 등) */
+  key: string;
+  /** 뱃지 이름 (한국어) */
+  nameKo: string;
+  /** 뱃지 설명 (히든 미획득 시 ???로 표시됨) */
+  descriptionKo: string;
+  /** 뱃지 아이콘 이모지 (히든 미획득 시 🔒) */
+  icon: string;
+  /** 뱃지 카테고리 */
+  category: string;
+  /** 히든 뱃지 여부 */
+  isHidden: boolean;
+  /** 획득 여부 */
+  isEarned: boolean;
+  /** 획득 일시 (ISO 문자열, 미획득 시 null) */
+  earnedAt: string | null;
+}
+
+/** 뱃지 카테고리 탭 목록 */
+const BADGE_CATEGORIES = [
+  { key: 'ALL', label: '전체' },
+  { key: 'PROFILE', label: '프로필' },
+  { key: 'DIARY', label: '다이어리' },
+  { key: 'RECORD', label: '기록' },
+  { key: 'BOARD', label: '보드' },
+  { key: 'SPOT', label: '스팟' },
+  { key: 'TIME', label: '시간대' },
+  { key: 'SATISFACTION', label: '만족도' },
+  { key: 'STREAK', label: '연속' },
+  { key: 'COMMUNITY', label: '커뮤니티' },
+  { key: 'STORY', label: '스토리' },
+  { key: 'LIMITED', label: '한정' },
+] as const;
+
+/** 획득일을 "YYYY.MM.DD" 형식으로 포맷 */
+function formatBadgeDate(isoStr: string): string {
+  const d = new Date(isoStr);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}.${m}.${day}`;
 }
 
 /**
@@ -149,6 +196,14 @@ export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange, onBoardTy
   const [diaryEntries, setDiaryEntries] = useState<DiaryEntry[]>([]);
   /** 통계 데이터 로딩 상태 */
   const [statsLoading, setStatsLoading] = useState(true);
+  /** 뱃지 목록 데이터 (API 응답) */
+  const [badges, setBadges] = useState<BadgeItem[]>([]);
+  /** 뱃지 로딩 상태 */
+  const [badgesLoading, setBadgesLoading] = useState(true);
+  /** 현재 선택된 뱃지 카테고리 탭 */
+  const [selectedBadgeCategory, setSelectedBadgeCategory] = useState<string>('ALL');
+  /** 선택된 뱃지 (설명 팝업) */
+  const [selectedBadge, setSelectedBadge] = useState<BadgeItem | null>(null);
 
   /** 현재 보드 타입 - userInfo에서 가져오거나 기본값 UNSET */
   const currentBoard: BoardType = userInfo?.boardType ?? 'UNSET';
@@ -191,6 +246,46 @@ export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange, onBoardTy
 
     fetchDiaryData();
   }, []);
+
+  /**
+   * 뱃지 목록 가져오기
+   * GET /api/v1/badges/me (인증 필요)
+   * 전체 뱃지 + 획득 여부 + 획득일 반환
+   */
+  useEffect(() => {
+    const fetchBadges = async () => {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setBadgesLoading(false);
+        return;
+      }
+      try {
+        const res = await fetch(api('/api/v1/badges/me'), {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (!res.ok) {
+          setBadgesLoading(false);
+          return;
+        }
+        const data: BadgeItem[] = await res.json();
+        setBadges(data);
+      } catch {
+        console.warn('뱃지 조회 실패');
+      } finally {
+        setBadgesLoading(false);
+      }
+    };
+    fetchBadges();
+  }, []);
+
+  /** 현재 카테고리 탭에서 표시할 뱃지 목록 */
+  const filteredBadges = useMemo(() => {
+    if (selectedBadgeCategory === 'ALL') return badges;
+    return badges.filter((b) => b.category === selectedBadgeCategory);
+  }, [badges, selectedBadgeCategory]);
+
+  /** 획득한 뱃지 수 */
+  const earnedCount = useMemo(() => badges.filter((b) => b.isEarned).length, [badges]);
 
   /**
    * 다이어리 데이터로 서핑 통계 계산 (메모이제이션)
@@ -432,6 +527,156 @@ export function MyPage({ surfLevel, userInfo, onLogout, onLevelChange, onBoardTy
             </div>
           )}
         </div>
+
+        {/* ===== 뱃지/업적 섹션 ===== */}
+        <div className="bg-card border border-border rounded-xl mb-6">
+          {/* 섹션 헤더 — 제목 + 획득 수 */}
+          <div className="flex items-center justify-between px-5 pt-5 pb-3">
+            <h3 className="text-sm font-bold flex items-center gap-1.5">
+              <Trophy className="w-4 h-4 text-yellow-500" />
+              내 뱃지
+            </h3>
+            {!badgesLoading && badges.length > 0 && (
+              <span className="text-xs text-muted-foreground font-medium">
+                {earnedCount}/{badges.length}개 획득
+              </span>
+            )}
+          </div>
+
+          {/* 카테고리 탭 - 가로 스크롤 */}
+          {!badgesLoading && badges.length > 0 && (
+            <div className="flex gap-1.5 px-4 pb-3 overflow-x-auto no-scrollbar">
+              {BADGE_CATEGORIES.map((cat) => (
+                <button
+                  key={cat.key}
+                  onClick={() => setSelectedBadgeCategory(cat.key)}
+                  className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                    selectedBadgeCategory === cat.key
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-secondary text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* 뱃지 로딩 스켈레톤 */}
+          {badgesLoading && (
+            <div className="grid grid-cols-4 gap-3 px-4 pb-5 animate-pulse">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="flex flex-col items-center gap-1.5">
+                  <div className="w-14 h-14 rounded-full bg-secondary" />
+                  <div className="h-2.5 w-10 bg-secondary rounded" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* 뱃지 그리드 */}
+          {!badgesLoading && filteredBadges.length > 0 && (
+            <div className="grid grid-cols-4 gap-x-2 gap-y-4 px-4 pb-5">
+              {filteredBadges.map((badge) => (
+                <button
+                  key={badge.key}
+                  onClick={() => setSelectedBadge(badge)}
+                  className="flex flex-col items-center gap-1 group"
+                >
+                  {/* 뱃지 아이콘 원형 */}
+                  <div
+                    className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl transition-transform group-active:scale-95 ${
+                      badge.isEarned
+                        ? 'bg-gradient-to-br from-yellow-100 to-amber-100 border-2 border-yellow-300 shadow-sm'
+                        : 'bg-secondary border-2 border-border opacity-40'
+                    }`}
+                  >
+                    {badge.icon}
+                  </div>
+                  {/* 뱃지 이름 */}
+                  <span
+                    className={`text-[10px] text-center leading-tight font-medium line-clamp-2 w-full ${
+                      badge.isEarned ? 'text-foreground' : 'text-muted-foreground'
+                    }`}
+                  >
+                    {badge.nameKo}
+                  </span>
+                  {/* 획득일 */}
+                  {badge.isEarned && badge.earnedAt && (
+                    <span className="text-[9px] text-primary font-medium">
+                      {formatBadgeDate(badge.earnedAt)}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* 뱃지 없음 (비로그인 등) */}
+          {!badgesLoading && badges.length === 0 && (
+            <div className="text-center py-8 px-4">
+              <Trophy className="w-10 h-10 mx-auto text-muted-foreground/30 mb-2" />
+              <p className="text-sm text-muted-foreground">뱃지 정보를 불러올 수 없어요</p>
+            </div>
+          )}
+        </div>
+
+        {/* 뱃지 상세 팝업 */}
+        {selectedBadge && (
+          <div
+            className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center"
+            onClick={() => setSelectedBadge(null)}
+          >
+            <div
+              className="bg-card rounded-t-2xl w-full max-w-md p-6 pb-10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* 뱃지 아이콘 + 이름 */}
+              <div className="flex flex-col items-center gap-3 mb-4">
+                <div
+                  className={`w-20 h-20 rounded-full flex items-center justify-center text-4xl ${
+                    selectedBadge.isEarned
+                      ? 'bg-gradient-to-br from-yellow-100 to-amber-100 border-2 border-yellow-300 shadow-md'
+                      : 'bg-secondary border-2 border-border opacity-50'
+                  }`}
+                >
+                  {selectedBadge.icon}
+                </div>
+                <div className="text-center">
+                  <h4 className="text-lg font-bold">{selectedBadge.nameKo}</h4>
+                  {selectedBadge.isHidden && !selectedBadge.isEarned && (
+                    <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
+                      히든 뱃지
+                    </span>
+                  )}
+                </div>
+              </div>
+              {/* 설명 */}
+              <p className="text-sm text-muted-foreground text-center mb-4">
+                {selectedBadge.descriptionKo}
+              </p>
+              {/* 획득일 */}
+              {selectedBadge.isEarned && selectedBadge.earnedAt && (
+                <p className="text-xs text-primary text-center font-medium mb-4">
+                  🏆 {formatBadgeDate(selectedBadge.earnedAt)} 획득
+                </p>
+              )}
+              {/* 미획득 상태 */}
+              {!selectedBadge.isEarned && (
+                <p className="text-xs text-muted-foreground text-center mb-4">
+                  아직 획득하지 못한 뱃지예요
+                </p>
+              )}
+              {/* 닫기 버튼 */}
+              <button
+                onClick={() => setSelectedBadge(null)}
+                className="w-full py-3 bg-secondary rounded-xl text-sm font-medium hover:bg-secondary/70 transition-colors"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* 설정 목록 */}
         <div className="bg-card border border-border rounded-xl divide-y divide-border">
