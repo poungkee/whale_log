@@ -47,3 +47,13 @@ surf-wave-mobile/android/app/build/
 
 # Backend
 surf-wave-backend/dist/
+surf-wave-backend/uploads/
+
+# DB 백업 파일
+*.sql
+
+# 임시 데이터 파일
+*.json
+!**/tsconfig*.json
+!**/package.json
+!**/package-lock.json
