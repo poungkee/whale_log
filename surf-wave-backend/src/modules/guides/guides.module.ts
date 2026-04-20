@@ -8,9 +8,10 @@ import { GuidesController } from './guides.controller';
 import { GuidesService } from './guides.service';
 import { Guide } from './entities/guide.entity';
 import { GuideProgress } from './entities/guide-progress.entity';
+import { BadgesModule } from '../badges/badges.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Guide, GuideProgress])],
+  imports: [TypeOrmModule.forFeature([Guide, GuideProgress]), BadgesModule],
   controllers: [GuidesController],
   providers: [GuidesService],
   exports: [GuidesService],

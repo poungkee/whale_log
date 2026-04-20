@@ -27,12 +27,17 @@ import { UsersService } from './users.service';
 import { CurrentUser, RequestUser } from '../../common/decorators/current-user.decorator';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateFcmTokenDto } from './dto/update-fcm-token.dto';
+import { BadgesService } from '../badges/badges.service';
 
 @ApiTags('users') // Swagger 문서에서 'users' 그룹으로 분류
 @ApiBearerAuth()  // 모든 엔드포인트에 Bearer 토큰 인증 필요 표시
 @Controller('users') // 기본 경로: /api/v1/users
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    /** 뱃지 서비스 - 프로필 수정 후 PROFILE_COMPLETE, PRO_SURFER 체크용 */
+    private readonly badgesService: BadgesService,
+  ) {}
 
   /**
    * 내 프로필 조회
@@ -74,6 +79,13 @@ export class UsersController {
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
     const updated = await this.usersService.update(user.id, updateProfileDto);
+
+    /** 뱃지 체크 — 레벨/보드 등 프로필 변경 시 PROFILE_COMPLETE, PRO_SURFER 체크 */
+    this.badgesService.checkAndAward({
+      userId: user.id,
+      trigger: 'PROFILE_UPDATE',
+    }).catch(() => {});
+
     /** passwordHash 등 민감 정보 제거 후 반환 */
     return this.usersService.sanitizeUser(updated);
   }

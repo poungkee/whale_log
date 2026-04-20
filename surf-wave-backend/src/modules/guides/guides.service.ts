@@ -14,6 +14,7 @@ import { Guide } from './entities/guide.entity';
 import { GuideProgress } from './entities/guide-progress.entity';
 import { GuideQueryDto } from './dto/guide-query.dto';
 import { GuideCategory } from '../../common/enums/guide-category.enum';
+import { BadgesService } from '../badges/badges.service';
 
 @Injectable()
 export class GuidesService {
@@ -22,6 +23,8 @@ export class GuidesService {
     private readonly guideRepository: Repository<Guide>,
     @InjectRepository(GuideProgress)
     private readonly progressRepository: Repository<GuideProgress>,
+    /** 뱃지 서비스 - 가이드 읽기 후 GUIDE_5, GUIDE_ALL 체크용 */
+    private readonly badgesService: BadgesService,
   ) {}
 
   async findAll(query: GuideQueryDto, userId: string) {
@@ -97,6 +100,19 @@ export class GuidesService {
     }
 
     await this.progressRepository.save(progress);
+
+    /** 뱃지 체크 — 완료된 가이드 수 + 전체 가이드 수 조회 후 GUIDE_5, GUIDE_ALL 체크 */
+    const [guideReadCount, totalGuideCount] = await Promise.all([
+      this.progressRepository.count({ where: { userId, isCompleted: true } }),
+      this.guideRepository.count({ where: { isPublished: true } }),
+    ]);
+    this.badgesService.checkAndAward({
+      userId,
+      trigger: 'GUIDE_READ',
+      guideReadCount,
+      totalGuideCount,
+    }).catch(() => {});
+
     return { message: 'Guide marked as complete' };
   }
 
