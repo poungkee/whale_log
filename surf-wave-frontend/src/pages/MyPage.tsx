@@ -314,6 +314,21 @@ export function MyPage({
                 </div>
               </div>
 
+              {/* 자세 연습 바로가기 */}
+              <button
+                onClick={onNavigateToPoseTraining}
+                className="w-full flex items-center justify-between p-4 bg-card border border-border rounded-xl hover:bg-secondary transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Camera className="w-4 h-4 text-primary" />
+                  <div>
+                    <p className="text-sm font-medium">자세 연습</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">실시간 포즈 감지</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </button>
+
               {/* 레벨 · 보드 변경 */}
               <div className="bg-card border border-border rounded-xl divide-y divide-border">
                 {/* 레벨 변경 */}
@@ -626,30 +641,6 @@ export function MyPage({
             </div>
 
             <div className="divide-y divide-border">
-              {/* 서핑 다이어리 */}
-              <button
-                onClick={() => { setShowSettings(false); onNavigateToDiary(); }}
-                className="w-full flex items-center justify-between px-5 py-4 hover:bg-secondary transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <BookOpen className="w-4 h-4 text-primary" />
-                  <span className="text-sm">서핑 다이어리</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              </button>
-
-              {/* 자세 연습 */}
-              <button
-                onClick={() => { setShowSettings(false); onNavigateToPoseTraining?.(); }}
-                className="w-full flex items-center justify-between px-5 py-4 hover:bg-secondary transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <Camera className="w-4 h-4 text-primary" />
-                  <span className="text-sm">자세 연습</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              </button>
-
               {/* 알림 설정 */}
               <div className="flex items-center justify-between px-5 py-4">
                 <div className="flex items-center gap-3">
@@ -672,13 +663,7 @@ export function MyPage({
                 </label>
               </div>
 
-              {/* 앱 정보 */}
-              <div className="flex items-center justify-between px-5 py-4">
-                <span className="text-sm">앱 정보</span>
-                <span className="text-sm text-muted-foreground">v1.4.2</span>
-              </div>
-
-              {/* 관리자 패널 */}
+              {/* 관리자 패널 — ADMIN 계정에만 표시 */}
               {userInfo?.role === 'ADMIN' && (
                 <button
                   onClick={() => { setShowSettings(false); onNavigateToAdmin?.(); }}
@@ -699,6 +684,12 @@ export function MyPage({
               >
                 로그아웃
               </button>
+
+              {/* 앱 정보 — 가장 하단 */}
+              <div className="flex items-center justify-between px-5 py-4">
+                <span className="text-sm text-muted-foreground">앱 정보</span>
+                <span className="text-sm text-muted-foreground">v1.4.2</span>
+              </div>
             </div>
           </div>
         </div>
