@@ -81,13 +81,13 @@ export class UsersController {
     const updated = await this.usersService.update(user.id, updateProfileDto);
 
     /** 뱃지 체크 — 레벨/보드 등 프로필 변경 시 PROFILE_COMPLETE, PRO_SURFER 체크 */
-    this.badgesService.checkAndAward({
+    const newBadges = await this.badgesService.checkAndAward({
       userId: user.id,
       trigger: 'PROFILE_UPDATE',
-    }).catch(() => {});
+    }).catch(() => []);
 
     /** passwordHash 등 민감 정보 제거 후 반환 */
-    return this.usersService.sanitizeUser(updated);
+    return { ...this.usersService.sanitizeUser(updated), newBadges };
   }
 
   /**

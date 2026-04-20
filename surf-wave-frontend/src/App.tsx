@@ -33,11 +33,15 @@ import { Diary } from './pages/Diary';
 import { PoseTraining } from './pages/PoseTraining';
 import { AdminPage } from './pages/admin/AdminPage';
 import { BottomNav } from './components/BottomNav';
+import { BadgeEarnedPopup } from './components/BadgeEarnedPopup';
+import { BadgeProvider, useBadgeQueue, useBadgeNotify } from './contexts/BadgeContext';
 import { GlobalAlertBanner, AlertEntryModal } from './components/WeatherAlertBanner';
 import type { SurfAlertSummary } from './components/WeatherAlertBanner';
 import { api } from './lib/api';
 
-export default function App() {
+function AppInner() {
+  const pushBadges = useBadgeNotify();
+
   /** 현재 표시 중인 화면 상태 */
   const [screen, setScreen] = useState<AppScreen>('splash');
   /** 메인 화면의 활성 탭 (하단 네비게이션) */
@@ -59,6 +63,7 @@ export default function App() {
   const [showAlertModal, setShowAlertModal] = useState(false);
   /** 특보 상세 모달 (배너 클릭 시) */
   const [showAlertDetail, setShowAlertDetail] = useState(false);
+
   /** 특보 모달 이미 표시했는지 여부 (세션 중 재표시 방지) */
   const alertShownRef = useRef(false);
 
@@ -266,6 +271,10 @@ export default function App() {
           }
           return rollback;
         });
+      } else if (!isCurrentlyFavorited) {
+        /** 즐겨찾기 추가 성공 시 뱃지 체크 */
+        const result = await res.json().catch(() => ({}));
+        if (result.newBadges?.length) pushBadges(result.newBadges);
       }
     } catch {
       /** 네트워크 에러 시 롤백 */
@@ -669,6 +678,23 @@ export default function App() {
         }
         setMainTab(tab);
       }} />
+
+      {/* ── 뱃지 획득 팝업 ── */}
+      <BadgePopupRenderer />
     </div>
+  );
+}
+
+/** 뱃지 팝업 렌더러 — Context에서 큐를 읽어 표시 */
+function BadgePopupRenderer() {
+  const { badgeQueue, dismissFirst } = useBadgeQueue();
+  return <BadgeEarnedPopup queue={badgeQueue} onDismiss={dismissFirst} />;
+}
+
+export default function App() {
+  return (
+    <BadgeProvider>
+      <AppInner />
+    </BadgeProvider>
   );
 }

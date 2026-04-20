@@ -198,13 +198,13 @@ export class SpotsService {
 
     /** 뱃지 체크 — 투표 후 총 투표 수 조회 */
     const voteCount = await this.voteRepository.count({ where: { userId } });
-    this.badgesService.checkAndAward({
+    const newBadges = await this.badgesService.checkAndAward({
       userId,
       trigger: 'VOTE',
       voteCount,
-    }).catch(() => {});
+    }).catch(() => []);
 
-    return { message: 'Vote recorded successfully' };
+    return { message: 'Vote recorded successfully', newBadges };
   }
 
   async getFavorites(userId: string) {
@@ -235,13 +235,13 @@ export class SpotsService {
 
     /** 뱃지 체크 — 즐겨찾기 추가 후 현재 즐겨찾기 수 조회 */
     const favCount = await this.favoriteRepository.count({ where: { userId } });
-    this.badgesService.checkAndAward({
+    const newBadges = await this.badgesService.checkAndAward({
       userId,
       trigger: 'FAVORITE_ADD',
       favoriteCount: favCount,
-    }).catch(() => {});
+    }).catch(() => []);
 
-    return { message: 'Added to favorites' };
+    return { message: 'Added to favorites', newBadges };
   }
 
   async removeFavorite(spotId: string, userId: string) {

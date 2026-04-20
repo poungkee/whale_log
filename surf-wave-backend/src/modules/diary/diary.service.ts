@@ -279,8 +279,8 @@ export class DiaryService {
 
     const result = await this.findById(savedDiary.id, userId);
 
-    /** 뱃지 조건 체크 — 비동기로 처리 (실패해도 다이어리 생성에 영향 없음) */
-    this.badgesService.checkAndAward({
+    /** 뱃지 조건 체크 — 새로 획득한 뱃지 키 배열 반환 */
+    const newBadges = await this.badgesService.checkAndAward({
       userId,
       trigger: 'DIARY_CREATE',
       diary: {
@@ -294,9 +294,9 @@ export class DiaryService {
         hasImages: !!(dto.imageUrls?.length),
         waveHeight: diaryData.waveHeight ? Number(diaryData.waveHeight) : undefined,
       },
-    }).catch((err) => this.logger.warn(`뱃지 체크 실패: ${err.message}`));
+    }).catch((err) => { this.logger.warn(`뱃지 체크 실패: ${err.message}`); return []; });
 
-    return result;
+    return { ...result, newBadges };
   }
 
   async update(diaryId: string, userId: string, dto: UpdateDiaryDto) {

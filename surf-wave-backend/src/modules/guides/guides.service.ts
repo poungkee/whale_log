@@ -106,14 +106,14 @@ export class GuidesService {
       this.progressRepository.count({ where: { userId, isCompleted: true } }),
       this.guideRepository.count({ where: { isPublished: true } }),
     ]);
-    this.badgesService.checkAndAward({
+    const newBadges = await this.badgesService.checkAndAward({
       userId,
       trigger: 'GUIDE_READ',
       guideReadCount,
       totalGuideCount,
-    }).catch(() => {});
+    }).catch(() => []);
 
-    return { message: 'Guide marked as complete' };
+    return { message: 'Guide marked as complete', newBadges };
   }
 
   async getProgress(userId: string) {

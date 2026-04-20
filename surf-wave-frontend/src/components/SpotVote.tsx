@@ -13,6 +13,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useBadgeNotify } from '../contexts/BadgeContext';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import { api } from '../lib/api';
 
@@ -31,6 +32,7 @@ interface SpotVoteProps {
 }
 
 export function SpotVote({ spotId, compact = false }: SpotVoteProps) {
+  const pushBadges = useBadgeNotify();
   /** 투표 분포 데이터 */
   const [voteData, setVoteData] = useState<VoteDistribution | null>(null);
   /** 투표 제출 중 */
@@ -73,6 +75,10 @@ export function SpotVote({ spotId, compact = false }: SpotVoteProps) {
       });
 
       if (res.ok) {
+        /** 뱃지 체크 — 투표 응답의 newBadges 큐에 추가 */
+        const voteResult = await res.json().catch(() => ({}));
+        if (voteResult.newBadges?.length) pushBadges(voteResult.newBadges);
+
         /** 투표 성공 → 분포 데이터 다시 조회 */
         const votesRes = await fetch(api(`/api/v1/spots/${spotId}/votes`), {
           headers: { 'Authorization': `Bearer ${token}` },

@@ -19,6 +19,7 @@ import { useState, useEffect } from 'react';
 import { X, Loader2, MapPin, Search, Calendar, Clock, Eye, EyeOff, Sunrise, ImagePlus, Trash2 } from 'lucide-react';
 import type { BoardType } from '../types';
 import { api } from '../lib/api';
+import { useBadgeNotify } from '../contexts/BadgeContext';
 
 /**
  * 다이어리 보드 타입 — 백엔드 BoardType enum과 1:1 대응
@@ -116,6 +117,7 @@ const SURF_TIME_PRESETS = [
 ];
 
 export function DiaryFormModal({ editEntry, defaultBoardType, onClose, onSaved }: DiaryFormModalProps) {
+  const pushBadges = useBadgeNotify();
   /** 오늘 날짜 (YYYY-MM-DD) */
   const today = new Date().toISOString().slice(0, 10);
 
@@ -384,6 +386,12 @@ export function DiaryFormModal({ editEntry, defaultBoardType, onClose, onSaved }
       if (!res.ok) {
         const data = await res.json().catch(() => null);
         throw new Error(data?.message || '저장에 실패했습니다');
+      }
+
+      /** 뱃지 체크 — 신규 작성 시에만 newBadges 확인 */
+      if (!isEdit) {
+        const result = await res.json().catch(() => ({}));
+        if (result.newBadges?.length) pushBadges(result.newBadges);
       }
 
       /** 저장 성공 → 부모 컴포넌트에 알림 후 모달 닫기 */
