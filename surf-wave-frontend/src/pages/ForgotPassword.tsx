@@ -125,14 +125,35 @@ export function ForgotPassword({ onBack, onDone }: ForgotPasswordProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0D1B2A] via-[#1A2332] to-[#0D1B2A]">
-      <header className="px-4 py-6">
-        <button onClick={onBack} className="p-2 hover:bg-secondary rounded-lg transition-colors">
-          <ArrowLeft className="w-6 h-6" />
+    <div
+      className="min-h-screen flex flex-col relative overflow-hidden"
+      style={{ background: 'linear-gradient(160deg, #071E2F 0%, #0A3352 40%, #0D4A6B 65%, #071E2F 100%)' }}
+    >
+      <header className="px-4 py-5">
+        <button
+          onClick={onBack}
+          className="p-2 rounded-xl transition-colors"
+          style={{ background: 'rgba(255,255,255,0.08)', color: '#80CBC4' }}
+        >
+          <ArrowLeft className="w-5 h-5" />
         </button>
       </header>
 
-      <div className="max-w-md mx-auto px-6 py-4 page-transition">
+      {/* 크림 카드 */}
+      <div className="flex-1 flex items-start justify-center px-4 pt-4 pb-8">
+      <div className="w-full max-w-md rounded-3xl shadow-2xl overflow-hidden" style={{ background: '#FBF8F3' }}>
+        {/* 상단 헤더 */}
+        <div className="px-6 pt-6 pb-5 text-center" style={{ background: 'linear-gradient(160deg, #1A8FA8 0%, #2AAFC6 100%)' }}>
+          <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-3">
+            <Lock className="w-7 h-7 text-white" />
+          </div>
+          <h1 className="text-xl font-bold italic text-white">비밀번호 찾기</h1>
+          <p className="text-xs text-white/75 mt-1">
+            {step === 1 ? '가입 시 등록한 이메일로 인증코드를 보내드릴게요' : `${email}로 발송된 인증코드를 입력해주세요`}
+          </p>
+        </div>
+
+      <div className="px-6 py-6 max-w-md mx-auto page-transition">
         <div className="text-center mb-10">
           <div className="w-20 h-20 mx-auto mb-4 bg-primary/10 rounded-full flex items-center justify-center">
             <Lock className="w-10 h-10 text-primary" />
@@ -269,6 +290,8 @@ export function ForgotPassword({ onBack, onDone }: ForgotPasswordProps) {
             </div>
           </form>
         )}
+      </div>
+      </div>
       </div>
     </div>
   );

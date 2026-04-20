@@ -160,171 +160,191 @@ export function Register({ onBack, onAuthSuccess, onGoLogin }: RegisterProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0D1B2A] via-[#1A2332] to-[#0D1B2A]">
-      <header className="px-4 py-6">
-        <button onClick={onBack} className="p-2 hover:bg-secondary rounded-lg transition-colors">
-          <ArrowLeft className="w-6 h-6" />
-        </button>
-      </header>
+    /* 바깥 배경 — 어두운 오션 그라데이션 (로그인 화면과 통일) */
+    <div
+      className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden px-4 py-8"
+      style={{
+        background: 'linear-gradient(160deg, #071E2F 0%, #0A3352 40%, #0D4A6B 65%, #071E2F 100%)',
+      }}
+    >
+      {/* 뒤로 가기 버튼 */}
+      <button
+        onClick={onBack}
+        className="absolute top-5 left-4 p-2 rounded-xl transition-colors z-10"
+        style={{ background: 'rgba(255,255,255,0.08)', color: '#80CBC4' }}
+      >
+        <ArrowLeft className="w-5 h-5" />
+      </button>
 
-      <div className="max-w-md mx-auto px-6 py-4 page-transition">
-        <div className="text-center mb-8">
-          <img src="/logo.png" alt="Whale Log" className="w-20 h-20 mx-auto mb-4 rounded-full shadow-xl shadow-primary/20" />
-          <h1 className="text-3xl font-bold mb-2">회원가입</h1>
-          <p className="text-muted-foreground">Whale Log와 함께 시작하세요</p>
+      {/* 크림 플로팅 카드 */}
+      <div
+        className="w-full max-w-md rounded-3xl shadow-2xl relative z-10 overflow-hidden"
+        style={{ background: '#FBF8F3' }}
+      >
+        {/* 카드 상단 — 틸 헤더 */}
+        <div
+          className="px-6 pt-7 pb-5 text-center"
+          style={{
+            background: 'linear-gradient(160deg, #1A8FA8 0%, #2AAFC6 100%)',
+          }}
+        >
+          <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-3">
+            <img src="/logo.png" alt="Whale Log" className="w-12 h-12 rounded-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
+          </div>
+          <h1 className="text-xl font-bold italic text-white mb-0.5">회원가입</h1>
+          <p className="text-xs text-white/75">Whale Log와 함께 시작하세요</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="px-6 py-5">
+
+        <form onSubmit={handleSubmit} className="space-y-4">
 
           {/* 아이디 입력 + 중복 확인 */}
           <div>
-            <label htmlFor="username" className="block mb-2 text-sm font-medium">
-              아이디
-            </label>
+            <label htmlFor="username" className="block mb-1.5 text-sm font-medium text-[#1a2332]">아이디</label>
             <div className="flex gap-2">
               <div className="relative flex-1">
-                <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b6355]" />
                 <input
                   id="username"
                   type="text"
                   value={username}
                   onChange={(e) => handleUsernameChange(e.target.value)}
                   placeholder="4~20자, 영문/숫자/_"
-                  className="w-full pl-11 pr-10 py-3 bg-card border border-border rounded-lg focus:outline-none focus:border-primary transition-colors text-foreground placeholder:text-muted-foreground"
+                  className="w-full pl-10 pr-9 py-3 rounded-xl text-sm text-[#1a2332] placeholder:text-[#a09880]"
+                  style={{ background: '#EDE8DC', border: '1.5px solid transparent', outline: 'none' }}
+                  onFocus={(e) => (e.target.style.borderColor = '#2AAFC6')}
+                  onBlur={(e) => (e.target.style.borderColor = 'transparent')}
                   required
                 />
-                {/* 중복 확인 결과 아이콘 */}
-                {usernameAvailable === true && (
-                  <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
-                )}
-                {usernameAvailable === false && (
-                  <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-destructive" />
-                )}
+                {usernameAvailable === true && <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500" />}
+                {usernameAvailable === false && <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-red-500" />}
               </div>
-              {/* 중복 확인 버튼 */}
               <button
                 type="button"
                 onClick={handleCheckUsername}
                 disabled={isCheckingUsername || !username.trim()}
-                className="px-4 py-3 bg-secondary border border-border rounded-lg text-sm font-medium hover:bg-secondary/80 transition-colors disabled:opacity-50 whitespace-nowrap"
+                className="px-3 py-2 rounded-xl text-xs font-semibold transition-colors disabled:opacity-50 whitespace-nowrap text-white"
+                style={{ background: '#2AAFC6' }}
               >
-                {isCheckingUsername ? '확인 중...' : '중복 확인'}
+                {isCheckingUsername ? '확인...' : '중복 확인'}
               </button>
             </div>
-            {errors.username && <p className="text-sm text-destructive mt-1">{errors.username}</p>}
-            {usernameAvailable === true && (
-              <p className="text-sm text-green-500 mt-1">사용 가능한 아이디입니다</p>
-            )}
+            {errors.username && <p className="text-xs text-red-500 mt-1">{errors.username}</p>}
+            {usernameAvailable === true && <p className="text-xs text-green-600 mt-1">사용 가능한 아이디입니다</p>}
           </div>
 
           {/* 닉네임 입력 */}
           <div>
-            <label htmlFor="nickname" className="block mb-2 text-sm font-medium">
-              닉네임
-            </label>
+            <label htmlFor="nickname" className="block mb-1.5 text-sm font-medium text-[#1a2332]">닉네임</label>
             <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b6355]" />
               <input
                 id="nickname"
                 type="text"
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
                 placeholder="닉네임을 입력하세요"
-                className="w-full pl-11 pr-4 py-3 bg-card border border-border rounded-lg focus:outline-none focus:border-primary transition-colors text-foreground placeholder:text-muted-foreground"
+                className="w-full pl-10 pr-4 py-3 rounded-xl text-sm text-[#1a2332] placeholder:text-[#a09880]"
+                style={{ background: '#EDE8DC', border: '1.5px solid transparent', outline: 'none' }}
+                onFocus={(e) => (e.target.style.borderColor = '#2AAFC6')}
+                onBlur={(e) => (e.target.style.borderColor = 'transparent')}
                 required
               />
             </div>
-            {errors.nickname && <p className="text-sm text-destructive mt-1">{errors.nickname}</p>}
+            {errors.nickname && <p className="text-xs text-red-500 mt-1">{errors.nickname}</p>}
           </div>
 
           {/* 이메일 입력 */}
           <div>
-            <label htmlFor="reg-email" className="block mb-2 text-sm font-medium">
-              이메일 <span className="text-muted-foreground text-xs">(비밀번호 찾기용)</span>
+            <label htmlFor="reg-email" className="block mb-1.5 text-sm font-medium text-[#1a2332]">
+              이메일 <span className="text-[#9a9082] text-xs font-normal">(비밀번호 찾기용)</span>
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b6355]" />
               <input
                 id="reg-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="이메일을 입력하세요"
-                className="w-full pl-11 pr-4 py-3 bg-card border border-border rounded-lg focus:outline-none focus:border-primary transition-colors text-foreground placeholder:text-muted-foreground"
+                className="w-full pl-10 pr-4 py-3 rounded-xl text-sm text-[#1a2332] placeholder:text-[#a09880]"
+                style={{ background: '#EDE8DC', border: '1.5px solid transparent', outline: 'none' }}
+                onFocus={(e) => (e.target.style.borderColor = '#2AAFC6')}
+                onBlur={(e) => (e.target.style.borderColor = 'transparent')}
                 required
               />
             </div>
-            {errors.email && <p className="text-sm text-destructive mt-1">{errors.email}</p>}
+            {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
           </div>
 
           {/* 비밀번호 입력 */}
           <div>
-            <label htmlFor="reg-password" className="block mb-2 text-sm font-medium">
-              비밀번호
-            </label>
+            <label htmlFor="reg-password" className="block mb-1.5 text-sm font-medium text-[#1a2332]">비밀번호</label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b6355]" />
               <input
                 id="reg-password"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="비밀번호 (8자 이상, 영문+숫자)"
-                className="w-full pl-11 pr-12 py-3 bg-card border border-border rounded-lg focus:outline-none focus:border-primary transition-colors text-foreground placeholder:text-muted-foreground"
+                placeholder="8자 이상, 영문+숫자"
+                className="w-full pl-10 pr-11 py-3 rounded-xl text-sm text-[#1a2332] placeholder:text-[#a09880]"
+                style={{ background: '#EDE8DC', border: '1.5px solid transparent', outline: 'none' }}
+                onFocus={(e) => (e.target.style.borderColor = '#2AAFC6')}
+                onBlur={(e) => (e.target.style.borderColor = 'transparent')}
                 required
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6355]">
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            {errors.password && <p className="text-sm text-destructive mt-1">{errors.password}</p>}
+            {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
           </div>
 
           {/* 비밀번호 확인 */}
           <div>
-            <label htmlFor="confirm-password" className="block mb-2 text-sm font-medium">
-              비밀번호 확인
-            </label>
+            <label htmlFor="confirm-password" className="block mb-1.5 text-sm font-medium text-[#1a2332]">비밀번호 확인</label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b6355]" />
               <input
                 id="confirm-password"
                 type={showPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="비밀번호를 다시 입력하세요"
-                className="w-full pl-11 pr-4 py-3 bg-card border border-border rounded-lg focus:outline-none focus:border-primary transition-colors text-foreground placeholder:text-muted-foreground"
+                className="w-full pl-10 pr-4 py-3 rounded-xl text-sm text-[#1a2332] placeholder:text-[#a09880]"
+                style={{ background: '#EDE8DC', border: '1.5px solid transparent', outline: 'none' }}
+                onFocus={(e) => (e.target.style.borderColor = '#2AAFC6')}
+                onBlur={(e) => (e.target.style.borderColor = 'transparent')}
                 required
               />
             </div>
-            {errors.confirmPassword && <p className="text-sm text-destructive mt-1">{errors.confirmPassword}</p>}
+            {errors.confirmPassword && <p className="text-xs text-red-500 mt-1">{errors.confirmPassword}</p>}
           </div>
 
           {/* 회원가입 버튼 */}
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-4 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl active:scale-[0.98] disabled:opacity-50"
+            className="w-full py-3.5 rounded-2xl font-semibold text-white transition-all active:scale-[0.98] disabled:opacity-50"
+            style={{
+              background: 'linear-gradient(135deg, #1A8FA8 0%, #2AAFC6 100%)',
+              boxShadow: '0 4px 16px rgba(42,175,198,0.3)',
+            }}
           >
             {isLoading ? '가입 중...' : '회원가입'}
           </button>
 
           {/* 로그인 링크 */}
-          <div className="text-center pt-2">
-            <span className="text-sm text-muted-foreground">이미 계정이 있으신가요? </span>
-            <button
-              type="button"
-              onClick={onGoLogin}
-              className="text-sm text-primary hover:underline font-medium"
-            >
+          <div className="text-center pt-1 pb-1">
+            <span className="text-xs text-[#9a9082]">이미 계정이 있으신가요? </span>
+            <button type="button" onClick={onGoLogin} className="text-xs font-semibold" style={{ color: '#2AAFC6' }}>
               로그인
             </button>
           </div>
         </form>
+      </div>
       </div>
     </div>
   );

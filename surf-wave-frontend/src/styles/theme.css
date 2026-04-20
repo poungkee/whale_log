@@ -1,30 +1,31 @@
 /**
- * Whale Log 앱 테마 — 다크 오션
+ * Whale Log 앱 테마 — 오션 크림
  *
- * 기존 다크 모드 기반 (안정적, 검증됨)
- * - 배경: 깊은 네이비
- * - 카드: 불투명 다크
- * - 포인트: 청록 + 오렌지
+ * Stitch 디자인 시스템 기반
+ * - 배경: 따뜻한 크림/베이지 (#F5EFE3)
+ * - 카드: 아이보리 화이트 (#FFFDF9)
+ * - 포인트: 틸 (#2AAFC6) + 코럴 오렌지 (#E8744A)
+ * - 테두리: 따뜻한 샌드 톤
  */
 
 :root {
   --font-size: 16px;
-  --background: #f0f7fa;
-  --foreground: #0d1b2a;
-  --card: #ffffff;
-  --card-foreground: #0d1b2a;
+  --background: #F5EFE3;
+  --foreground: #1a2332;
+  --card: #FFFDF9;
+  --card-foreground: #1a2332;
   --primary: #2AAFC6;
   --primary-foreground: #ffffff;
-  --secondary: #e4f2f7;
-  --secondary-foreground: #0d1b2a;
-  --muted: #e8f4f8;
-  --muted-foreground: #5a7080;
-  --accent: #FF8C00;
+  --secondary: #EDE8DC;
+  --secondary-foreground: #1a2332;
+  --muted: #E8E3D8;
+  --muted-foreground: #6b6355;
+  --accent: #E8744A;
   --accent-foreground: #ffffff;
   --destructive: #d4183d;
   --destructive-foreground: #ffffff;
-  --border: rgba(42, 175, 198, 0.15);
-  --input: #ffffff;
+  --border: rgba(160, 140, 110, 0.20);
+  --input: #FFFDF9;
   --ring: #2AAFC6;
   --radius: 0.625rem;
 }
