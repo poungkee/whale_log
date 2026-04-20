@@ -132,7 +132,7 @@ function BadgeIcon({ imgSrc, emoji, isEarned, large }: {
     <img
       src={imgSrc}
       alt=""
-      className="w-full h-full object-contain bg-white"
+      className="w-full h-full object-cover scale-110"
       onError={() => setImgFailed(true)}
     />
   );
