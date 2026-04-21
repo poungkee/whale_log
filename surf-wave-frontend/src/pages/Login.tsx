@@ -276,23 +276,15 @@ export function Login({ onBack, onAuthSuccess, onGoRegister, onGoForgotPassword 
           }}
         >
           {/* 로고 */}
-          <div className="relative inline-block mb-3">
-            <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center mx-auto">
-              <img
-                src="/logo.png"
-                alt="Whale Log"
-                className="w-14 h-14 rounded-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
-            </div>
-            <div
-              className="absolute -bottom-1 -right-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-              style={{ background: '#E8744A', color: '#fff', letterSpacing: '0.05em' }}
-            >
-              EST 2026
-            </div>
+          <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-3">
+            <img
+              src="/logo-transparent.png"
+              alt="Whale Log"
+              className="w-14 h-14 object-contain"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/logo.png';
+              }}
+            />
           </div>
           <h1 className="text-2xl font-bold italic text-white mb-0.5">Whale Log</h1>
           <p className="text-sm text-white/75">나만의 서핑 코치</p>
