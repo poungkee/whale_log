@@ -9,7 +9,7 @@
  * - CTA: 로그인(틸 filled) + 회원가입(반투명 outline)
  */
 
-import { TrendingUp, BookOpen, MapPin, Waves } from 'lucide-react';
+import { TrendingUp, BookOpen, MapPin } from 'lucide-react';
 
 interface WelcomeProps {
   onLoginClick: () => void;
@@ -37,17 +37,12 @@ export function Welcome({ onLoginClick, onRegisterClick }: WelcomeProps) {
 
         {/* 상단: 로고 섹션 */}
         <div className="flex-1 flex flex-col items-center justify-center text-center">
-          {/* 파도 아이콘 원 */}
-          <div
-            className="w-24 h-24 rounded-full flex items-center justify-center mb-6"
-            style={{
-              border: '2px solid rgba(255,255,255,0.35)',
-              background: 'rgba(255,255,255,0.08)',
-              backdropFilter: 'blur(8px)',
-            }}
-          >
-            <Waves className="w-10 h-10 text-white" strokeWidth={1.5} />
-          </div>
+          {/* 로고 이미지 — 투명 배경 */}
+          <img
+            src="/logo-transparent.png"
+            alt="Whale Log"
+            className="w-28 h-28 mb-5 drop-shadow-2xl"
+          />
 
           {/* 앱 이름 — 크고 이탤릭 */}
           <h1
@@ -56,8 +51,8 @@ export function Welcome({ onLoginClick, onRegisterClick }: WelcomeProps) {
           >
             Whale Log
           </h1>
-          <p className="text-base font-medium" style={{ color: '#8cd0eb' }}>
-            나만의 서핑 코치
+          <p className="text-base font-semibold tracking-wide" style={{ color: '#8cd0eb' }}>
+            We make waves
           </p>
         </div>
 
