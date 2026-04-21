@@ -28,14 +28,12 @@ import { api } from '../lib/api';
 /** 홈 뷰 모드 — 스팟 목록 / 소통 게시판 */
 type HomeViewMode = 'spots' | 'community';
 
-/** 지역명 → 배경 이미지 경로 매핑 */
-function getSpotImage(region: string): string {
-  const r = region.toLowerCase();
-  if (r.includes('bali') || r.includes('발리')) return '/spots/bali.jpg';
-  if (r.includes('제주')) return '/spots/jeju.jpg';
-  if (r.includes('남해') || r.includes('부산') || r.includes('경남')) return '/spots/namhae.jpg';
-  // 동해 (강원, 경북, 속초, 양양, 강릉 등)
-  return '/spots/donghai.jpg';
+/** 스팟 id 기반으로 wave1~5 중 하나 선택 (새로고침해도 동일) */
+const WAVE_IMAGES = ['/spots/wave1.jpg', '/spots/wave2.jpg', '/spots/wave3.jpg', '/spots/wave4.jpg', '/spots/wave5.jpg'];
+function getSpotImage(spotId: string): string {
+  let hash = 0;
+  for (let i = 0; i < spotId.length; i++) hash = (hash * 31 + spotId.charCodeAt(i)) & 0xffff;
+  return WAVE_IMAGES[hash % WAVE_IMAGES.length];
 }
 
 interface HomeProps {
@@ -291,7 +289,7 @@ export function Home({ surfLevel, boardType, favoriteIds, onToggleFavorite }: Ho
                     onClick={() => setSelectedSpot(spotData)}
                     className="relative min-w-[200px] h-[130px] flex-shrink-0 snap-start rounded-xl overflow-hidden cursor-pointer shadow-md hover:shadow-lg transition-all"
                     style={{
-                      backgroundImage: `url(${getSpotImage(spotData.spot.region)})`,
+                      backgroundImage: `url(${getSpotImage(spotData.spot.id)})`,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
                     }}
