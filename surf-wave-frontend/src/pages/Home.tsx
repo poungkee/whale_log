@@ -28,6 +28,16 @@ import { api } from '../lib/api';
 /** 홈 뷰 모드 — 스팟 목록 / 소통 게시판 */
 type HomeViewMode = 'spots' | 'community';
 
+/** 지역명 → 배경 이미지 경로 매핑 */
+function getSpotImage(region: string): string {
+  const r = region.toLowerCase();
+  if (r.includes('bali') || r.includes('발리')) return '/spots/bali.jpg';
+  if (r.includes('제주')) return '/spots/jeju.jpg';
+  if (r.includes('남해') || r.includes('부산') || r.includes('경남')) return '/spots/namhae.jpg';
+  // 동해 (강원, 경북, 속초, 양양, 강릉 등)
+  return '/spots/donghai.jpg';
+}
+
 interface HomeProps {
   /** 사용자 서핑 레벨 - 대시보드 API 쿼리 파라미터로 사용 */
   surfLevel: SurfLevel;
@@ -279,24 +289,32 @@ export function Home({ surfLevel, boardType, favoriteIds, onToggleFavorite }: Ho
                   <div
                     key={spotData.spot.id}
                     onClick={() => setSelectedSpot(spotData)}
-                    className="min-w-[200px] flex-shrink-0 snap-start bg-card rounded-xl border border-border shadow-sm p-3 cursor-pointer hover:border-primary/40 hover:shadow-md transition-all"
+                    className="relative min-w-[200px] h-[130px] flex-shrink-0 snap-start rounded-xl overflow-hidden cursor-pointer shadow-md hover:shadow-lg transition-all"
+                    style={{
+                      backgroundImage: `url(${getSpotImage(spotData.spot.region)})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                    }}
                   >
-                    {/* 등급 dot + 등급 텍스트 */}
-                    <div className="flex items-center gap-1.5 mb-1">
+                    {/* 어두운 그라디언트 오버레이 */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/10" />
+                    {/* 상단: 등급 뱃지 */}
+                    <div className="absolute top-2.5 left-3 flex items-center gap-1.5">
                       <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
-                      <span className="text-xs font-bold" style={{ color }}>{grade}</span>
-                      <span className="text-xs font-black" style={{ color }}>{spotData.surfRating.toFixed(1)}</span>
+                      <span className="text-xs font-bold text-white drop-shadow">{grade}</span>
+                      <span className="text-xs font-black text-white drop-shadow">{spotData.surfRating.toFixed(1)}</span>
                     </div>
-                    {/* 파고 크게 */}
-                    <div className="mb-1">
-                      <span className="text-2xl font-black">
-                        {spotData.forecast ? Number(spotData.forecast.waveHeight).toFixed(1) : '-'}
-                      </span>
-                      <span className="text-xs text-muted-foreground ml-0.5">m</span>
+                    {/* 하단: 파고 + 스팟명 */}
+                    <div className="absolute bottom-2.5 left-3 right-3">
+                      <div className="flex items-baseline gap-0.5 mb-0.5">
+                        <span className="text-2xl font-black text-white leading-none">
+                          {spotData.forecast ? Number(spotData.forecast.waveHeight).toFixed(1) : '-'}
+                        </span>
+                        <span className="text-xs text-white/80">m</span>
+                      </div>
+                      <p className="text-xs font-semibold text-white truncate">{spotData.spot.name}</p>
+                      <p className="text-[10px] text-white/70">{spotData.spot.region}</p>
                     </div>
-                    {/* 스팟 이름 */}
-                    <p className="text-xs font-semibold truncate">{spotData.spot.name}</p>
-                    <p className="text-[10px] text-muted-foreground">{spotData.spot.region}</p>
                   </div>
                 );
               })}
