@@ -16,12 +16,10 @@ interface GeolocationState {
   error: string | null; // 에러 메시지
 }
 
-/** 기본 좌표 - 양양 서피비치 (국내 주요 서핑 스팟) */
-const DEFAULT_COORDS = { latitude: 38.029, longitude: 128.6741 };
-
 export function useGeolocation() {
   const [state, setState] = useState<GeolocationState>({
-    ...DEFAULT_COORDS,
+    latitude: 0,
+    longitude: 0,
     loading: true,
     error: null,
   });
@@ -44,17 +42,13 @@ export function useGeolocation() {
         });
       },
       (err) => {
-        /** 위치 정보 실패 - 기본값(양양) 유지 */
-        setState(prev => ({
-          ...prev,
-          loading: false,
-          error: err.message,
-        }));
+        /** 위치 정보 실패 — 좌표 0,0 유지 + error 설정 */
+        setState({ latitude: 0, longitude: 0, loading: false, error: err.message });
       },
       {
-        enableHighAccuracy: false, // 빠른 응답 우선
-        timeout: 5000,             // 5초 타임아웃
-        maximumAge: 300000,        // 5분간 캐시 허용
+        enableHighAccuracy: true, // 정확한 GPS 위치
+        timeout: 10000,
+        maximumAge: 0,            // 캐시 사용 안 함
       },
     );
   }, []);

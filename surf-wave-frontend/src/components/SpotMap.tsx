@@ -179,13 +179,16 @@ export function SpotMap({ spots, onSpotDetail }: SpotMapProps) {
 
   /** 내 위치로 이동 */
   const handleMyLocation = useCallback(() => {
-    if (!geo.loading && !geo.error) {
-      mapRef.current?.flyTo({
-        center: [geo.longitude, geo.latitude],
-        zoom: 10,
-        duration: 1000,
-      });
+    if (geo.loading) return;
+    if (geo.error || geo.latitude === 0) {
+      alert('위치 권한이 필요해요.\n브라우저 설정에서 위치 접근을 허용해주세요.');
+      return;
     }
+    mapRef.current?.flyTo({
+      center: [geo.longitude, geo.latitude],
+      zoom: 12,
+      duration: 1000,
+    });
   }, [geo]);
 
   return (
