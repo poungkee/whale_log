@@ -13,12 +13,16 @@
     <meta http-equiv="Content-Security-Policy"
       content="default-src 'self';
         script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://accounts.google.com https://t1.kakaocdn.net https://kauth.kakao.com;
-        style-src 'self' 'unsafe-inline' https://accounts.google.com;
+        style-src 'self' 'unsafe-inline' https://accounts.google.com https://fonts.googleapis.com;
         img-src 'self' data: blob: https: http:;
         worker-src 'self' blob:;
         connect-src 'self' blob: https://accounts.google.com https://oauth2.googleapis.com https://kapi.kakao.com https://kauth.kakao.com https://*.tile.openstreetmap.org https://*.openfreemap.org https://tiles.openfreemap.org https://api.open-meteo.com https://whalelog-production.up.railway.app;
         frame-src 'self' https://accounts.google.com;
-        font-src 'self' data:;" />
+        font-src 'self' data: https://fonts.gstatic.com;" />
+    <!-- Plus Jakarta Sans — Stitch 디자인 시스템 폰트 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700;1,800&display=swap" rel="stylesheet">
     <title>Whale Log — 나만의 서핑 코치</title>
   </head>
   <body>
