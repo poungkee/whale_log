@@ -287,7 +287,7 @@ export function Login({ onBack, onAuthSuccess, onGoRegister, onGoForgotPassword 
             />
           </div>
           <h1 className="text-2xl font-bold italic text-white mb-0.5">Whale Log</h1>
-          <p className="text-sm text-white/75">나만의 서핑 코치</p>
+          <p className="text-sm text-white/75">We make waves</p>
         </div>
 
         {/* 폼 영역 */}
