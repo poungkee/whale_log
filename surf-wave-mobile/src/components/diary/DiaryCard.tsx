@@ -1,6 +1,7 @@
+// 다이어리 카드 — 날짜/스팟명/보드/만족도 표시
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { ChevronRight, Ship, ArrowRight, Smile, User, Waves } from 'lucide-react-native';
 import StarRating from '../common/StarRating';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
@@ -18,14 +19,18 @@ interface DiaryCardProps {
   onPress: () => void;
 }
 
-const BOARD_ICONS: Record<string, string> = {
-  LONGBOARD: 'boat',
-  SHORTBOARD: 'arrow-forward',
-  FUNBOARD: 'happy',
-  SUP: 'person',
+const getBoardIcon = (boardType: string) => {
+  switch (boardType) {
+    case 'LONGBOARD': return Ship;
+    case 'SHORTBOARD': return ArrowRight;
+    case 'FUNBOARD': return Smile;
+    case 'SUP': return User;
+    default: return Waves;
+  }
 };
 
 const DiaryCard: React.FC<DiaryCardProps> = ({ diary, onPress }) => {
+  const BoardIcon = getBoardIcon(diary.boardType);
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.dateContainer}>
@@ -37,14 +42,14 @@ const DiaryCard: React.FC<DiaryCardProps> = ({ diary, onPress }) => {
         <Text style={styles.spotName}>{diary.spotName}</Text>
         <View style={styles.details}>
           <View style={styles.detailItem}>
-            <Icon name={BOARD_ICONS[diary.boardType] || 'water'} size={16} color={colors.textSecondary} />
+            <BoardIcon size={16} color={colors.textSecondary} />
             <Text style={styles.detailText}>{diary.boardType}</Text>
           </View>
           <StarRating rating={diary.satisfaction} maxStars={5} size={14} />
         </View>
       </View>
 
-      <Icon name="chevron-forward" size={20} color={colors.textTertiary} />
+      <ChevronRight size={20} color={colors.textTertiary} />
     </TouchableOpacity>
   );
 };

@@ -1,6 +1,7 @@
+// 서핑 가이드 카드 — 카테고리/제목/읽기 시간 표시
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { BookOpen, Check, Clock } from 'lucide-react-native';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
 interface Guide {
@@ -25,12 +26,12 @@ const GuideCard: React.FC<GuideCardProps> = ({ guide, onPress }) => {
           <Image source={{ uri: guide.thumbnailUrl }} style={styles.thumbnail} />
         ) : (
           <View style={styles.thumbnailPlaceholder}>
-            <Icon name="book-outline" size={24} color={colors.textTertiary} />
+            <BookOpen size={24} color={colors.textTertiary} />
           </View>
         )}
         {guide.isCompleted && (
           <View style={styles.completedBadge}>
-            <Icon name="checkmark" size={16} color={colors.textInverse} />
+            <Check size={16} color={colors.textInverse} />
           </View>
         )}
       </View>
@@ -41,7 +42,7 @@ const GuideCard: React.FC<GuideCardProps> = ({ guide, onPress }) => {
         </View>
         <Text style={styles.title} numberOfLines={2}>{guide.title}</Text>
         <View style={styles.meta}>
-          <Icon name="time-outline" size={14} color={colors.textTertiary} />
+          <Clock size={14} color={colors.textTertiary} />
           <Text style={styles.metaText}>{guide.estimatedReadMinutes} min read</Text>
         </View>
       </View>

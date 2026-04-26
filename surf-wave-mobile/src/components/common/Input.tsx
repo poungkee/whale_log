@@ -18,10 +18,10 @@ const Input: React.FC<InputProps> = ({
   return (
     <View style={styles.container}>
       {label && <Text style={styles.label}>{label}</Text>}
-      <View style={[styles.inputContainer, error && styles.inputError]}>
+      <View style={[styles.inputContainer, error ? styles.inputError : undefined]}>
         {leftIcon && <View style={styles.iconContainer}>{leftIcon}</View>}
         <TextInput
-          style={[styles.input, leftIcon && styles.inputWithIcon, style]}
+          style={[styles.input, leftIcon ? styles.inputWithIcon : undefined, style]}
           placeholderTextColor={colors.textTertiary}
           {...props}
         />

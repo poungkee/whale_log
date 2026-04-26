@@ -1,6 +1,7 @@
+// 하단 탭 네비게이터 — 홈/지도/피드/마이페이지
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Home, Map, Newspaper, User } from 'lucide-react-native';
 import { MainTabParamList } from './types';
 import HomeStack from './HomeStack';
 import MapScreen from '../screens/map/MapScreen';
@@ -18,49 +19,25 @@ const MainTabNavigator: React.FC = () => {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.gray400,
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName: string;
-
           switch (route.name) {
             case 'HomeTab':
-              iconName = focused ? 'home' : 'home-outline';
-              break;
+              return <Home size={size} color={color} />;
             case 'MapTab':
-              iconName = focused ? 'map' : 'map-outline';
-              break;
+              return <Map size={size} color={color} />;
             case 'FeedTab':
-              iconName = focused ? 'newspaper' : 'newspaper-outline';
-              break;
+              return <Newspaper size={size} color={color} />;
             case 'MyPageTab':
-              iconName = focused ? 'person' : 'person-outline';
-              break;
+              return <User size={size} color={color} />;
             default:
-              iconName = 'ellipse';
+              return null;
           }
-
-          return <Icon name={iconName} size={size} color={color} />;
         },
       })}
     >
-      <Tab.Screen
-        name="HomeTab"
-        component={HomeStack}
-        options={{ tabBarLabel: 'Home' }}
-      />
-      <Tab.Screen
-        name="MapTab"
-        component={MapScreen}
-        options={{ tabBarLabel: 'Map' }}
-      />
-      <Tab.Screen
-        name="FeedTab"
-        component={FeedStack}
-        options={{ tabBarLabel: 'Feed' }}
-      />
-      <Tab.Screen
-        name="MyPageTab"
-        component={MyPageStack}
-        options={{ tabBarLabel: 'My' }}
-      />
+      <Tab.Screen name="HomeTab" component={HomeStack} options={{ tabBarLabel: '홈' }} />
+      <Tab.Screen name="MapTab" component={MapScreen} options={{ tabBarLabel: '탐색' }} />
+      <Tab.Screen name="FeedTab" component={FeedStack} options={{ tabBarLabel: '피드' }} />
+      <Tab.Screen name="MyPageTab" component={MyPageStack} options={{ tabBarLabel: '마이' }} />
     </Tab.Navigator>
   );
 };

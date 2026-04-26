@@ -1,49 +1,42 @@
-import { Platform, PermissionsAndroid, Alert, Linking } from 'react-native';
-import { check, request, PERMISSIONS, RESULTS, Permission } from 'react-native-permissions';
+// 권한 유틸 — Expo 권한 API로 카메라/위치/갤러리/알림 요청
+import { Alert, Linking } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
+import * as Notifications from 'expo-notifications';
 
 export type PermissionType = 'camera' | 'photo' | 'location' | 'notification';
 
-const PERMISSION_MAP: Record<PermissionType, { ios: Permission; android: Permission }> = {
-  camera: {
-    ios: PERMISSIONS.IOS.CAMERA,
-    android: PERMISSIONS.ANDROID.CAMERA,
-  },
-  photo: {
-    ios: PERMISSIONS.IOS.PHOTO_LIBRARY,
-    android: PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE,
-  },
-  location: {
-    ios: PERMISSIONS.IOS.LOCATION_WHEN_IN_USE,
-    android: PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
-  },
-  notification: {
-    ios: PERMISSIONS.IOS.NOTIFICATIONS,
-    android: PERMISSIONS.ANDROID.POST_NOTIFICATIONS,
-  },
-};
-
-export const checkPermission = async (type: PermissionType): Promise<boolean> => {
-  const permission = Platform.OS === 'ios'
-    ? PERMISSION_MAP[type].ios
-    : PERMISSION_MAP[type].android;
-
-  const result = await check(permission);
-  return result === RESULTS.GRANTED;
-};
-
 export const requestPermission = async (type: PermissionType): Promise<boolean> => {
-  const permission = Platform.OS === 'ios'
-    ? PERMISSION_MAP[type].ios
-    : PERMISSION_MAP[type].android;
+  let status: string;
 
-  const result = await request(permission);
+  switch (type) {
+    case 'camera': {
+      const result = await ImagePicker.requestCameraPermissionsAsync();
+      status = result.status;
+      break;
+    }
+    case 'photo': {
+      const result = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      status = result.status;
+      break;
+    }
+    case 'location': {
+      const result = await Location.requestForegroundPermissionsAsync();
+      status = result.status;
+      break;
+    }
+    case 'notification': {
+      const result = await Notifications.requestPermissionsAsync();
+      status = result.status;
+      break;
+    }
+  }
 
-  if (result === RESULTS.BLOCKED) {
+  if (status === 'denied') {
     showSettingsAlert(type);
     return false;
   }
-
-  return result === RESULTS.GRANTED;
+  return status === 'granted';
 };
 
 const showSettingsAlert = (type: PermissionType) => {
@@ -62,16 +55,4 @@ const showSettingsAlert = (type: PermissionType) => {
       { text: '설정으로 이동', onPress: () => Linking.openSettings() },
     ]
   );
-};
-
-export const requestMultiplePermissions = async (
-  types: PermissionType[]
-): Promise<Record<PermissionType, boolean>> => {
-  const results: Record<PermissionType, boolean> = {} as Record<PermissionType, boolean>;
-
-  for (const type of types) {
-    results[type] = await requestPermission(type);
-  }
-
-  return results;
 };

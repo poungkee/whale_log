@@ -1,6 +1,7 @@
+// QnA 답변 카드 — 채택 답변 표시 + 좋아요/채택 액션
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { CheckCircle, ThumbsUp } from 'lucide-react-native';
 import Avatar from '../common/Avatar';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
@@ -19,18 +20,13 @@ interface AnswerCardProps {
   onLike: () => void;
 }
 
-const AnswerCard: React.FC<AnswerCardProps> = ({
-  answer,
-  isAuthor = false,
-  onAccept,
-  onLike,
-}) => {
+const AnswerCard: React.FC<AnswerCardProps> = ({ answer, isAuthor = false, onAccept, onLike }) => {
   return (
     <View style={[styles.container, answer.isAccepted && styles.acceptedContainer]}>
       {answer.isAccepted && (
         <View style={styles.acceptedBadge}>
-          <Icon name="checkmark-circle" size={16} color={colors.success} />
-          <Text style={styles.acceptedText}>Accepted Answer</Text>
+          <CheckCircle size={16} color={colors.success} />
+          <Text style={styles.acceptedText}>채택된 답변</Text>
         </View>
       )}
 
@@ -43,16 +39,16 @@ const AnswerCard: React.FC<AnswerCardProps> = ({
 
       <View style={styles.actions}>
         <TouchableOpacity style={styles.actionButton} onPress={onLike}>
-          <Icon name="thumbs-up-outline" size={18} color={colors.textSecondary} />
-          {answer.likeCount && answer.likeCount > 0 && (
+          <ThumbsUp size={18} color={colors.textSecondary} />
+          {answer.likeCount != null && answer.likeCount > 0 && (
             <Text style={styles.actionText}>{answer.likeCount}</Text>
           )}
         </TouchableOpacity>
 
         {isAuthor && !answer.isAccepted && (
           <TouchableOpacity style={styles.acceptButton} onPress={onAccept}>
-            <Icon name="checkmark-circle-outline" size={18} color={colors.success} />
-            <Text style={styles.acceptButtonText}>Accept</Text>
+            <CheckCircle size={18} color={colors.success} />
+            <Text style={styles.acceptButtonText}>채택</Text>
           </TouchableOpacity>
         )}
       </View>

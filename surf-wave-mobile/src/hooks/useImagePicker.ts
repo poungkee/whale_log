@@ -1,6 +1,13 @@
+// 이미지 피커 훅 — expo-image-picker로 갤러리/카메라 선택
 import { useState, useCallback } from 'react';
-import { launchImageLibrary, launchCamera, ImagePickerResponse, Asset } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 import { uploadApi } from '../api/upload.api';
+
+interface PickedImage {
+  uri: string;
+  type?: string;
+  fileName?: string;
+}
 
 interface UseImagePickerOptions {
   maxImages?: number;
@@ -9,45 +16,58 @@ interface UseImagePickerOptions {
 
 export const useImagePicker = (options: UseImagePickerOptions = {}) => {
   const { maxImages = 5, quality = 0.8 } = options;
-  const [images, setImages] = useState<Asset[]>([]);
+  const [images, setImages] = useState<PickedImage[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
   const pickFromGallery = useCallback(async () => {
-    const result: ImagePickerResponse = await launchImageLibrary({
-      mediaType: 'photo',
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') return [];
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
       selectionLimit: maxImages - images.length,
       quality,
     });
 
-    if (result.assets && !result.didCancel) {
-      setImages((prev) => [...prev, ...result.assets!].slice(0, maxImages));
+    if (!result.canceled) {
+      const picked = result.assets.map((a) => ({
+        uri: a.uri,
+        type: a.mimeType ?? 'image/jpeg',
+        fileName: a.fileName ?? undefined,
+      }));
+      setImages((prev) => [...prev, ...picked].slice(0, maxImages));
+      return picked;
     }
-    return result.assets || [];
+    return [];
   }, [images.length, maxImages, quality]);
 
   const takePhoto = useCallback(async () => {
-    const result: ImagePickerResponse = await launchCamera({
-      mediaType: 'photo',
-      quality,
-    });
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') return [];
 
-    if (result.assets && !result.didCancel) {
-      setImages((prev) => [...prev, ...result.assets!].slice(0, maxImages));
+    const result = await ImagePicker.launchCameraAsync({ quality });
+
+    if (!result.canceled) {
+      const picked = result.assets.map((a) => ({
+        uri: a.uri,
+        type: a.mimeType ?? 'image/jpeg',
+        fileName: a.fileName ?? undefined,
+      }));
+      setImages((prev) => [...prev, ...picked].slice(0, maxImages));
+      return picked;
     }
-    return result.assets || [];
+    return [];
   }, [maxImages, quality]);
 
   const removeImage = useCallback((index: number) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
-  const clearImages = useCallback(() => {
-    setImages([]);
-  }, []);
+  const clearImages = useCallback(() => setImages([]), []);
 
   const uploadImages = useCallback(async (): Promise<string[]> => {
     if (images.length === 0) return [];
-
     setIsUploading(true);
     try {
       const formData = new FormData();
@@ -58,7 +78,6 @@ export const useImagePicker = (options: UseImagePickerOptions = {}) => {
           name: image.fileName || `image_${index}.jpg`,
         } as any);
       });
-
       const response = await uploadApi.uploadImages(formData);
       return response.data.urls;
     } finally {
@@ -66,13 +85,5 @@ export const useImagePicker = (options: UseImagePickerOptions = {}) => {
     }
   }, [images]);
 
-  return {
-    images,
-    isUploading,
-    pickFromGallery,
-    takePhoto,
-    removeImage,
-    clearImages,
-    uploadImages,
-  };
+  return { images, isUploading, pickFromGallery, takePhoto, removeImage, clearImages, uploadImages };
 };

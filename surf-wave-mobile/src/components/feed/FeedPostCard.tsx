@@ -1,6 +1,7 @@
+// 피드 게시물 카드 — 좋아요/댓글/북마크 액션 포함
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Heart, MessageCircle, Bookmark } from 'lucide-react-native';
 import Avatar from '../common/Avatar';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
@@ -24,15 +25,9 @@ interface FeedPostCardProps {
   onBookmark: () => void;
 }
 
-const FeedPostCard: React.FC<FeedPostCardProps> = ({
-  post,
-  onPress,
-  onLike,
-  onBookmark,
-}) => {
+const FeedPostCard: React.FC<FeedPostCardProps> = ({ post, onPress, onLike, onBookmark }) => {
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.9}>
-      {/* Author Row */}
       <View style={styles.authorRow}>
         <Avatar name={post.author.nickname} uri={post.author.avatarUrl || undefined} size="sm" />
         <View style={styles.authorInfo}>
@@ -41,37 +36,34 @@ const FeedPostCard: React.FC<FeedPostCardProps> = ({
         </View>
       </View>
 
-      {/* Content */}
       <Text style={styles.content} numberOfLines={3}>{post.content}</Text>
 
-      {/* Images */}
       {post.images && post.images.length > 0 && (
         <View style={styles.imageContainer}>
           <Image source={{ uri: post.images[0].imageUrl }} style={styles.image} />
         </View>
       )}
 
-      {/* Actions */}
       <View style={styles.actions}>
         <TouchableOpacity style={styles.actionButton} onPress={onLike}>
-          <Icon
-            name={post.isLiked ? 'heart' : 'heart-outline'}
+          <Heart
             size={20}
             color={post.isLiked ? colors.error : colors.textSecondary}
+            fill={post.isLiked ? colors.error : 'transparent'}
           />
           <Text style={styles.actionText}>{post.likeCount}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.actionButton} onPress={onPress}>
-          <Icon name="chatbubble-outline" size={20} color={colors.textSecondary} />
+          <MessageCircle size={20} color={colors.textSecondary} />
           <Text style={styles.actionText}>{post.commentCount}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.actionButton} onPress={onBookmark}>
-          <Icon
-            name={post.isBookmarked ? 'bookmark' : 'bookmark-outline'}
+          <Bookmark
             size={20}
             color={post.isBookmarked ? colors.primary : colors.textSecondary}
+            fill={post.isBookmarked ? colors.primary : 'transparent'}
           />
         </TouchableOpacity>
       </View>

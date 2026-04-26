@@ -1,6 +1,7 @@
+// Axios 인스턴스 — JWT 토큰 자동 첨부 + 401 처리
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { ENV } from './env';
-import { getIdToken } from './firebase';
+import { storage } from './storage';
 
 export const api = axios.create({
   baseURL: ENV.API_URL,
@@ -10,10 +11,10 @@ export const api = axios.create({
   },
 });
 
-// Request interceptor - add auth token
+// 요청 인터셉터 — SecureStore에서 JWT 토큰 꺼내서 헤더에 붙임
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
-    const token = await getIdToken();
+    const token = await storage.getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -22,13 +23,12 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor - handle errors
+// 응답 인터셉터 — 401이면 토큰 삭제 (자동 로그아웃은 authStore에서 처리)
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      // Handle unauthorized - logout user
-      console.log('Unauthorized - redirecting to login');
+      storage.clearAll();
     }
     return Promise.reject(error);
   }

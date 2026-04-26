@@ -1,6 +1,7 @@
+// 별점 컴포넌트 — 읽기 전용 또는 편집 가능
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Star } from 'lucide-react-native';
 import { colors, spacing } from '../../theme';
 
 interface StarRatingProps {
@@ -28,21 +29,27 @@ const StarRating: React.FC<StarRatingProps> = ({
     <View style={styles.container}>
       {[...Array(maxStars)].map((_, index) => {
         const filled = index < rating;
-        const StarComponent = editable ? TouchableOpacity : View;
-
+        if (editable) {
+          return (
+            <TouchableOpacity key={index} onPress={() => handlePress(index)} activeOpacity={0.7}>
+              <Star
+                size={size}
+                color={filled ? colors.warning : colors.gray300}
+                fill={filled ? colors.warning : 'transparent'}
+                style={styles.star}
+              />
+            </TouchableOpacity>
+          );
+        }
         return (
-          <StarComponent
-            key={index}
-            onPress={() => handlePress(index)}
-            activeOpacity={0.7}
-          >
-            <Icon
-              name={filled ? 'star' : 'star-outline'}
+          <View key={index}>
+            <Star
               size={size}
               color={filled ? colors.warning : colors.gray300}
+              fill={filled ? colors.warning : 'transparent'}
               style={styles.star}
             />
-          </StarComponent>
+          </View>
         );
       })}
     </View>

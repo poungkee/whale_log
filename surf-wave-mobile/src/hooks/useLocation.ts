@@ -1,67 +1,29 @@
-import { useEffect, useCallback } from 'react';
-import Geolocation from 'react-native-geolocation-service';
-import { Platform, PermissionsAndroid } from 'react-native';
+// 위치 훅 — expo-location으로 현재 위치 요청
+import { useCallback } from 'react';
+import * as Location from 'expo-location';
 import { useLocationStore } from '../stores/locationStore';
 
 export const useLocation = () => {
-  const {
-    currentLocation,
-    permissionStatus,
-    setCurrentLocation,
-    setPermissionStatus,
-    setLoading,
-    isLoading
-  } = useLocationStore();
-
-  const requestPermission = useCallback(async (): Promise<boolean> => {
-    if (Platform.OS === 'ios') {
-      const status = await Geolocation.requestAuthorization('whenInUse');
-      setPermissionStatus(status);
-      return status === 'granted';
-    }
-
-    if (Platform.OS === 'android') {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-      );
-      const isGranted = granted === PermissionsAndroid.RESULTS.GRANTED;
-      setPermissionStatus(isGranted ? 'granted' : 'denied');
-      return isGranted;
-    }
-
-    return false;
-  }, [setPermissionStatus]);
+  const { currentLocation, setLocation } = useLocationStore();
 
   const getCurrentLocation = useCallback(async () => {
-    const hasPermission = await requestPermission();
-    if (!hasPermission) return null;
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') return null;
 
-    setLoading(true);
-    return new Promise((resolve, reject) => {
-      Geolocation.getCurrentPosition(
-        (position) => {
-          const location = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          };
-          setCurrentLocation(location);
-          setLoading(false);
-          resolve(location);
-        },
-        (error) => {
-          setLoading(false);
-          reject(error);
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-      );
+    const position = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.High,
     });
-  }, [requestPermission, setCurrentLocation, setLoading]);
+
+    const location = {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+    };
+    setLocation(location);
+    return location;
+  }, [setLocation]);
 
   return {
     currentLocation,
-    permissionStatus,
-    isLoading,
-    requestPermission,
     getCurrentLocation,
   };
 };

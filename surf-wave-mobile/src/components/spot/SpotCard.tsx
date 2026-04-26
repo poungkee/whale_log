@@ -1,6 +1,7 @@
+// 스팟 카드 — 스팟 이름, 지역, 난이도, 점수 표시
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ViewStyle, StyleProp } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Waves, Heart, Star } from 'lucide-react-native';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
 interface Spot {
@@ -27,12 +28,12 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onPress, style }) => {
           <Image source={{ uri: spot.imageUrl }} style={styles.image} />
         ) : (
           <View style={styles.imagePlaceholder}>
-            <Icon name="water-outline" size={32} color={colors.textTertiary} />
+            <Waves size={32} color={colors.textTertiary} />
           </View>
         )}
         {spot.isFavorited && (
           <View style={styles.favoriteIcon}>
-            <Icon name="heart" size={16} color={colors.error} />
+            <Heart size={16} color={colors.error} fill={colors.error} />
           </View>
         )}
       </View>
@@ -49,7 +50,7 @@ const SpotCard: React.FC<SpotCardProps> = ({ spot, onPress, style }) => {
           )}
           {spot.rating && (
             <View style={styles.rating}>
-              <Icon name="star" size={14} color={colors.warning} />
+              <Star size={14} color={colors.warning} fill={colors.warning} />
               <Text style={styles.ratingText}>{spot.rating.toFixed(1)}</Text>
             </View>
           )}

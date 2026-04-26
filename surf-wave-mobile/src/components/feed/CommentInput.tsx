@@ -1,6 +1,7 @@
+// 댓글 입력 컴포넌트
 import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Send } from 'lucide-react-native';
 import { colors, spacing, typography } from '../../theme';
 
 interface CommentInputProps {
@@ -11,7 +12,7 @@ interface CommentInputProps {
 
 const CommentInput: React.FC<CommentInputProps> = ({
   onSubmit,
-  placeholder = 'Write a comment...',
+  placeholder = '댓글을 입력하세요...',
   replyTo,
 }) => {
   const [text, setText] = useState('');
@@ -25,11 +26,7 @@ const CommentInput: React.FC<CommentInputProps> = ({
 
   return (
     <View style={styles.container}>
-      {replyTo && (
-        <View style={styles.replyBanner}>
-          {/* <Text style={styles.replyText}>Replying to {replyTo}</Text> */}
-        </View>
-      )}
+      {replyTo && <View style={styles.replyBanner} />}
       <View style={styles.inputRow}>
         <TextInput
           style={styles.input}
@@ -44,7 +41,7 @@ const CommentInput: React.FC<CommentInputProps> = ({
           onPress={handleSubmit}
           disabled={!text.trim()}
         >
-          <Icon name="send" size={20} color={text.trim() ? colors.primary : colors.textTertiary} />
+          <Send size={20} color={text.trim() ? colors.primary : colors.textTertiary} />
         </TouchableOpacity>
       </View>
     </View>
@@ -60,10 +57,6 @@ const styles = StyleSheet.create({
   replyBanner: {
     padding: spacing.sm,
     backgroundColor: colors.gray100,
-  },
-  replyText: {
-    ...typography.caption,
-    color: colors.textSecondary,
   },
   inputRow: {
     flexDirection: 'row',

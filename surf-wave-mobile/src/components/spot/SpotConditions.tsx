@@ -1,6 +1,7 @@
+// 스팟 파도 컨디션 — 파고/주기/풍속/수온 표시
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { Waves, Clock, Wind, Thermometer } from 'lucide-react-native';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
 interface Forecast {
@@ -18,17 +19,17 @@ interface SpotConditionsProps {
 
 const SpotConditions: React.FC<SpotConditionsProps> = ({ forecast }) => {
   const conditions = [
-    { icon: 'water', label: 'Waves', value: `${forecast.waveHeight || '-'}m` },
-    { icon: 'time', label: 'Period', value: `${forecast.wavePeriod || '-'}s` },
-    { icon: 'leaf', label: 'Wind', value: `${forecast.windSpeed || '-'}km/h` },
-    { icon: 'thermometer', label: 'Water', value: `${forecast.waterTemperature || '-'}°C` },
+    { Icon: Waves, label: '파고', value: `${forecast.waveHeight || '-'}m` },
+    { Icon: Clock, label: '주기', value: `${forecast.wavePeriod || '-'}s` },
+    { Icon: Wind, label: '바람', value: `${forecast.windSpeed || '-'}km/h` },
+    { Icon: Thermometer, label: '수온', value: `${forecast.waterTemperature || '-'}°C` },
   ];
 
   return (
     <View style={styles.container}>
       {conditions.map((condition, index) => (
         <View key={index} style={styles.item}>
-          <Icon name={condition.icon as any} size={24} color={colors.primary} />
+          <condition.Icon size={24} color={colors.primary} />
           <Text style={styles.value}>{condition.value}</Text>
           <Text style={styles.label}>{condition.label}</Text>
         </View>

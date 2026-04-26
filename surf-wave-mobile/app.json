@@ -1,4 +1,51 @@
 {
-  "name": "SurfWave",
-  "displayName": "Surf Wave"
+  "expo": {
+    "name": "Whale Log",
+    "slug": "whale-log",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "whalelog",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0a4f6e"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.whalelog.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0a4f6e"
+      },
+      "package": "com.whalelog.app"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "서핑 다이어리 사진 업로드를 위해 갤러리 접근이 필요합니다.",
+          "cameraPermission": "서핑 사진 촬영을 위해 카메라 접근이 필요합니다."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "가까운 서핑 스팟을 찾기 위해 위치 접근이 필요합니다."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#0a4f6e"
+        }
+      ]
+    ],
+    "experiments": {}
+  }
 }

@@ -1,6 +1,6 @@
+// QnA 질문 카드 — 답변수/조회수/태그 표시
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
 interface Question {
@@ -29,19 +29,19 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, onPress }) => {
             {question.answerCount}
           </Text>
           <Text style={[styles.statLabel, hasAcceptedAnswer && styles.acceptedText]}>
-            answers
+            답변
           </Text>
         </View>
         <View style={styles.statBox}>
           <Text style={styles.statValue}>{question.viewCount}</Text>
-          <Text style={styles.statLabel}>views</Text>
+          <Text style={styles.statLabel}>조회</Text>
         </View>
       </View>
 
       <View style={styles.content}>
         <Text style={styles.title} numberOfLines={2}>{question.title}</Text>
         <View style={styles.footer}>
-          <Text style={styles.author}>asked by {question.author.nickname}</Text>
+          <Text style={styles.author}>by {question.author.nickname}</Text>
           {question.tags && question.tags.length > 0 && (
             <View style={styles.tags}>
               {question.tags.slice(0, 2).map((tag, index) => (
