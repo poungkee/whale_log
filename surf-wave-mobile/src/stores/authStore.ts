@@ -5,22 +5,23 @@ import { storage } from '../config/storage';
 interface User {
   id: string;
   email: string;
+  username: string;
   nickname: string;
   avatarUrl: string | null;
   role: string;
   surfLevel: string | null;
+  boardType: string | null;
 }
 
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  // 앱 시작 시 SecureStore에서 기존 토큰/유저 복원
   initialize: () => Promise<void>;
-  // 로그인 성공 시 토큰+유저 저장
   login: (token: string, user: User) => Promise<void>;
-  // 로그아웃 시 SecureStore 전체 삭제
   logout: () => Promise<void>;
+  // 프로필 부분 업데이트 (레벨/보드 변경 등)
+  updateUser: (partial: Partial<User>) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -55,5 +56,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: async () => {
     await storage.clearAll();
     set({ user: null, isAuthenticated: false, isLoading: false });
+  },
+
+  updateUser: (partial) => {
+    set(s => ({ user: s.user ? { ...s.user, ...partial } : s.user }));
   },
 }));
