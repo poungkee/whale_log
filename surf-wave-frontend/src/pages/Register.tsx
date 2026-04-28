@@ -222,42 +222,45 @@ export function Register({ onBack, onAuthSuccess, onGoLogin }: RegisterProps) {
   return (
     /* 바깥 배경 — 어두운 오션 그라데이션 (로그인 화면과 통일) */
     <div
-      className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden px-4 py-8"
+      className="h-screen flex flex-col items-center relative overflow-hidden px-4"
       style={{
         background: 'linear-gradient(160deg, #071E2F 0%, #0A3352 40%, #0D4A6B 65%, #071E2F 100%)',
       }}
     >
-      {/* 뒤로 가기 버튼 */}
+      {/* 뒤로 가기 버튼 — 항상 상단 고정 */}
       <button
         onClick={onBack}
-        className="absolute top-5 left-4 p-2 rounded-xl transition-colors z-10"
+        className="absolute top-5 left-4 p-2 rounded-xl transition-colors z-20"
         style={{ background: 'rgba(255,255,255,0.08)', color: '#80CBC4' }}
       >
         <ArrowLeft className="w-5 h-5" />
       </button>
 
+      {/* 스크롤 가능한 카드 영역 */}
+      <div className="w-full max-w-md overflow-y-auto py-8 flex-1" style={{ scrollbarWidth: 'none' }}>
+
       {/* 크림 플로팅 카드 */}
       <div
-        className="w-full max-w-md rounded-3xl shadow-2xl relative z-10 overflow-hidden"
+        className="w-full rounded-3xl shadow-2xl relative z-10 overflow-hidden"
         style={{ background: '#FBF8F3' }}
       >
         {/* 카드 상단 — 틸 헤더 */}
         <div
-          className="px-6 pt-7 pb-5 text-center"
+          className="px-6 pt-5 pb-4 text-center"
           style={{
             background: 'linear-gradient(160deg, #1A8FA8 0%, #2AAFC6 100%)',
           }}
         >
-          <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-3">
-            <img src="/logo.png" alt="Whale Log" className="w-12 h-12 rounded-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
+          <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-2">
+            <img src="/logo.png" alt="Whale Log" className="w-10 h-10 rounded-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
           </div>
-          <h1 className="text-xl font-bold italic text-white mb-0.5">회원가입</h1>
+          <h1 className="text-lg font-bold italic text-white mb-0.5">회원가입</h1>
           <p className="text-xs text-white/75">Whale Log와 함께 시작하세요</p>
         </div>
 
-      <div className="px-6 py-5">
+      <div className="px-6 py-4">
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
 
           {/* 아이디 입력 + 중복 확인 */}
           <div>
@@ -506,6 +509,7 @@ export function Register({ onBack, onAuthSuccess, onGoLogin }: RegisterProps) {
             </button>
           </div>
         </form>
+      </div>
       </div>
       </div>
     </div>
