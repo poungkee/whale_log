@@ -19,6 +19,7 @@ import Input from '../../components/common/Input';
 import { colors, spacing, typography } from '../../theme';
 import { authApi } from '../../api/auth.api';
 import { useAuthStore } from '../../stores/authStore';
+import { useKakaoLogin } from '../../hooks/useKakaoLogin';
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Login'>;
@@ -29,6 +30,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuthStore();
+  const { promptKakaoLogin, loading: kakaoLoading } = useKakaoLogin();
 
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
@@ -100,6 +102,23 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             </TouchableOpacity>
           </View>
 
+          {/* 소셜 로그인 구분선 */}
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>소셜 로그인</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* 카카오 로그인 */}
+          <TouchableOpacity
+            style={styles.kakaoBtn}
+            onPress={promptKakaoLogin}
+            disabled={kakaoLoading}
+          >
+            <Text style={styles.kakaoIcon}>💬</Text>
+            <Text style={styles.kakaoBtnText}>카카오로 로그인</Text>
+          </TouchableOpacity>
+
           <View style={styles.footer}>
             <Text style={styles.footerText}>계정이 없으신가요? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
@@ -162,6 +181,22 @@ const styles = StyleSheet.create({
   },
   forgotBtn: { alignItems: 'center', paddingVertical: spacing.xs },
   forgotText: { ...typography.caption, color: colors.textTertiary },
+
+  dividerRow: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    marginVertical: spacing.xs,
+  },
+  dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
+  dividerText: { fontSize: 12, color: colors.textTertiary, fontWeight: '500' },
+
+  kakaoBtn: {
+    backgroundColor: '#FEE500',
+    borderRadius: 14, paddingVertical: 14,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 8,
+  },
+  kakaoIcon: { fontSize: 18 },
+  kakaoBtnText: { color: '#191919', fontWeight: '700', fontSize: 15 },
 });
 
 export default LoginScreen;

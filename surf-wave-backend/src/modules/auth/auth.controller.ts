@@ -16,8 +16,11 @@
 import {
   Controller,
   Post,
+  Get,
   Delete,
   Body,
+  Query,
+  Res,
   HttpCode,
   HttpStatus,
   Request,
@@ -126,6 +129,32 @@ export class AuthController {
   @ApiOperation({ summary: 'Kakao 인가코드 콜백' })
   async kakaoCallback(@Body() dto: KakaoCallbackDto) {
     return this.authService.kakaoLoginWithCode(dto.code, dto.redirectUri);
+  }
+
+  /**
+   * Kakao 모바일 앱 OAuth 콜백 (GET) — 출시 빌드용
+   * Kakao → 이 엔드포인트로 리다이렉트 → JWT 발급 후 앱 딥링크로 이동
+   */
+  @Public()
+  @Get('kakao/mobile-callback')
+  @ApiOperation({ summary: 'Kakao 모바일 인가코드 콜백 (딥링크 리다이렉트)' })
+  async kakaoMobileCallback(
+    @Query('code') code: string,
+    @Query('error') error: string,
+    @Res() res: any,
+  ) {
+    if (error || !code) {
+      return res.redirect(`whalelog://oauth?error=${error || 'no_code'}`);
+    }
+    try {
+      const MOBILE_REDIRECT = 'https://whalelog-production.up.railway.app/api/v1/auth/kakao/mobile-callback';
+      const result = await this.authService.kakaoLoginWithCode(code, MOBILE_REDIRECT);
+      const token = encodeURIComponent(result.accessToken);
+      const user = encodeURIComponent(JSON.stringify(result.user));
+      return res.redirect(`whalelog://oauth?token=${token}&user=${user}`);
+    } catch (e) {
+      return res.redirect(`whalelog://oauth?error=auth_failed`);
+    }
   }
 
   /** 회원탈퇴 */

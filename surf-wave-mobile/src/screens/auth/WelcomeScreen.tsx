@@ -7,7 +7,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/types';
-import { colors, spacing, typography } from '../../theme';
+import { colors, spacing } from '../../theme';
+import { useKakaoLogin } from '../../hooks/useKakaoLogin';
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Welcome'>;
@@ -16,13 +17,14 @@ type Props = {
 const { height } = Dimensions.get('window');
 
 const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
+  const { promptKakaoLogin, loading: kakaoLoading } = useKakaoLogin();
+
   return (
     <ImageBackground
       source={require('../../../assets/images/ocean-bg.jpg')}
       style={styles.bg}
       resizeMode="cover"
     >
-      {/* 어두운 오버레이 */}
       <View style={styles.overlay} />
 
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -39,12 +41,29 @@ const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* 버튼 영역 */}
         <View style={styles.btnArea}>
-          {/* 로그인 */}
+          {/* 카카오 로그인 */}
+          <TouchableOpacity
+            style={styles.kakaoBtn}
+            onPress={promptKakaoLogin}
+            disabled={kakaoLoading}
+          >
+            <Text style={styles.kakaoIcon}>💬</Text>
+            <Text style={styles.kakaoBtnText}>카카오로 시작하기</Text>
+          </TouchableOpacity>
+
+          {/* 구분선 */}
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>또는</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* 이메일 로그인 */}
           <TouchableOpacity
             style={styles.loginBtn}
             onPress={() => navigation.navigate('Login')}
           >
-            <Text style={styles.loginBtnText}>로그인</Text>
+            <Text style={styles.loginBtnText}>이메일로 로그인</Text>
           </TouchableOpacity>
 
           {/* 회원가입 */}
@@ -79,8 +98,7 @@ const styles = StyleSheet.create({
   logo: { width: 110, height: 110, marginBottom: spacing.md },
   appName: {
     fontSize: 36, fontWeight: '800', color: '#fff',
-    letterSpacing: 1, marginBottom: spacing.xs,
-    fontStyle: 'italic',
+    letterSpacing: 1, marginBottom: spacing.xs, fontStyle: 'italic',
   },
   tagline: {
     fontSize: 15, color: 'rgba(255,255,255,0.7)',
@@ -92,10 +110,28 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
     gap: spacing.sm,
   },
+
+  // 카카오 버튼 — 카카오 공식 색상 (#FEE500)
+  kakaoBtn: {
+    backgroundColor: '#FEE500',
+    borderRadius: 16, paddingVertical: 16,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 8,
+  },
+  kakaoIcon: { fontSize: 18 },
+  kakaoBtnText: { color: '#191919', fontWeight: '700', fontSize: 16 },
+
+  // 구분선
+  dividerRow: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    marginVertical: spacing.xs,
+  },
+  dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.25)' },
+  dividerText: { fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: '500' },
+
   loginBtn: {
     backgroundColor: colors.primary,
-    borderRadius: 16, paddingVertical: 16,
-    alignItems: 'center',
+    borderRadius: 16, paddingVertical: 16, alignItems: 'center',
     shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.5, shadowRadius: 8, elevation: 6,
   },
