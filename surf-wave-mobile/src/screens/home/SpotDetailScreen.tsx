@@ -17,6 +17,7 @@ import { api } from '../../config/api';
 import { colors, spacing, typography } from '../../theme';
 import { useAuthStore } from '../../stores/authStore';
 import Avatar from '../../components/common/Avatar';
+import KhoaBadge, { KhoaEnrichment } from '../../components/spot/KhoaBadge';
 
 // HomeStack과 ExploreStack 둘 다 동일한 파라미터 구조 사용
 type Props = NativeStackScreenProps<any, 'SpotDetail'>;
@@ -40,6 +41,8 @@ interface SpotForecast {
   detail?: RatingDetail;
   safetyReasons?: string[];
   hints?: { message: string; tags: string[] }[];
+  levelFit?: Record<string, string>;
+  khoaEnrichment?: KhoaEnrichment;
 }
 
 interface HourlyForecast {
@@ -336,7 +339,7 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     );
   }
 
-  const { spot, forecast, surfRating, recommendationKo, simpleCondition, detail, safetyReasons, hints } = spotData;
+  const { spot, forecast, surfRating, recommendationKo, simpleCondition, detail, safetyReasons, hints, levelFit, khoaEnrichment } = spotData;
   const ratingColor = getRatingColor(surfRating);
 
   return (
@@ -497,6 +500,14 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                   ))}
                 </View>
               </View>
+
+              {/* KHOA 정부 서핑지수 카드 (한국 스팟만) */}
+              {khoaEnrichment?.khoaIndex && (
+                <View style={s.card}>
+                  <Text style={s.cardTitle}>🏛 정부 서핑지수</Text>
+                  <KhoaBadge enrichment={khoaEnrichment} currentLevel={undefined} />
+                </View>
+              )}
 
               {/* hints 태그 */}
               {hints && hints.length > 0 && (

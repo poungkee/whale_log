@@ -15,6 +15,7 @@ import { api } from '../../config/api';
 import { useAuthStore } from '../../stores/authStore';
 import { colors, spacing, typography } from '../../theme';
 import { HomeStackParamList } from '../../navigation/types';
+import KhoaBadge, { KhoaEnrichment } from '../../components/spot/KhoaBadge';
 
 type Props = {
   navigation: NativeStackNavigationProp<HomeStackParamList, 'Home'>;
@@ -36,9 +37,7 @@ interface SpotForecast {
   // hints 메시지 + 태그
   hints?: { message: string; tags: string[] };
   // KHOA 정부 서핑지수
-  khoaEnrichment?: {
-    levelFit: string; levelFitIndex: string; levelFitDesc: string; waveHeight: string;
-  };
+  khoaEnrichment?: KhoaEnrichment;
 }
 
 interface DashboardResponse {
@@ -724,14 +723,13 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   </View>
 
                   {/* KHOA 정부 서핑지수 (한국 스팟만) */}
-                  {item.khoaEnrichment && (
+                  {item.khoaEnrichment?.khoaIndex && (
                     <View style={styles.khoaRow}>
-                      <Text style={styles.khoaLabel}>🏛 정부 서핑지수</Text>
-                      <View style={[styles.khoaBadge, { backgroundColor: getKhoaColor(item.khoaEnrichment.levelFitIndex) + '20', borderColor: getKhoaColor(item.khoaEnrichment.levelFitIndex) + '60' }]}>
-                        <Text style={[styles.khoaBadgeText, { color: getKhoaColor(item.khoaEnrichment.levelFitIndex) }]}>
-                          {item.khoaEnrichment.levelFitIndex}
-                        </Text>
-                      </View>
+                      <KhoaBadge
+                        enrichment={item.khoaEnrichment}
+                        currentLevel={selectedLevel}
+                        compact
+                      />
                     </View>
                   )}
 
@@ -961,15 +959,8 @@ const styles = StyleSheet.create({
 
   // KHOA 정부 서핑지수
   khoaRow: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
     paddingHorizontal: spacing.md, paddingBottom: 4,
   },
-  khoaLabel: { fontSize: 11, color: colors.textSecondary, fontWeight: '600' },
-  khoaBadge: {
-    paddingHorizontal: 8, paddingVertical: 2,
-    borderRadius: 6, borderWidth: 1,
-  },
-  khoaBadgeText: { fontSize: 11, fontWeight: '700' },
 });
 
 export default HomeScreen;
