@@ -3,14 +3,17 @@
  * @description 인증 컨트롤러
  *
  * API 엔드포인트:
- * - POST /auth/check-username  → 아이디 중복 확인 (공개)
- * - POST /auth/register        → 회원가입 (공개)
- * - POST /auth/login           → 아이디/비밀번호 로그인 (공개)
- * - POST /auth/forgot-password → 비밀번호 찾기 인증코드 발송 (공개)
- * - POST /auth/reset-password  → 비밀번호 재설정 (공개)
- * - POST /auth/google          → Google 소셜 로그인 (공개)
- * - POST /auth/kakao           → Kakao 소셜 로그인 (공개)
- * - DELETE /auth/withdraw      → 회원탈퇴 (인증 필요)
+ * - POST /auth/check-username   → 아이디 중복 확인 (공개)
+ * - POST /auth/register         → 회원가입 (공개)
+ * - POST /auth/login            → 아이디/비밀번호 로그인 (공개)
+ * - POST /auth/forgot-password  → 비밀번호 찾기 인증코드 발송 (공개)
+ * - POST /auth/reset-password   → 비밀번호 재설정 (공개)
+ * - POST /auth/google           → Google 소셜 로그인 (공개, 웹앱용 ID 토큰)
+ * - POST /auth/google/callback  → Google 인가코드 콜백 (공개, 모바일용)
+ * - POST /auth/kakao            → Kakao 소셜 로그인 (공개)
+ * - POST /auth/kakao/callback   → Kakao 인가코드 콜백 (공개)
+ * - GET  /auth/kakao/mobile-callback → Kakao 모바일 딥링크 콜백 (공개)
+ * - DELETE /auth/withdraw       → 회원탈퇴 (인증 필요)
  */
 
 import {
@@ -31,7 +34,7 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto, ResetPasswordDto, CheckUsernameDto } from './dto/password-reset.dto';
-import { GoogleLoginDto, KakaoLoginDto, KakaoCallbackDto } from './dto/social-login.dto';
+import { GoogleLoginDto, GoogleCallbackDto, KakaoLoginDto, KakaoCallbackDto } from './dto/social-login.dto';
 import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('auth')
@@ -111,6 +114,15 @@ export class AuthController {
   @ApiOperation({ summary: 'Google 소셜 로그인/회원가입' })
   async googleLogin(@Body() dto: GoogleLoginDto) {
     return this.authService.googleLogin(dto.credential, dto.nickname);
+  }
+
+  /** Google 인가코드 콜백 (모바일 앱용) */
+  @Public()
+  @Post('google/callback')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Google 인가코드 콜백 (모바일 앱용)' })
+  async googleCallback(@Body() dto: GoogleCallbackDto) {
+    return this.authService.googleLoginWithCode(dto.code, dto.redirectUri);
   }
 
   /** Kakao 소셜 로그인 */

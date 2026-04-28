@@ -325,6 +325,50 @@ export class AuthService {
     }
   }
 
+  /** Google 인가코드로 로그인 (모바일 앱용) */
+  async googleLoginWithCode(code: string, redirectUri: string) {
+    try {
+      const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+      const clientSecret = this.configService.get<string>('GOOGLE_CLIENT_SECRET');
+
+      if (!clientId || !clientSecret) {
+        throw new UnauthorizedException('Google 로그인 설정이 완료되지 않았습니다');
+      }
+
+      // 인가코드 → 토큰 교환
+      const { data: tokenData } = await firstValueFrom(
+        this.httpService.post(
+          'https://oauth2.googleapis.com/token',
+          new URLSearchParams({
+            grant_type: 'authorization_code',
+            client_id: clientId,
+            client_secret: clientSecret,
+            redirect_uri: redirectUri,
+            code,
+          }).toString(),
+          { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
+        ),
+      );
+
+      if (!tokenData.id_token) {
+        throw new UnauthorizedException('Google ID 토큰을 받지 못했습니다');
+      }
+
+      // ID 토큰으로 사용자 로그인 처리
+      return this.googleLogin(tokenData.id_token);
+    } catch (error) {
+      if (error instanceof UnauthorizedException || error instanceof ConflictException) {
+        throw error;
+      }
+      const axiosError = error as any;
+      if (axiosError.response) {
+        this.logger.error(`Google API 응답: ${axiosError.response.status} ${JSON.stringify(axiosError.response.data)}`);
+      }
+      this.logger.error(`Google 인가코드 교환 실패: ${(error as Error).message}`);
+      throw new UnauthorizedException('Google 인증에 실패했습니다');
+    }
+  }
+
   /** Kakao 소셜 로그인 */
   async kakaoLogin(accessToken: string, nickname?: string) {
     try {

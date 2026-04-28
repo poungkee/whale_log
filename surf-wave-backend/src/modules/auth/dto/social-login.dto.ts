@@ -66,6 +66,23 @@ export class KakaoLoginDto {
 }
 
 /**
+ * Google 인가코드 콜백 DTO
+ * 사용처: POST /api/v1/auth/google/callback
+ * 모바일 앱에서 authorization code flow로 받은 인가코드를 서버에 전달
+ */
+export class GoogleCallbackDto {
+  @ApiProperty({ description: 'Google 인가 코드 (OAuth 리다이렉트 후 받은 code 파라미터)' })
+  @IsString({ message: 'code는 문자열이어야 합니다' })
+  @IsNotEmpty({ message: 'Google 인가 코드는 필수값입니다' })
+  code: string;
+
+  @ApiProperty({ description: '리다이렉트 URI (인가코드 요청 시 사용한 것과 동일)' })
+  @IsString({ message: 'redirectUri는 문자열이어야 합니다' })
+  @IsNotEmpty({ message: 'redirectUri는 필수값입니다' })
+  redirectUri: string;
+}
+
+/**
  * Kakao 인가코드 콜백 DTO
  * 사용처: POST /api/v1/auth/kakao/callback
  *
