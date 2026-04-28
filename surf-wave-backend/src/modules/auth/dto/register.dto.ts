@@ -10,7 +10,7 @@
  * 사용처: POST /api/v1/auth/register
  */
 
-import { IsString, IsEmail, MinLength, MaxLength, Matches } from 'class-validator';
+import { IsString, IsEmail, IsNotEmpty, MinLength, MaxLength, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterDto {
