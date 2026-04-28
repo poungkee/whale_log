@@ -666,6 +666,31 @@ function AppInner() {
       <div className="page-transition">
         {renderMainPage()}
       </div>
+
+      {/* ── 하단 Footer — 이용약관 / 개인정보처리방침 ── */}
+      <footer
+        className="w-full text-center border-t"
+        style={{
+          backgroundColor: 'rgba(255,253,249,0.95)',
+          borderColor: 'rgba(160,140,110,0.2)',
+          paddingTop: '10px',
+          paddingBottom: 'calc(4.5rem + 10px)',
+        }}
+      >
+        <div className="flex items-center justify-center gap-1 flex-wrap" style={{ fontSize: '11px', color: '#A09880' }}>
+          <span>© 2026 Whale Log</span>
+          <span style={{ color: 'rgba(160,140,110,0.35)' }}>|</span>
+          <a href="/terms.html" target="_blank" rel="noopener noreferrer"
+            className="hover:underline" style={{ color: '#6b6355' }}>이용약관</a>
+          <span style={{ color: 'rgba(160,140,110,0.35)' }}>|</span>
+          <a href="/privacy.html" target="_blank" rel="noopener noreferrer"
+            className="hover:underline" style={{ color: '#6b6355' }}>개인정보처리방침</a>
+          <span style={{ color: 'rgba(160,140,110,0.35)' }}>|</span>
+          <a href="mailto:poung1869@gmail.com"
+            className="hover:underline" style={{ color: '#6b6355' }}>문의</a>
+        </div>
+      </footer>
+
       <BottomNav currentTab={mainTab} onNavigate={(tab) => {
         if (tab === 'home' && mainTab === 'home') {
           /** 이미 홈 탭인데 다시 누르면 → 홈 화면 초기화 (필터/검색/스크롤 리셋) */
