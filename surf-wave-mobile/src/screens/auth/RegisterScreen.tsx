@@ -34,7 +34,6 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
-  const [nickname, setNickname] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -84,7 +83,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 
   // 회원가입 처리
   const handleRegister = async () => {
-    if (!username.trim() || !email.trim() || !password || !nickname.trim()) {
+    if (!username.trim() || !email.trim() || !password) {
       Alert.alert('입력 오류', '모든 필드를 입력해주세요.');
       return;
     }
@@ -110,7 +109,6 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
         username: username.trim(),
         email: email.trim(),
         password,
-        nickname: nickname.trim(),
       });
       await login(res.data.accessToken, res.data.user);
       navigation.navigate('Onboarding');
@@ -184,18 +182,6 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 placeholderTextColor={colors.textTertiary}
                 keyboardType="email-address"
                 autoCapitalize="none"
-              />
-            </View>
-
-            {/* 닉네임 */}
-            <View style={styles.field}>
-              <Text style={styles.label}>닉네임</Text>
-              <TextInput
-                style={styles.input}
-                value={nickname}
-                onChangeText={setNickname}
-                placeholder="서퍼 닉네임 입력"
-                placeholderTextColor={colors.textTertiary}
               />
             </View>
 

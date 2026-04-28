@@ -79,7 +79,7 @@ export class PostsService {
       ...post,
       author: {
         id: post.author.id,
-        nickname: post.author.nickname,
+        username: post.author.username,
         avatarUrl: post.author.avatarUrl,
       },
       isLiked: likedIds.includes(post.id),
@@ -118,7 +118,7 @@ export class PostsService {
       ...post,
       author: {
         id: post.author.id,
-        nickname: post.author.nickname,
+        username: post.author.username,
         avatarUrl: post.author.avatarUrl,
       },
       isLiked: !!isLiked,

@@ -93,7 +93,7 @@ export class AnswersService {
       ...answer,
       author: {
         id: answer.author.id,
-        nickname: answer.author.nickname,
+        username: answer.author.username,
         avatarUrl: answer.author.avatarUrl,
       },
     };

@@ -71,7 +71,7 @@ export function AdminPage({ userInfo, onBack }: AdminPageProps) {
           <div className="flex-1">
             <h1 className="text-base font-bold text-red-400">관리자 패널</h1>
             {userInfo && (
-              <p className="text-xs text-muted-foreground">{userInfo.nickname} · ADMIN</p>
+              <p className="text-xs text-muted-foreground">{userInfo.username || '관리자'} · ADMIN</p>
             )}
           </div>
         </div>

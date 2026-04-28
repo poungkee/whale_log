@@ -10,7 +10,6 @@ export interface RegisterRequest {
   username: string;
   email: string;
   password: string;
-  nickname: string;
 }
 
 export interface AuthResponse {
@@ -18,8 +17,7 @@ export interface AuthResponse {
   user: {
     id: string;
     email: string;
-    username: string;
-    nickname: string;
+    username: string | null;
     avatarUrl: string | null;
     role: string;
     surfLevel: string | null;

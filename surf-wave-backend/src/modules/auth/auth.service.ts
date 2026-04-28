@@ -70,18 +70,17 @@ export class AuthService {
   }
 
   /**
-   * 일반 회원가입 (아이디 + 이메일 + 비밀번호 + 닉네임)
+   * 일반 회원가입 (아이디 + 이메일 + 비밀번호)
    *
    * 처리 순서:
    * 1. 아이디 중복 확인
    * 2. 이메일 중복 확인
-   * 3. 닉네임 중복 확인
-   * 4. 비밀번호 bcrypt 해싱
-   * 5. DB에 사용자 생성
-   * 6. JWT 발급 후 반환
+   * 3. 비밀번호 bcrypt 해싱
+   * 4. DB에 사용자 생성
+   * 5. JWT 발급 후 반환
    */
   async register(registerDto: RegisterDto) {
-    const { username, email, password, nickname } = registerDto;
+    const { username, email, password } = registerDto;
 
     /** 아이디 중복 확인 */
     const existingUsername = await this.usersService.findByUsername(username);
@@ -95,12 +94,6 @@ export class AuthService {
       throw new ConflictException('이미 가입된 이메일입니다');
     }
 
-    /** 닉네임 중복 확인 */
-    const existingNickname = await this.usersService.findByNickname(nickname);
-    if (existingNickname) {
-      throw new ConflictException('이미 사용 중인 닉네임입니다');
-    }
-
     /** 비밀번호 해싱 */
     const passwordHash = await bcrypt.hash(password, 10);
 
@@ -108,7 +101,6 @@ export class AuthService {
     const user = await this.usersService.create({
       username,
       email,
-      nickname,
       passwordHash,
     });
 
@@ -200,7 +192,7 @@ export class AuthService {
         html: `
           <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
             <h2 style="color: #0ea5e9;">🐋 Whale Log 비밀번호 재설정</h2>
-            <p>안녕하세요, <strong>${user.nickname}</strong>님!</p>
+            <p>안녕하세요, <strong>${user.username || user.email}</strong>님!</p>
             <p>비밀번호 재설정을 요청하셨습니다. 아래 인증코드를 입력해주세요.</p>
             <div style="background: #f0f9ff; border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0;">
               <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #0ea5e9;">${code}</span>
@@ -264,8 +256,9 @@ export class AuthService {
 
   /**
    * 소셜 로그인/가입 공통 처리 (Google, Kakao 공용)
+   * 신규 소셜 가입 시 username은 null — 프론트에서 온보딩(아이디 설정)으로 유도
    */
-  async socialLogin(socialId: string, email: string, provider: 'GOOGLE' | 'KAKAO', nickname?: string) {
+  async socialLogin(socialId: string, email: string, provider: 'GOOGLE' | 'KAKAO') {
     let user = await this.usersService.findByFirebaseUid(socialId);
 
     if (!user) {
@@ -278,11 +271,9 @@ export class AuthService {
         });
         user = await this.usersService.findById(existingEmail.id);
       } else {
-        const finalNickname = nickname || email.split('@')[0] + '_' + Date.now().toString(36).slice(-4);
         user = await this.usersService.create({
           firebaseUid: socialId,
           email,
-          nickname: finalNickname,
           provider: provider as any,
         });
       }
@@ -298,7 +289,7 @@ export class AuthService {
   }
 
   /** Google 소셜 로그인 */
-  async googleLogin(credential: string, nickname?: string) {
+  async googleLogin(credential: string) {
     try {
       const { data } = await firstValueFrom(
         this.httpService.post(
@@ -315,7 +306,7 @@ export class AuthService {
         throw new UnauthorizedException('Google 계정에 이메일이 없습니다');
       }
 
-      return this.socialLogin(googleId, email, 'GOOGLE', nickname);
+      return this.socialLogin(googleId, email, 'GOOGLE');
     } catch (error) {
       if (error instanceof UnauthorizedException || error instanceof ConflictException) {
         throw error;
@@ -370,7 +361,7 @@ export class AuthService {
   }
 
   /** Kakao 소셜 로그인 */
-  async kakaoLogin(accessToken: string, nickname?: string) {
+  async kakaoLogin(accessToken: string) {
     try {
       const { data } = await firstValueFrom(
         this.httpService.get('https://kapi.kakao.com/v2/user/me', {
@@ -381,9 +372,8 @@ export class AuthService {
       const kakaoId = `kakao_${data.id}`;
       const email = data.kakao_account?.email;
       const finalEmail = email || `kakao_${data.id}@kakao.user`;
-      const kakaoNickname = nickname || data.kakao_account?.profile?.nickname;
 
-      return this.socialLogin(kakaoId, finalEmail, 'KAKAO', kakaoNickname);
+      return this.socialLogin(kakaoId, finalEmail, 'KAKAO');
     } catch (error) {
       if (error instanceof UnauthorizedException || error instanceof ConflictException) {
         throw error;
@@ -456,7 +446,6 @@ export class AuthService {
       id: user.id,
       username: user.username,
       email: user.email,
-      nickname: user.nickname,
       avatarUrl: user.avatarUrl,
       role: user.role,
       surfLevel: user.surfLevel,

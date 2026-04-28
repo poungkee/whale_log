@@ -13,19 +13,20 @@
  * - notificationsEnabled: 푸시 알림 수신 여부
  */
 
-import { IsString, IsOptional, IsBoolean, IsEnum, IsNumber, Min, Max, MinLength, MaxLength } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsEnum, IsNumber, Min, Max, MinLength, MaxLength, Matches } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Difficulty } from '../../../common/enums/difficulty.enum';
 import { UserBoardType } from '../../../common/enums/user-board-type.enum';
 
 export class UpdateProfileDto {
-  /** 닉네임 변경 - 서비스 내 표시 이름 (2~30자, 고유값) */
-  @ApiPropertyOptional({ description: '닉네임 (2~30자)', minLength: 2, maxLength: 30, example: '파도타기왕' })
+  /** 아이디(userId) 변경 - 소셜 로그인 후 온보딩 시 설정 (4~20자, 영문/숫자/언더스코어) */
+  @ApiPropertyOptional({ description: '아이디 (4~20자, 영문/숫자/언더스코어)', minLength: 4, maxLength: 20, example: 'surfer_kim' })
   @IsOptional()
-  @IsString({ message: '닉네임은 문자열이어야 합니다' })
-  @MinLength(2, { message: '닉네임은 최소 2자 이상이어야 합니다' })
-  @MaxLength(30, { message: '닉네임은 최대 30자까지 가능합니다' })
-  nickname?: string;
+  @IsString({ message: '아이디는 문자열이어야 합니다' })
+  @MinLength(4, { message: '아이디는 최소 4자 이상이어야 합니다' })
+  @MaxLength(20, { message: '아이디는 최대 20자까지 가능합니다' })
+  @Matches(/^[a-zA-Z0-9_]+$/, { message: '아이디는 영문, 숫자, 언더스코어(_)만 사용 가능합니다' })
+  username?: string;
 
   /** 자기소개 변경 - 프로필에 표시되는 소개글 (최대 500자) */
   @ApiPropertyOptional({ description: '자기소개 (최대 500자)', maxLength: 500 })

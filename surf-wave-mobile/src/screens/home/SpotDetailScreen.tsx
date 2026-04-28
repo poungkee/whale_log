@@ -63,12 +63,12 @@ interface PublicDiary {
   durationMinutes?: number;
   satisfaction: number;
   memo: string | null;
-  user: { id: string; nickname: string; avatarUrl: string | null };
+  user: { id: string; username: string | null; avatarUrl: string | null };
 }
 
 interface CommunityPost {
   id: string;
-  author: { id: string; nickname: string; avatarUrl: string | null };
+  author: { id: string; username: string | null; avatarUrl: string | null };
   content: string;
   images: { id: string; imageUrl: string }[];
   likeCount: number;
@@ -580,9 +580,9 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
               {posts.map(post => (
                 <View key={post.id} style={s.feedCard}>
                   <View style={s.feedAuthorRow}>
-                    <Avatar name={post.author.nickname} uri={post.author.avatarUrl || undefined} size="sm" />
+                    <Avatar name={post.author.username || '?'} uri={post.author.avatarUrl || undefined} size="sm" />
                     <View style={{ marginLeft: spacing.sm, flex: 1 }}>
-                      <Text style={s.feedNick}>{post.author.nickname}</Text>
+                      <Text style={s.feedNick}>{post.author.username || '알 수 없음'}</Text>
                       <Text style={s.feedTime}>{relTime(post.createdAt)}</Text>
                     </View>
                   </View>
@@ -624,8 +624,8 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                 <View key={d.id} style={s.diaryCard}>
                   <View style={s.diaryHeader}>
                     <View style={s.diaryAuthorRow}>
-                      <Avatar name={d.user.nickname} uri={d.user.avatarUrl || undefined} size="sm" />
-                      <Text style={s.diaryNick}>{d.user.nickname}</Text>
+                      <Avatar name={d.user.username || '?'} uri={d.user.avatarUrl || undefined} size="sm" />
+                      <Text style={s.diaryNick}>{d.user.username || '알 수 없음'}</Text>
                     </View>
                     <Text style={s.diarySat}>{SAT_EMOJI[d.satisfaction] ?? '😊'}</Text>
                   </View>

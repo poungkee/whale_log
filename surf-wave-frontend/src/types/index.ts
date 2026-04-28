@@ -43,7 +43,7 @@ export interface TrafficDay {
 export interface AdminUser {
   id: string;
   email: string;
-  nickname: string;
+  username: string | null;
   role: string;
   isSuspended: boolean;
   suspendedUntil: string | null;
@@ -59,7 +59,7 @@ export interface AdminReport {
   status: string;
   adminNote: string | null;
   createdAt: string;
-  reporter: { id: string; nickname: string } | null;
+  reporter: { id: string; username: string | null } | null;
   post: { id: string; content: string } | null;
 }
 
@@ -72,7 +72,7 @@ export interface AdminLog {
   description: string | null;
   ipAddress: string | null;
   createdAt: string;
-  admin: { id: string; nickname: string; email: string } | null;
+  admin: { id: string; username: string | null; email: string } | null;
 }
 
 /** 메인 탭 - 하단 네비게이션의 탭 종류 (guide: 초보 서핑 가이드) */
@@ -101,8 +101,8 @@ export interface AuthResponse {
  */
 export interface UserInfo {
   id: string;                    // 사용자 UUID
+  username: string | null;       // 아이디 (userId) — 소셜 가입 직후 null, 온보딩 후 설정
   email: string;                 // 이메일
-  nickname: string;              // 닉네임
   avatarUrl: string | null;      // 프로필 사진 URL (null이면 기본 아바타)
   role: string;                  // 역할 ('USER' | 'ADMIN')
   surfLevel: string | null;      // 서핑 레벨 (null이면 아직 선택 안 함)

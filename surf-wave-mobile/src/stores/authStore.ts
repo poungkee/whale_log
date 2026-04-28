@@ -5,8 +5,7 @@ import { storage } from '../config/storage';
 interface User {
   id: string;
   email: string;
-  username: string;
-  nickname: string;
+  username: string | null;
   avatarUrl: string | null;
   role: string;
   surfLevel: string | null;

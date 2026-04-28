@@ -209,7 +209,7 @@ export class AdminService {
        * ILIKE: PostgreSQL 대소문자 무시 LIKE ('%검색어%')
        */
       qb.andWhere(
-        '(user.email ILIKE :search OR user.nickname ILIKE :search)',
+        '(user.email ILIKE :search OR user.username ILIKE :search)',
         { search: `%${search}%` },
       );
     }
@@ -235,7 +235,7 @@ export class AdminService {
       data: users.map((u) => ({
         id: u.id,
         email: u.email,
-        nickname: u.nickname,
+        username: u.username,
         role: u.role,
         isSuspended: u.isSuspended,
         suspendedUntil: u.suspendedUntil,
@@ -262,7 +262,7 @@ export class AdminService {
   async suspendUser(adminId: string, userId: string, dto: SuspendUserDto, ipAddress?: string) {
     const target = await this.userRepository.findOne({
       where: { id: userId },
-      select: ['id', 'email', 'nickname'],
+      select: ['id', 'email', 'username'],
     });
 
     await this.userRepository.update(userId, {

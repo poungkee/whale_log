@@ -201,7 +201,7 @@ function matchRegionFilter(
 // ── 커뮤니티 피드 (홈 소통 탭 임베드용) ─────────────────────────
 interface CommunityPost {
   id: string;
-  author: { id: string; nickname: string; avatarUrl: string | null };
+  author: { id: string; username: string | null; avatarUrl: string | null };
   content: string;
   images: { id: string; imageUrl: string }[];
   spot: { id: string; name: string; region: string } | null;
@@ -263,9 +263,9 @@ const CommunityFeed: React.FC = () => {
       {posts.map(post => (
         <View key={post.id} style={cfStyles.card}>
           <View style={cfStyles.authorRow}>
-            <Avatar name={post.author.nickname} uri={post.author.avatarUrl || undefined} size="sm" />
+            <Avatar name={post.author.username || '?'} uri={post.author.avatarUrl || undefined} size="sm" />
             <View style={{ marginLeft: spacing.sm, flex: 1 }}>
-              <Text style={cfStyles.nick}>{post.author.nickname}</Text>
+              <Text style={cfStyles.nick}>{post.author.username || '알 수 없음'}</Text>
               <View style={cfStyles.metaRow}>
                 {post.spot && <><MapPin size={10} color={colors.primary} /><Text style={cfStyles.spotTag}>{post.spot.name} · </Text></>}
                 <Text style={cfStyles.ts}>{relTime(post.createdAt)}</Text>

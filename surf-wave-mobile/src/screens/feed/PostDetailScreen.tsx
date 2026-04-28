@@ -15,7 +15,7 @@ const PostDetailScreen: React.FC<Props> = ({ route }) => {
   // TODO: Fetch post details
   const post = {
     id: postId,
-    author: { id: 'u1', nickname: 'SurferKim', avatarUrl: null },
+    author: { id: 'u1', username: 'SurferKim', avatarUrl: null },
     content: 'Amazing session today at Yangyang! The waves were perfect. Had a great time with friends.',
     likeCount: 24,
     commentCount: 5,
@@ -25,8 +25,8 @@ const PostDetailScreen: React.FC<Props> = ({ route }) => {
   };
 
   const comments = [
-    { id: 'c1', author: { id: 'u2', nickname: 'WaveRider', avatarUrl: null }, content: 'Looks amazing!', createdAt: '2024-01-15T11:00:00Z' },
-    { id: 'c2', author: { id: 'u3', nickname: 'OceanLover', avatarUrl: null }, content: 'Which board did you use?', createdAt: '2024-01-15T11:30:00Z' },
+    { id: 'c1', author: { id: 'u2', username: 'WaveRider', avatarUrl: null }, content: 'Looks amazing!', createdAt: '2024-01-15T11:00:00Z' },
+    { id: 'c2', author: { id: 'u3', username: 'OceanLover', avatarUrl: null }, content: 'Which board did you use?', createdAt: '2024-01-15T11:30:00Z' },
   ];
 
   return (
@@ -35,9 +35,9 @@ const PostDetailScreen: React.FC<Props> = ({ route }) => {
         {/* Post Content */}
         <View style={styles.postContainer}>
           <View style={styles.authorRow}>
-            <Avatar name={post.author.nickname} size="md" />
+            <Avatar name={post.author.username || '?'} size="md" />
             <View style={styles.authorInfo}>
-              <Text style={styles.authorName}>{post.author.nickname}</Text>
+              <Text style={styles.authorName}>{post.author.username || '?'}</Text>
               <Text style={styles.timestamp}>2 hours ago</Text>
             </View>
           </View>

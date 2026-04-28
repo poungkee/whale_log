@@ -25,7 +25,7 @@ interface Post {
   commentCount: number;
   bookmarkCount: number;
   createdAt: string;
-  author: { id: string; nickname: string; avatarUrl: string | null };
+  author: { id: string; username: string | null; avatarUrl: string | null };
   spot: { id: string; name: string; region: string } | null;
   images: { id: string; imageUrl: string; sortOrder: number }[];
   /** 현재 사용자가 좋아요 했는지 */
@@ -37,7 +37,7 @@ interface Comment {
   id: string;
   content: string;
   createdAt: string;
-  author: { id: string; nickname: string };
+  author: { id: string; username: string | null };
   replies?: Comment[];
 }
 
@@ -325,11 +325,11 @@ export function CommunityFeed({ spotId, regionFilter }: CommunityFeedProps) {
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     <span className="text-[10px] font-bold text-primary">
-                      {post.author.nickname?.charAt(0) || '?'}
+                      {(post.author.username || '?').charAt(0)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-xs font-semibold">{post.author.nickname}</span>
+                    <span className="text-xs font-semibold">{post.author.username || '알 수 없음'}</span>
                     <span className="text-[10px] text-muted-foreground ml-1.5">{timeAgo(post.createdAt)}</span>
                   </div>
                 </div>
@@ -559,11 +559,11 @@ export function CommunityFeed({ spotId, regionFilter }: CommunityFeedProps) {
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                     <span className="text-xs font-bold text-primary">
-                      {selectedPost.author.nickname?.charAt(0) || '?'}
+                      {(selectedPost.author.username || '?').charAt(0)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-sm font-semibold">{selectedPost.author.nickname}</span>
+                    <span className="text-sm font-semibold">{selectedPost.author.username || '알 수 없음'}</span>
                     <span className="text-[10px] text-muted-foreground ml-1.5">{timeAgo(selectedPost.createdAt)}</span>
                   </div>
                 </div>
@@ -635,11 +635,11 @@ export function CommunityFeed({ spotId, regionFilter }: CommunityFeedProps) {
                     {/* 댓글 */}
                     <div className="flex gap-2">
                       <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center shrink-0 mt-0.5">
-                        <span className="text-[9px] font-bold">{comment.author.nickname?.charAt(0)}</span>
+                        <span className="text-[9px] font-bold">{(comment.author.username || '?').charAt(0)}</span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-semibold">{comment.author.nickname}</span>
+                          <span className="text-xs font-semibold">{comment.author.username || '알 수 없음'}</span>
                           <span className="text-[10px] text-muted-foreground">{timeAgo(comment.createdAt)}</span>
                         </div>
                         <p className="text-xs text-foreground/80 mt-0.5">{comment.content}</p>
@@ -649,11 +649,11 @@ export function CommunityFeed({ spotId, regionFilter }: CommunityFeedProps) {
                     {comment.replies?.map(reply => (
                       <div key={reply.id} className="flex gap-2 ml-8">
                         <div className="w-5 h-5 rounded-full bg-secondary flex items-center justify-center shrink-0 mt-0.5">
-                          <span className="text-[8px] font-bold">{reply.author.nickname?.charAt(0)}</span>
+                          <span className="text-[8px] font-bold">{(reply.author.username || '?').charAt(0)}</span>
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-[11px] font-semibold">{reply.author.nickname}</span>
+                            <span className="text-[11px] font-semibold">{reply.author.username || '알 수 없음'}</span>
                             <span className="text-[9px] text-muted-foreground">{timeAgo(reply.createdAt)}</span>
                           </div>
                           <p className="text-[11px] text-foreground/80 mt-0.5">{reply.content}</p>

@@ -46,14 +46,14 @@ export class CommentsService {
       ...comment,
       author: {
         id: comment.author.id,
-        nickname: comment.author.nickname,
+        username: comment.author.username,
         avatarUrl: comment.author.avatarUrl,
       },
       replies: comment.replies?.map((reply) => ({
         ...reply,
         author: {
           id: reply.author.id,
-          nickname: reply.author.nickname,
+          username: reply.author.username,
           avatarUrl: reply.author.avatarUrl,
         },
       })),
@@ -152,7 +152,7 @@ export class CommentsService {
       ...comment,
       author: {
         id: comment.author.id,
-        nickname: comment.author.nickname,
+        username: comment.author.username,
         avatarUrl: comment.author.avatarUrl,
       },
     };

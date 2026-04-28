@@ -5,7 +5,7 @@ import { colors, spacing, typography } from '../../theme';
 
 interface Comment {
   id: string;
-  author: { id: string; nickname: string; avatarUrl: string | null };
+  author: { id: string; username: string | null; avatarUrl: string | null };
   content: string;
   likeCount?: number;
   depth?: number;
@@ -27,10 +27,10 @@ const CommentItem: React.FC<CommentItemProps> = ({
 }) => {
   return (
     <View style={[styles.container, { marginLeft: depth * spacing.lg }]}>
-      <Avatar name={comment.author.nickname} size="sm" />
+      <Avatar name={comment.author.username || '?'} size="sm" />
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.authorName}>{comment.author.nickname}</Text>
+          <Text style={styles.authorName}>{comment.author.username || '알 수 없음'}</Text>
           <Text style={styles.timestamp}>1h</Text>
         </View>
         <Text style={styles.text}>{comment.content}</Text>

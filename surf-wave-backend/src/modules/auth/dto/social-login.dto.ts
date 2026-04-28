@@ -13,8 +13,8 @@
  * 3. 백엔드에서 Kakao user/me API로 사용자 정보 조회
  */
 
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsNotEmpty } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 /**
  * Google 소셜 로그인 요청 DTO
@@ -30,15 +30,6 @@ export class GoogleLoginDto {
   @IsNotEmpty({ message: 'Google credential은 필수값입니다' })
   credential: string;
 
-  /**
-   * 닉네임 (선택) - 신규 가입 시 사용할 닉네임
-   * 미입력 시 이메일 앞부분 + 랜덤 4자리로 자동 생성
-   * 예: "surfuser@gmail.com" → "surfuser_a1b2"
-   */
-  @ApiPropertyOptional({ description: '닉네임 (신규 가입 시, 미입력 시 자동 생성)' })
-  @IsOptional()
-  @IsString({ message: '닉네임은 문자열이어야 합니다' })
-  nickname?: string;
 }
 
 /**
@@ -55,14 +46,6 @@ export class KakaoLoginDto {
   @IsNotEmpty({ message: 'Kakao access token은 필수값입니다' })
   accessToken: string;
 
-  /**
-   * 닉네임 (선택) - 신규 가입 시 사용할 닉네임
-   * 미입력 시 이메일 앞부분 + 랜덤 4자리로 자동 생성
-   */
-  @ApiPropertyOptional({ description: '닉네임 (신규 가입 시, 미입력 시 자동 생성)' })
-  @IsOptional()
-  @IsString({ message: '닉네임은 문자열이어야 합니다' })
-  nickname?: string;
 }
 
 /**

@@ -36,20 +36,16 @@ const EditProfileScreen: React.FC = () => {
   const { user, login } = useAuthStore();
   const queryClient = useQueryClient();
 
-  const [nickname, setNickname] = useState(user?.nickname || '');
+  const [username, setUsernameField] = useState(user?.username || '');
   const [surfLevel, setSurfLevel] = useState(user?.surfLevel || 'BEGINNER');
   const [boardType, setBoardType] = useState(user?.boardType || 'LONGBOARD');
   const [loading, setLoading] = useState(false);
 
   // 저장 처리
   const handleSave = async () => {
-    if (!nickname.trim()) {
-      Alert.alert('알림', '닉네임을 입력해주세요.');
-      return;
-    }
     setLoading(true);
     try {
-      const res = await api.patch('/users/me', { nickname: nickname.trim(), surfLevel, boardType });
+      const res = await api.patch('/users/me', { username: username.trim() || undefined, surfLevel, boardType });
       // 저장된 사용자 정보로 store 업데이트
       const updatedUser = res.data;
       const token = await storage.getToken();
@@ -67,15 +63,16 @@ const EditProfileScreen: React.FC = () => {
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
 
-        {/* 닉네임 */}
+        {/* 아이디(userId) */}
         <View style={styles.field}>
-          <Text style={styles.label}>닉네임</Text>
+          <Text style={styles.label}>아이디</Text>
           <TextInput
             style={styles.input}
-            value={nickname}
-            onChangeText={setNickname}
-            placeholder="서퍼 닉네임"
+            value={username}
+            onChangeText={setUsernameField}
+            placeholder="영문/숫자/언더스코어 4~20자"
             placeholderTextColor={colors.textTertiary}
+            autoCapitalize="none"
             maxLength={20}
           />
         </View>

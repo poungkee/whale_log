@@ -9,7 +9,7 @@
  * 요청 Body: { username, email, password, nickname }
  */
 
-import { ArrowLeft, AtSign, Mail, Lock, Eye, EyeOff, User, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, AtSign, Mail, Lock, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { AuthResponse } from '../types';
 import { api } from '../lib/api';
@@ -35,8 +35,6 @@ export function Register({ onBack, onAuthSuccess, onGoLogin }: RegisterProps) {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
 
-  /** 닉네임 입력값 */
-  const [nickname, setNickname] = useState('');
   /** 이메일 입력값 */
   const [email, setEmail] = useState('');
   /** 비밀번호 입력값 */
@@ -154,9 +152,6 @@ export function Register({ onBack, onAuthSuccess, onGoLogin }: RegisterProps) {
       newErrors.username = '이미 사용 중인 아이디입니다';
     }
 
-    if (nickname.trim().length < 2) {
-      newErrors.nickname = '닉네임은 2자 이상이어야 합니다';
-    }
     if (!email.includes('@')) {
       newErrors.email = '올바른 이메일을 입력하세요';
     }
@@ -188,7 +183,7 @@ export function Register({ onBack, onAuthSuccess, onGoLogin }: RegisterProps) {
       const res = await fetch(api('/api/v1/auth/register'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password, nickname }),
+        body: JSON.stringify({ username, email, password }),
       });
 
       if (!res.ok) {
@@ -198,8 +193,6 @@ export function Register({ onBack, onAuthSuccess, onGoLogin }: RegisterProps) {
           const msg = data?.message || '';
           if (msg.includes('아이디')) {
             setErrors({ username: msg });
-          } else if (msg.includes('닉네임')) {
-            setErrors({ nickname: msg });
           } else {
             setErrors({ email: msg });
           }
@@ -298,27 +291,6 @@ export function Register({ onBack, onAuthSuccess, onGoLogin }: RegisterProps) {
             </div>
             {errors.username && <p className="text-xs text-red-500 mt-1">{errors.username}</p>}
             {usernameAvailable === true && <p className="text-xs text-green-600 mt-1">사용 가능한 아이디입니다</p>}
-          </div>
-
-          {/* 닉네임 입력 */}
-          <div>
-            <label htmlFor="nickname" className="block mb-1.5 text-sm font-medium text-[#1a2332]">닉네임</label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b6355]" />
-              <input
-                id="nickname"
-                type="text"
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                placeholder="닉네임을 입력하세요"
-                className="w-full pl-10 pr-4 py-3 rounded-xl text-sm text-[#1a2332] placeholder:text-[#a09880]"
-                style={{ background: '#EDE8DC', border: '1.5px solid transparent', outline: 'none' }}
-                onFocus={(e) => (e.target.style.borderColor = '#2AAFC6')}
-                onBlur={(e) => (e.target.style.borderColor = 'transparent')}
-                required
-              />
-            </div>
-            {errors.nickname && <p className="text-xs text-red-500 mt-1">{errors.nickname}</p>}
           </div>
 
           {/* 이메일 입력 */}

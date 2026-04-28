@@ -10,7 +10,7 @@
  * 사용처: POST /api/v1/auth/register
  */
 
-import { IsString, IsNotEmpty, IsEmail, MinLength, MaxLength, Matches } from 'class-validator';
+import { IsString, IsEmail, MinLength, MaxLength, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterDto {
@@ -40,10 +40,4 @@ export class RegisterDto {
   })
   password: string;
 
-  /** 닉네임 - 서비스 내 표시 이름, users 테이블에서 unique */
-  @ApiProperty({ description: '닉네임 (2~30자)', minLength: 2, maxLength: 30, example: '서핑초보' })
-  @IsString({ message: '닉네임은 문자열이어야 합니다' })
-  @MinLength(2, { message: '닉네임은 최소 2자 이상이어야 합니다' })
-  @MaxLength(30, { message: '닉네임은 최대 30자까지 가능합니다' })
-  nickname: string;
 }

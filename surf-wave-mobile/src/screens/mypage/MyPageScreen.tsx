@@ -269,7 +269,7 @@ const MyPageScreen: React.FC<Props> = ({ navigation }) => {
                 <Text style={s.avatarEmoji}>🏄‍♂️</Text>
               </View>
               <View style={s.profileTextArea}>
-                <Text style={s.profileName}>{user?.nickname || '서퍼'}</Text>
+                <Text style={s.profileName}>{user?.username || '서퍼'}</Text>
                 {user?.email ? <Text style={s.profileEmail}>{user.email}</Text> : null}
                 <View style={s.badgeRow}>
                   <View style={[s.levelBadge, { backgroundColor: LEVEL_COLORS[currentLevel] + '25' }]}>

@@ -158,7 +158,7 @@ export class DiaryService {
     return {
       data: diaries.map((d) => ({
         ...d,
-        user: { id: d.user.id, nickname: d.user.nickname, avatarUrl: d.user.avatarUrl },
+        user: { id: d.user.id, username: d.user.username, avatarUrl: d.user.avatarUrl },
       })),
       meta: {
         page,

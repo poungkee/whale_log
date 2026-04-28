@@ -3,7 +3,7 @@ import { api } from '../config/api';
 export const usersApi = {
   getMe: () => api.get('/users/me'),
 
-  updateProfile: (data: { nickname?: string; bio?: string; avatarUrl?: string; surfLevel?: string }) =>
+  updateProfile: (data: { username?: string; bio?: string; avatarUrl?: string; surfLevel?: string }) =>
     api.patch('/users/me', data),
 
   updateFcmToken: (fcmToken: string) =>

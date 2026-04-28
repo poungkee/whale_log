@@ -10,8 +10,8 @@ type Props = {
 };
 
 const QUESTIONS = [
-  { id: '1', title: 'Best board for beginners?', author: { nickname: 'NewSurfer' }, answerCount: 5, viewCount: 42 },
-  { id: '2', title: 'How to improve duck diving?', author: { nickname: 'WaveRider' }, answerCount: 3, viewCount: 28 },
+  { id: '1', title: 'Best board for beginners?', author: { username: 'NewSurfer' }, answerCount: 5, viewCount: 42 },
+  { id: '2', title: 'How to improve duck diving?', author: { username: 'WaveRider' }, answerCount: 3, viewCount: 28 },
 ];
 
 const QnAListScreen: React.FC<Props> = ({ navigation }) => {

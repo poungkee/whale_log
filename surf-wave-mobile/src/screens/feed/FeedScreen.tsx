@@ -17,7 +17,7 @@ import { useAuthStore } from '../../stores/authStore';
 // 커뮤니티 게시글 타입
 interface CommunityPost {
   id: string;
-  author: { id: string; nickname: string; avatarUrl: string | null };
+  author: { id: string; username: string | null; avatarUrl: string | null };
   content: string;
   images: { id: string; imageUrl: string }[];
   spot: { id: string; name: string; region: string } | null;
@@ -141,9 +141,9 @@ const FeedScreen: React.FC = () => {
     <View style={styles.card}>
       {/* 작성자 정보 */}
       <View style={styles.authorRow}>
-        <Avatar name={post.author.nickname} uri={post.author.avatarUrl || undefined} size="sm" />
+        <Avatar name={post.author.username || '?'} uri={post.author.avatarUrl || undefined} size="sm" />
         <View style={styles.authorInfo}>
-          <Text style={styles.authorName}>{post.author.nickname}</Text>
+          <Text style={styles.authorName}>{post.author.username || '알 수 없음'}</Text>
           <View style={styles.metaRow}>
             {post.spot && (
               <>

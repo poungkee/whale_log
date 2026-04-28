@@ -151,7 +151,7 @@ export function AdminLogs({ token }: AdminLogsProps) {
                 )}
                 {/* 실행 관리자 */}
                 {log.admin && (
-                  <span>관리자: {log.admin.nickname}</span>
+                  <span>관리자: {log.admin?.username || log.admin?.email || '알 수 없음'}</span>
                 )}
                 {/* IP 주소 */}
                 {log.ipAddress && (

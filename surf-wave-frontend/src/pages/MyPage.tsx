@@ -292,7 +292,7 @@ export function MyPage({
                     🏄‍♂️
                   </div>
                   <div className="flex-1">
-                    <h2 className="text-xl font-bold mb-1">{userInfo?.nickname || '서퍼'}</h2>
+                    <h2 className="text-xl font-bold mb-1">{userInfo?.username || '서퍼'}</h2>
                     {userInfo?.email && (
                       <p className="text-sm text-muted-foreground mb-2">{userInfo.email}</p>
                     )}

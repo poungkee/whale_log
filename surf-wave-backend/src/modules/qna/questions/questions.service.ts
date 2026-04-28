@@ -72,7 +72,7 @@ export class QuestionsService {
         ...q,
         author: {
           id: q.author.id,
-          nickname: q.author.nickname,
+          username: q.author.username,
           avatarUrl: q.author.avatarUrl,
         },
       })),
@@ -104,14 +104,14 @@ export class QuestionsService {
       ...question,
       author: {
         id: question.author.id,
-        nickname: question.author.nickname,
+        username: question.author.username,
         avatarUrl: question.author.avatarUrl,
       },
       answers: question.answers.map((a) => ({
         ...a,
         author: {
           id: a.author.id,
-          nickname: a.author.nickname,
+          username: a.author.username,
           avatarUrl: a.author.avatarUrl,
         },
       })),

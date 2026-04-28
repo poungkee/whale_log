@@ -8,7 +8,7 @@ import { colors, spacing, typography, borderRadius } from '../../theme';
 interface Answer {
   id: string;
   content: string;
-  author: { id: string; nickname: string; avatarUrl?: string };
+  author: { id: string; username: string | null; avatarUrl?: string };
   isAccepted: boolean;
   likeCount?: number;
 }
@@ -31,8 +31,8 @@ const AnswerCard: React.FC<AnswerCardProps> = ({ answer, isAuthor = false, onAcc
       )}
 
       <View style={styles.header}>
-        <Avatar name={answer.author.nickname} size="sm" />
-        <Text style={styles.authorName}>{answer.author.nickname}</Text>
+        <Avatar name={answer.author.username || '?'} size="sm" />
+        <Text style={styles.authorName}>{answer.author.username || '알 수 없음'}</Text>
       </View>
 
       <Text style={styles.content}>{answer.content}</Text>

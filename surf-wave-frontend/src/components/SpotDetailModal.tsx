@@ -73,7 +73,7 @@ interface PublicDiaryEntry {
   wavePeriod: string | null;
   windSpeed: string | null;
   /** 작성자 정보 (공개 다이어리용 - 닉네임/아바타만 노출) */
-  user: { id: string; nickname: string; avatarUrl: string | null };
+  user: { id: string; username: string | null; avatarUrl: string | null };
   spot: { id: string; name: string; region: string } | null;
 }
 
@@ -903,12 +903,11 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
                               {entry.user.avatarUrl ? (
                                 <img src={entry.user.avatarUrl} className="w-full h-full rounded-full object-cover" alt="" />
                               ) : (
-                                entry.user.nickname.charAt(0)
+                                (entry.user.username || '?').charAt(0)
                               )}
                             </div>
                             <div>
-                              {/* 닉네임 */}
-                              <span className="text-xs font-bold">{entry.user.nickname}</span>
+                              <span className="text-xs font-bold">{entry.user.username || '알 수 없음'}</span>
                               {/* 날짜 + 시작 시간 */}
                               <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                                 <span>{dateStr}</span>

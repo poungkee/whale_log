@@ -7,7 +7,7 @@ import { colors, spacing, typography, borderRadius } from '../../theme';
 
 interface Post {
   id: string;
-  author: { id: string; nickname: string; avatarUrl: string | null };
+  author: { id: string; username: string | null; avatarUrl: string | null };
   content: string;
   images?: { imageUrl: string }[];
   likeCount: number;
@@ -29,9 +29,9 @@ const FeedPostCard: React.FC<FeedPostCardProps> = ({ post, onPress, onLike, onBo
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.9}>
       <View style={styles.authorRow}>
-        <Avatar name={post.author.nickname} uri={post.author.avatarUrl || undefined} size="sm" />
+        <Avatar name={post.author.username || '?'} uri={post.author.avatarUrl || undefined} size="sm" />
         <View style={styles.authorInfo}>
-          <Text style={styles.authorName}>{post.author.nickname}</Text>
+          <Text style={styles.authorName}>{post.author.username || '알 수 없음'}</Text>
           <Text style={styles.timestamp}>2h ago</Text>
         </View>
       </View>

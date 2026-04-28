@@ -248,7 +248,7 @@ export function AdminUsers({ token }: AdminUsersProps) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     {/* 닉네임 */}
-                    <span className="font-medium text-sm truncate">{user.nickname}</span>
+                    <span className="font-medium text-sm truncate">{user.username || '(아이디 없음)'}</span>
                     {/* 역할 배지 */}
                     {user.role === 'ADMIN' ? (
                       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-red-500/20 text-red-400 rounded text-xs">

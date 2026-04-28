@@ -55,7 +55,7 @@ export class BookmarksService {
         ...b.post,
         author: {
           id: b.post.author.id,
-          nickname: b.post.author.nickname,
+          username: b.post.author.username,
           avatarUrl: b.post.author.avatarUrl,
         },
         isLiked: false, // TODO: fetch actual like status

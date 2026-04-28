@@ -6,7 +6,7 @@ import { colors, spacing, typography, borderRadius } from '../../theme';
 interface Question {
   id: string;
   title: string;
-  author: { nickname: string };
+  author: { username: string | null };
   answerCount: number;
   viewCount: number;
   tags?: string[];
@@ -41,7 +41,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({ question, onPress }) => {
       <View style={styles.content}>
         <Text style={styles.title} numberOfLines={2}>{question.title}</Text>
         <View style={styles.footer}>
-          <Text style={styles.author}>by {question.author.nickname}</Text>
+          <Text style={styles.author}>by {question.author.username || '알 수 없음'}</Text>
           {question.tags && question.tags.length > 0 && (
             <View style={styles.tags}>
               {question.tags.slice(0, 2).map((tag, index) => (

@@ -44,10 +44,6 @@ export class User extends BaseEntity {
   @Column({ name: 'password_hash', type: 'varchar', nullable: true })
   passwordHash: string | null;
 
-  /** 닉네임 - 서비스 내에서 사용하는 표시 이름 (최대 30자, 고유값) */
-  @Column({ type: 'varchar', length: 30, unique: true })
-  nickname: string;
-
   /** 자기소개 - 프로필에 표시되는 간단한 소개글 */
   @Column({ type: 'text', nullable: true })
   bio: string | null;

@@ -113,7 +113,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Google 소셜 로그인/회원가입' })
   async googleLogin(@Body() dto: GoogleLoginDto) {
-    return this.authService.googleLogin(dto.credential, dto.nickname);
+    return this.authService.googleLogin(dto.credential);
   }
 
   /** Google 인가코드 콜백 (모바일 앱용) */
@@ -131,7 +131,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Kakao 소셜 로그인/회원가입' })
   async kakaoLogin(@Body() dto: KakaoLoginDto) {
-    return this.authService.kakaoLogin(dto.accessToken, dto.nickname);
+    return this.authService.kakaoLogin(dto.accessToken);
   }
 
   /** Kakao 인가코드 콜백 */

@@ -18,7 +18,6 @@ interface CreateUserDto {
   username?: string | null;
   firebaseUid?: string | null;
   email: string;
-  nickname: string;
   passwordHash?: string | null;
   provider?: SocialProvider;
 }
@@ -69,7 +68,7 @@ export class UsersService {
        */
       return this.userRepository.findOne({
         where: { email },
-        select: ['id', 'email', 'passwordHash', 'nickname', 'role', 'isSuspended', 'provider', 'avatarUrl', 'notificationsEnabled'],
+        select: ['id', 'email', 'passwordHash', 'username', 'role', 'isSuspended', 'provider', 'avatarUrl', 'notificationsEnabled'],
       });
     }
 
@@ -79,13 +78,8 @@ export class UsersService {
      */
     return this.userRepository.findOne({
       where: { email },
-      select: ['id', 'email', 'nickname', 'role', 'isSuspended', 'firebaseUid', 'provider', 'avatarUrl', 'notificationsEnabled'],
+      select: ['id', 'email', 'username', 'role', 'isSuspended', 'firebaseUid', 'provider', 'avatarUrl', 'notificationsEnabled'],
     });
-  }
-
-  /** findByNickname - 닉네임으로 사용자 조회 (닉네임 중복 확인에 사용) */
-  async findByNickname(nickname: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { nickname } });
   }
 
   /** findByUsername - 아이디로 사용자 조회 (로그인 및 아이디 중복 확인에 사용) */
@@ -154,8 +148,8 @@ export class UsersService {
    */
   sanitizeUser(user: User): {
     id: string;
+    username: string | null;
     email: string;
-    nickname: string;
     bio: string | null;
     avatarUrl: string | null;
     role: string;
@@ -168,8 +162,8 @@ export class UsersService {
   } {
     return {
       id: user.id,
+      username: user.username,
       email: user.email,
-      nickname: user.nickname,
       bio: user.bio,
       avatarUrl: user.avatarUrl,
       role: user.role,
@@ -185,7 +179,7 @@ export class UsersService {
   /** getPublicProfile - 다른 사용자에게 공개되는 프로필 정보만 반환 (비공개 정보 제외) */
   async getPublicProfile(userId: string): Promise<{
     id: string;
-    nickname: string;
+    username: string | null;
     bio: string | null;
     avatarUrl: string | null;
     surfLevel: string | null;
@@ -194,7 +188,7 @@ export class UsersService {
     const user = await this.findById(userId);
     return {
       id: user.id,
-      nickname: user.nickname,
+      username: user.username,
       bio: user.bio,
       avatarUrl: user.avatarUrl,
       surfLevel: user.surfLevel,

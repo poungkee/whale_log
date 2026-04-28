@@ -30,7 +30,7 @@ interface AdminStats {
 
 interface AdminUser {
   id: string;
-  nickname: string;
+  username: string | null;
   email: string;
   role: string;
   isSuspended: boolean;
@@ -50,7 +50,7 @@ interface AdminLog {
   id: string;
   actionType: string;
   description: string;
-  admin: { nickname: string } | null;
+  admin: { username: string | null } | null;
   createdAt: string;
 }
 
@@ -213,7 +213,7 @@ const UsersTab: React.FC = () => {
             <View style={[styles.userCard, u.isSuspended && styles.userCardSuspended]}>
               <View style={styles.userLeft}>
                 <View style={styles.userNameRow}>
-                  <Text style={styles.userNick}>{u.nickname}</Text>
+                  <Text style={styles.userNick}>{u.username || '(아이디 없음)'}</Text>
                   {u.role === 'ADMIN'
                     ? <View style={styles.badgeAdmin}><Text style={styles.badgeAdminText}>ADMIN</Text></View>
                     : <View style={styles.badgeUser}><Text style={styles.badgeUserText}>USER</Text></View>
@@ -401,7 +401,7 @@ const LogsTab: React.FC = () => {
               </View>
               <Text style={styles.logDesc}>{l.description}</Text>
               {l.admin && (
-                <Text style={styles.logAdmin}>관리자: {l.admin.nickname}</Text>
+                <Text style={styles.logAdmin}>관리자: {l.admin?.username || '알 수 없음'}</Text>
               )}
             </View>
           )}
