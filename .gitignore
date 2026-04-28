@@ -57,3 +57,4 @@ surf-wave-backend/uploads/
 !**/tsconfig*.json
 !**/package.json
 !**/package-lock.json
+!**/vercel.json
