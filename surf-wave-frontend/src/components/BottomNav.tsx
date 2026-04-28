@@ -79,6 +79,25 @@ const navItems: { id: MainTab; label: string; Icon: React.FC<{ className?: strin
 export function BottomNav({ currentTab, onNavigate }: BottomNavProps) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50 safe-bottom">
+      {/* 정책 링크 바 — 항상 표시 */}
+      <div
+        className="flex items-center justify-center gap-2 border-b"
+        style={{
+          fontSize: '10px', color: '#A09880', paddingTop: '5px', paddingBottom: '5px',
+          borderColor: 'rgba(160,140,110,0.15)',
+        }}
+      >
+        <span>© 2026 Whale Log</span>
+        <span style={{ color: 'rgba(160,140,110,0.3)' }}>|</span>
+        <a href="/terms.html" target="_blank" rel="noopener noreferrer"
+          style={{ color: '#6b6355' }} className="hover:underline">이용약관</a>
+        <span style={{ color: 'rgba(160,140,110,0.3)' }}>|</span>
+        <a href="/privacy.html" target="_blank" rel="noopener noreferrer"
+          style={{ color: '#6b6355' }} className="hover:underline">개인정보처리방침</a>
+        <span style={{ color: 'rgba(160,140,110,0.3)' }}>|</span>
+        <a href="mailto:poung1869@gmail.com"
+          style={{ color: '#6b6355' }} className="hover:underline">문의</a>
+      </div>
       <div className="max-w-md mx-auto flex justify-around items-center h-16">
         {navItems.map((item) => {
           const isActive = currentTab === item.id;
