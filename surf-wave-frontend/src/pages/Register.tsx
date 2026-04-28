@@ -222,22 +222,25 @@ export function Register({ onBack, onAuthSuccess, onGoLogin }: RegisterProps) {
   return (
     /* 바깥 배경 — 어두운 오션 그라데이션 (로그인 화면과 통일) */
     <div
-      className="h-screen flex flex-col items-center relative overflow-hidden px-4"
+      className="h-screen flex flex-col overflow-hidden"
       style={{
         background: 'linear-gradient(160deg, #071E2F 0%, #0A3352 40%, #0D4A6B 65%, #071E2F 100%)',
       }}
     >
-      {/* 뒤로 가기 버튼 — 항상 상단 고정 */}
-      <button
-        onClick={onBack}
-        className="absolute top-5 left-4 p-2 rounded-xl transition-colors z-20"
-        style={{ background: 'rgba(255,255,255,0.08)', color: '#80CBC4' }}
-      >
-        <ArrowLeft className="w-5 h-5" />
-      </button>
+      {/* 고정 상단바 — 뒤로가기 버튼 */}
+      <div className="flex-shrink-0 flex items-center px-4 pt-5 pb-2">
+        <button
+          onClick={onBack}
+          className="p-2 rounded-xl transition-colors"
+          style={{ background: 'rgba(255,255,255,0.08)', color: '#80CBC4' }}
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+      </div>
 
       {/* 스크롤 가능한 카드 영역 */}
-      <div className="w-full max-w-md overflow-y-auto py-8 flex-1" style={{ scrollbarWidth: 'none' }}>
+      <div className="flex-1 overflow-y-auto px-4 pb-6" style={{ scrollbarWidth: 'none' }}>
+      <div className="max-w-md mx-auto">
 
       {/* 크림 플로팅 카드 */}
       <div
@@ -509,6 +512,7 @@ export function Register({ onBack, onAuthSuccess, onGoLogin }: RegisterProps) {
             </button>
           </div>
         </form>
+      </div>
       </div>
       </div>
       </div>
