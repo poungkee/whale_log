@@ -1,10 +1,13 @@
 // 설정 화면 — 앱 정보 + 로그아웃 + 회원탈퇴
 import React from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronRight, LogOut, Info, Trash2 } from 'lucide-react-native';
+import { ChevronRight, LogOut, Info, Trash2, FileText, Shield } from 'lucide-react-native';
+
+const TERMS_URL = 'https://whale-log.vercel.app/terms.html';
+const PRIVACY_URL = 'https://whale-log.vercel.app/privacy.html';
 import { api } from '../../config/api';
 import { colors, spacing, typography } from '../../theme';
 import { useAuthStore } from '../../stores/authStore';
@@ -76,6 +79,23 @@ const SettingsScreen: React.FC = () => {
             <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} onPress={handleWithdraw}>
               <Trash2 size={18} color={colors.error} />
               <Text style={[styles.rowLabel, { color: colors.error }]}>회원 탈퇴</Text>
+              <ChevronRight size={16} color={colors.textTertiary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* 법적 고지 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>법적 고지</Text>
+          <View style={styles.card}>
+            <TouchableOpacity style={styles.row} onPress={() => Linking.openURL(TERMS_URL)}>
+              <FileText size={18} color={colors.textSecondary} />
+              <Text style={styles.rowLabel}>이용약관</Text>
+              <ChevronRight size={16} color={colors.textTertiary} />
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} onPress={() => Linking.openURL(PRIVACY_URL)}>
+              <Shield size={18} color={colors.textSecondary} />
+              <Text style={styles.rowLabel}>개인정보처리방침</Text>
               <ChevronRight size={16} color={colors.textTertiary} />
             </TouchableOpacity>
           </View>

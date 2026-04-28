@@ -27,6 +27,9 @@ export function Register({ onBack, onAuthSuccess, onGoLogin }: RegisterProps) {
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   /** 아이디 중복 확인 로딩 */
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  /** 약관 동의 상태 */
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [agreePrivacy, setAgreePrivacy] = useState(false);
 
   /** 닉네임 입력값 */
   const [nickname, setNickname] = useState('');
@@ -110,6 +113,9 @@ export function Register({ onBack, onAuthSuccess, onGoLogin }: RegisterProps) {
     }
     if (password !== confirmPassword) {
       newErrors.confirmPassword = '비밀번호가 일치하지 않습니다';
+    }
+    if (!agreeTerms || !agreePrivacy) {
+      newErrors.agree = '이용약관 및 개인정보처리방침에 동의해주세요';
     }
 
     setErrors(newErrors);
@@ -321,6 +327,66 @@ export function Register({ onBack, onAuthSuccess, onGoLogin }: RegisterProps) {
               />
             </div>
             {errors.confirmPassword && <p className="text-xs text-red-500 mt-1">{errors.confirmPassword}</p>}
+          </div>
+
+          {/* 약관 동의 */}
+          <div className="space-y-2 pt-1">
+            {/* 전체 동의 */}
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={agreeTerms && agreePrivacy}
+                onChange={(e) => { setAgreeTerms(e.target.checked); setAgreePrivacy(e.target.checked); }}
+                className="w-4 h-4 rounded accent-[#2AAFC6]"
+              />
+              <span className="text-sm font-semibold text-[#1a2332]">전체 동의</span>
+            </label>
+            <div style={{ height: 1, background: 'rgba(160,140,110,0.2)', margin: '4px 0' }} />
+            {/* 이용약관 */}
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={agreeTerms}
+                onChange={(e) => setAgreeTerms(e.target.checked)}
+                className="w-4 h-4 rounded accent-[#2AAFC6]"
+              />
+              <span className="text-xs text-[#4a4338] flex-1">
+                <span className="text-[#E8744A] font-semibold">[필수] </span>
+                이용약관 동의
+              </span>
+              <a
+                href="/terms.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-[#2AAFC6] font-medium underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                보기
+              </a>
+            </label>
+            {/* 개인정보처리방침 */}
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={agreePrivacy}
+                onChange={(e) => setAgreePrivacy(e.target.checked)}
+                className="w-4 h-4 rounded accent-[#2AAFC6]"
+              />
+              <span className="text-xs text-[#4a4338] flex-1">
+                <span className="text-[#E8744A] font-semibold">[필수] </span>
+                개인정보처리방침 동의
+              </span>
+              <a
+                href="/privacy.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-[#2AAFC6] font-medium underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                보기
+              </a>
+            </label>
+            {errors.agree && <p className="text-xs text-red-500">{errors.agree}</p>}
           </div>
 
           {/* 회원가입 버튼 */}
