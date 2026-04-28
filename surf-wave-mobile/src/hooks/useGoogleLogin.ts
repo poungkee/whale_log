@@ -1,18 +1,17 @@
-// 구글 소셜 로그인 훅 — WebBrowser 직접 방식 (카카오와 동일한 패턴)
-// Expo Go + 출시 빌드 모두 auth.expo.io 프록시 URL 사용
-// 인가코드 → 백엔드 POST /auth/google/callback → JWT
+// 구글 소셜 로그인 훅 — 백엔드 mobile-callback → whalelog:// 딥링크
+// Expo Go + 출시 빌드 모두 동일한 방식 사용
+// Google → 백엔드 GET /auth/google/mobile-callback → whalelog://oauth?token=...
 import { useCallback, useState } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import { Alert } from 'react-native';
-import { api } from '../config/api';
 import { useAuthStore } from '../stores/authStore';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const GOOGLE_CLIENT_ID = '1070042796453-of66enkoc3i23irnug81atp56gpugkv1.apps.googleusercontent.com';
 
-// Google Cloud Console에 등록된 Authorized redirect URI
-const REDIRECT_URI = 'https://auth.expo.io/@poungkee/whale-log';
+// 백엔드가 Google code를 받아서 JWT 발급 후 whalelog:// 딥링크로 리다이렉트
+const REDIRECT_URI = 'https://whalelog-production.up.railway.app/api/v1/auth/google/mobile-callback';
 
 export function useGoogleLogin() {
   const { login } = useAuthStore();
@@ -30,37 +29,35 @@ export function useGoogleLogin() {
         `&access_type=offline` +
         `&prompt=select_account`;
 
-      const result = await WebBrowser.openAuthSessionAsync(authUrl, REDIRECT_URI);
+      // whalelog:// 딥링크가 오면 openAuthSessionAsync가 자동으로 닫힘
+      const result = await WebBrowser.openAuthSessionAsync(authUrl, 'whalelog://');
 
       if (result.type === 'success') {
         const url = result.url;
-        const codeMatch = url.match(/[?&]code=([^&]+)/);
-        const code = codeMatch ? decodeURIComponent(codeMatch[1]) : null;
+        const errorMatch = url.match(/[?&]error=([^&]+)/);
+        if (errorMatch) {
+          Alert.alert('구글 로그인 실패', decodeURIComponent(errorMatch[1]));
+          return;
+        }
 
-        if (code) {
-          await handleCode(code);
+        const tokenMatch = url.match(/[?&]token=([^&]+)/);
+        const userMatch = url.match(/[?&]user=([^&]+)/);
+
+        if (tokenMatch && userMatch) {
+          const accessToken = decodeURIComponent(tokenMatch[1]);
+          const user = JSON.parse(decodeURIComponent(userMatch[1]));
+          await login(accessToken, user);
         } else {
-          const errMatch = url.match(/[?&]error=([^&]+)/);
-          const err = errMatch ? decodeURIComponent(errMatch[1]) : '알 수 없는 오류';
-          Alert.alert('구글 로그인 실패', err);
+          Alert.alert('구글 로그인 실패', '토큰을 받지 못했어요.');
         }
       } else if (result.type === 'cancel') {
-        // 사용자가 직접 취소한 경우 — 알림 불필요
+        // 사용자가 직접 취소 — 알림 불필요
       }
     } catch (err: any) {
       Alert.alert('오류', '구글 로그인 중 문제가 발생했어요.');
     } finally {
       setLoading(false);
     }
-  }, [login]);
-
-  // 인가 코드 → 백엔드 → JWT
-  const handleCode = useCallback(async (code: string) => {
-    const res = await api.post('/auth/google/callback', {
-      code,
-      redirectUri: REDIRECT_URI,
-    });
-    await login(res.data.accessToken, res.data.user);
   }, [login]);
 
   return { promptGoogleLogin, loading };

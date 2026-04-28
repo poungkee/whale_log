@@ -169,6 +169,32 @@ export class AuthController {
     }
   }
 
+  /**
+   * Google 모바일 앱 OAuth 콜백 (GET)
+   * Google → 이 엔드포인트로 리다이렉트 → JWT 발급 후 앱 딥링크로 이동
+   */
+  @Public()
+  @Get('google/mobile-callback')
+  @ApiOperation({ summary: 'Google 모바일 인가코드 콜백 (딥링크 리다이렉트)' })
+  async googleMobileCallback(
+    @Query('code') code: string,
+    @Query('error') error: string,
+    @Res() res: any,
+  ) {
+    if (error || !code) {
+      return res.redirect(`whalelog://oauth?error=${error || 'no_code'}`);
+    }
+    try {
+      const MOBILE_REDIRECT = 'https://whalelog-production.up.railway.app/api/v1/auth/google/mobile-callback';
+      const result = await this.authService.googleLoginWithCode(code, MOBILE_REDIRECT);
+      const token = encodeURIComponent(result.accessToken);
+      const user = encodeURIComponent(JSON.stringify(result.user));
+      return res.redirect(`whalelog://oauth?token=${token}&user=${user}`);
+    } catch (e) {
+      return res.redirect(`whalelog://oauth?error=auth_failed`);
+    }
+  }
+
   /** 회원탈퇴 */
   @Delete('withdraw')
   @ApiBearerAuth()
