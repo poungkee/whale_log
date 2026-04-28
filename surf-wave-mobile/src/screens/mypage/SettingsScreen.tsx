@@ -1,102 +1,111 @@
+// 설정 화면 — 앱 정보 + 로그아웃 + 회원탈퇴
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Switch, TouchableOpacity, Alert } from 'react-native';
+import {
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ChevronRight, LogOut, Info, Trash2 } from 'lucide-react-native';
+import { api } from '../../config/api';
 import { colors, spacing, typography } from '../../theme';
-import { useSettingsStore } from '../../stores/settingsStore';
 import { useAuthStore } from '../../stores/authStore';
 
 const SettingsScreen: React.FC = () => {
-  const { notificationsEnabled, setNotifications } = useSettingsStore();
   const { logout } = useAuthStore();
 
+  // 로그아웃
   const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', style: 'destructive', onPress: logout },
+    Alert.alert('로그아웃', '정말 로그아웃 할까요?', [
+      { text: '취소', style: 'cancel' },
+      { text: '로그아웃', style: 'destructive', onPress: logout },
     ]);
   };
 
+  // 회원 탈퇴
   const handleWithdraw = () => {
-    Alert.alert('Delete Account', 'This action cannot be undone. Are you sure?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => {} },
-    ]);
+    Alert.alert(
+      '회원 탈퇴',
+      '탈퇴하면 모든 데이터(일기, 기록)가 삭제돼요. 정말 탈퇴할까요?',
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '탈퇴하기',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await api.delete('/users/me');
+              await logout();
+            } catch {
+              Alert.alert('오류', '탈퇴 처리 중 오류가 발생했어요. 다시 시도해주세요.');
+            }
+          },
+        },
+      ],
+    );
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Notifications</Text>
-        <View style={styles.row}>
-          <Text style={styles.rowLabel}>Push Notifications</Text>
-          <Switch value={notificationsEnabled} onValueChange={setNotifications} />
-        </View>
-      </View>
+    <SafeAreaView style={styles.container} edges={['bottom']}>
+      <ScrollView showsVerticalScrollIndicator={false}>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>About</Text>
-        <TouchableOpacity style={styles.row}>
-          <Text style={styles.rowLabel}>Terms of Service</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.row}>
-          <Text style={styles.rowLabel}>Privacy Policy</Text>
-        </TouchableOpacity>
-        <View style={styles.row}>
-          <Text style={styles.rowLabel}>App Version</Text>
-          <Text style={styles.rowValue}>1.0.0</Text>
+        {/* 앱 정보 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>앱 정보</Text>
+          <View style={styles.card}>
+            <View style={styles.row}>
+              <Info size={18} color={colors.textSecondary} />
+              <Text style={styles.rowLabel}>버전</Text>
+              <Text style={styles.rowValue}>1.0.0</Text>
+            </View>
+            <View style={[styles.row, { borderBottomWidth: 0 }]}>
+              <Info size={18} color={colors.textSecondary} />
+              <Text style={styles.rowLabel}>서비스 이름</Text>
+              <Text style={styles.rowValue}>Whale Log</Text>
+            </View>
+          </View>
         </View>
-      </View>
 
-      <View style={styles.section}>
-        <TouchableOpacity style={styles.row} onPress={handleLogout}>
-          <Text style={[styles.rowLabel, styles.logoutText]}>Logout</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.row} onPress={handleWithdraw}>
-          <Text style={[styles.rowLabel, styles.dangerText]}>Delete Account</Text>
-        </TouchableOpacity>
-      </View>
+        {/* 계정 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>계정</Text>
+          <View style={styles.card}>
+            <TouchableOpacity style={styles.row} onPress={handleLogout}>
+              <LogOut size={18} color={colors.error} />
+              <Text style={[styles.rowLabel, { color: colors.error }]}>로그아웃</Text>
+              <ChevronRight size={16} color={colors.textTertiary} />
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} onPress={handleWithdraw}>
+              <Trash2 size={18} color={colors.error} />
+              <Text style={[styles.rowLabel, { color: colors.error }]}>회원 탈퇴</Text>
+              <ChevronRight size={16} color={colors.textTertiary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* 하단 여백 */}
+        <View style={{ height: spacing.xl }} />
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  section: {
-    backgroundColor: colors.surface,
-    marginTop: spacing.lg,
-  },
-  sectionTitle: {
-    ...typography.overline,
-    color: colors.textSecondary,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
+  container: { flex: 1, backgroundColor: colors.background },
+
+  section: { paddingHorizontal: spacing.lg, marginBottom: spacing.lg, marginTop: spacing.md },
+  sectionTitle: { ...typography.caption, color: colors.textTertiary, fontWeight: '700',
+    letterSpacing: 0.5, marginBottom: spacing.sm, textTransform: 'uppercase' },
+
+  card: {
+    backgroundColor: colors.surface, borderRadius: 16,
+    borderWidth: 1, borderColor: colors.border, overflow: 'hidden',
   },
   row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+    paddingVertical: spacing.md, paddingHorizontal: spacing.md,
+    borderBottomWidth: 1, borderBottomColor: colors.border,
   },
-  rowLabel: {
-    ...typography.body1,
-    color: colors.text,
-  },
-  rowValue: {
-    ...typography.body2,
-    color: colors.textSecondary,
-  },
-  logoutText: {
-    color: colors.primary,
-  },
-  dangerText: {
-    color: colors.error,
-  },
+  rowLabel: { flex: 1, ...typography.body1, color: colors.text },
+  rowValue: { ...typography.body2, color: colors.textSecondary },
 });
 
 export default SettingsScreen;

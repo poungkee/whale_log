@@ -10,24 +10,31 @@ export type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
   Onboarding: undefined;
+  ForgotPassword: undefined;
 };
 
 export type MainTabParamList = {
   HomeTab: NavigatorScreenParams<HomeStackParamList>;
-  MapTab: undefined;
-  FeedTab: NavigatorScreenParams<FeedStackParamList>;
+  ExploreTab: NavigatorScreenParams<ExploreStackParamList>;
+  DiaryTab: NavigatorScreenParams<DiaryStackParamList>;
   MyPageTab: NavigatorScreenParams<MyPageStackParamList>;
+  GuideTab: NavigatorScreenParams<GuideStackParamList>;
+};
+
+export type ExploreStackParamList = {
+  ExploreMap: undefined;
+  SpotDetail: { spotId: string; spotName: string };
 };
 
 export type HomeStackParamList = {
   Home: undefined;
-  SpotDetail: { spotId: string };
+  SpotDetail: { spotId: string; spotName: string };
 };
 
-export type FeedStackParamList = {
-  Feed: undefined;
-  PostDetail: { postId: string };
-  CreatePost: { spotId?: string };
+export type DiaryStackParamList = {
+  DiaryList: undefined;
+  DiaryDetail: { diaryId: string };
+  CreateDiary: { spotId?: string; editId?: string };
 };
 
 export type MyPageStackParamList = {
@@ -35,25 +42,16 @@ export type MyPageStackParamList = {
   EditProfile: undefined;
   Settings: undefined;
   Favorites: undefined;
-  Notifications: undefined;
-  DiaryList: undefined;
-  DiaryDetail: { diaryId: string };
-  CreateDiary: { spotId?: string };
-  DiaryCalendar: undefined;
-  QnAList: undefined;
-  QuestionDetail: { questionId: string };
-  CreateQuestion: undefined;
-  GuideList: undefined;
-  GuideDetail: { guideId: string };
-};
-
-export type QnAStackParamList = {
-  QnAList: undefined;
-  QuestionDetail: { questionId: string };
-  CreateQuestion: undefined;
+  Admin: undefined;
 };
 
 export type GuideStackParamList = {
   GuideList: undefined;
-  GuideDetail: { guideId: string };
+};
+
+// 구형 파일 호환용 — 실제로는 사용하지 않음
+export type FeedStackParamList = {
+  Feed: undefined;
+  PostDetail: { postId: string };
+  CreatePost: undefined;
 };

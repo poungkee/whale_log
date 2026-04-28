@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/types';
@@ -53,7 +54,15 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Text style={styles.logo}>🌊 Whale Log</Text>
+          {/* 로고 이미지 */}
+          <View style={styles.logoArea}>
+            <Image
+              source={require('../../../assets/images/logo-transparent.png')}
+              style={styles.logoImg}
+              resizeMode="contain"
+            />
+            <Text style={styles.appName}>Whale Log</Text>
+          </View>
           <Text style={styles.title}>다시 오신 걸 환영해요</Text>
           <Text style={styles.subtitle}>서핑 일지에 로그인하세요</Text>
 
@@ -81,6 +90,14 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
               loading={loading}
               style={styles.loginButton}
             />
+
+            {/* 비밀번호 찾기 링크 */}
+            <TouchableOpacity
+              style={styles.forgotBtn}
+              onPress={() => navigation.navigate('ForgotPassword')}
+            >
+              <Text style={styles.forgotText}>비밀번호를 잊으셨나요?</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.footer}>
@@ -96,18 +113,16 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  keyboardAvoid: {
-    flex: 1,
-  },
+  container: { flex: 1, backgroundColor: colors.background },
+  keyboardAvoid: { flex: 1 },
   content: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xxl,
+    paddingTop: spacing.xl,
     paddingBottom: spacing.xl,
   },
+  logoArea: { alignItems: 'center', marginBottom: spacing.md },
+  logoImg: { width: 72, height: 72, marginBottom: 6 },
+  appName: { fontSize: 22, fontWeight: '800', color: colors.primary, fontStyle: 'italic' },
   logo: {
     fontSize: 28,
     textAlign: 'center',
@@ -145,6 +160,8 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontWeight: '600',
   },
+  forgotBtn: { alignItems: 'center', paddingVertical: spacing.xs },
+  forgotText: { ...typography.caption, color: colors.textTertiary },
 });
 
 export default LoginScreen;

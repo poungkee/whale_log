@@ -6,7 +6,7 @@ import QuestionCard from '../../components/qna/QuestionCard';
 import { colors, spacing } from '../../theme';
 
 type Props = {
-  navigation: NativeStackNavigationProp<MyPageStackParamList, 'QnAList'>;
+  navigation: NativeStackNavigationProp<any>;
 };
 
 const QUESTIONS = [

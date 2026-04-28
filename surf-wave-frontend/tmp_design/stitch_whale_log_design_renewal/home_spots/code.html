@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Whale Log - Surfing App</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "background": "#fff9ed",
+                    "surface-bright": "#fff9ed",
+                    "inverse-primary": "#8cd0eb",
+                    "outline": "#70787d",
+                    "on-surface": "#1d1c14",
+                    "surface-container-highest": "#e8e2d6",
+                    "surface-variant": "#e8e2d6",
+                    "on-primary-fixed-variant": "#004d61",
+                    "surface-container-high": "#ede8dc",
+                    "on-tertiary-fixed": "#351000",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#3f484c",
+                    "on-primary-fixed": "#001f29",
+                    "secondary": "#476271",
+                    "inverse-surface": "#333028",
+                    "secondary-fixed-dim": "#afcadc",
+                    "primary": "#12647b",
+                    "surface": "#fff9ed",
+                    "on-background": "#1d1c14",
+                    "on-error": "#ffffff",
+                    "on-primary-container": "#fafdff",
+                    "on-tertiary-fixed-variant": "#7a3000",
+                    "tertiary": "#974311",
+                    "surface-dim": "#dfd9ce",
+                    "secondary-container": "#cae7f9",
+                    "primary-container": "#367d95",
+                    "tertiary-fixed": "#ffdbcc",
+                    "error": "#ba1a1a",
+                    "error-container": "#ffdad6",
+                    "primary-fixed-dim": "#8cd0eb",
+                    "inverse-on-surface": "#f6f0e4",
+                    "on-error-container": "#93000a",
+                    "tertiary-fixed-dim": "#ffb693",
+                    "secondary-fixed": "#cae7f9",
+                    "on-secondary-fixed": "#001e2b",
+                    "tertiary-container": "#b75a28",
+                    "on-secondary": "#ffffff",
+                    "outline-variant": "#bfc8cd",
+                    "primary-fixed": "#b9eaff",
+                    "surface-tint": "#17667e",
+                    "on-secondary-fixed-variant": "#2f4a59",
+                    "on-secondary-container": "#4d6877",
+                    "on-tertiary-container": "#fffbff",
+                    "on-primary": "#ffffff",
+                    "surface-container": "#f3ede1",
+                    "surface-container-low": "#f9f3e7"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #F5EFE3; /* Custom requested background override */
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #1d1c14;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .vintage-sticker {
+            transform: rotate(-1deg);
+        }
+        .ocean-gradient {
+            background: linear-gradient(135deg, #12647b 0%, #367d95 100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="pb-32 overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#fff9ed]/80 dark:bg-stone-950/80 backdrop-blur-md shadow-[0_8px_30px_rgb(29,28,20,0.06)] flex items-center justify-between px-6 h-16 w-full">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#12647b]" data-icon="waves">waves</span>
+<span class="font-['Plus_Jakarta_Sans'] text-2xl font-black text-[#12647b] italic tracking-tight">Whale Log</span>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center overflow-hidden active:scale-95 duration-200 cursor-pointer">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="close-up portrait of a sun-kissed surfer with salt-styled hair and a friendly expression, warm beach lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAo8VAhh1McL07OHPc7ykB3fBEdeYWrBd4NJr99Mnu3jQQ1w8KmcgI9DJWIrpxOzBYcx054ZbpTQqTyt744Cs44bxbPSE4bzncs-1xkvfqy5umf82aklXEbEZ6DryQyZH-75M5Lu6mPP9zCm2ZrZjRaAn6K0Bf_z2R4tY8teXJIn3JiMnFE3OckURHkRbBBtkxZnjvUirkT4uuJCv2FpCgqkBCc0BZPY0kdrG3hPYs-38JWL-26cjBfdENzoPox545bYddb5GN2Yrs"/>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="mt-20 px-4 max-w-2xl mx-auto">
+<!-- Tab Bar -->
+<div class="flex gap-4 mb-8 justify-center">
+<button class="px-8 py-3 rounded-full ocean-gradient text-white font-bold shadow-lg active:scale-95 transition-transform">
+                Spots
+            </button>
+<button class="px-8 py-3 rounded-full bg-surface-container-low text-on-surface-variant font-bold active:scale-95 transition-transform">
+                Community
+            </button>
+</div>
+<!-- Today's Best Section -->
+<section class="mb-10">
+<div class="flex justify-between items-end mb-4 px-2">
+<h2 class="text-2xl font-extrabold tracking-tight">Today's Best</h2>
+<span class="text-primary font-bold text-sm tracking-wide uppercase">View All</span>
+</div>
+<div class="flex overflow-x-auto gap-4 hide-scrollbar pb-4 -mx-4 px-4">
+<!-- Card 1 -->
+<div class="min-w-[280px] bg-surface-container-lowest rounded-DEFAULT p-5 shadow-[0_12px_40px_rgba(29,28,20,0.06)] vintage-sticker">
+<div class="flex justify-between items-start mb-3">
+<div>
+<h3 class="font-bold text-lg leading-tight">Canggu</h3>
+<p class="text-on-surface-variant text-sm">Batu Bolong</p>
+</div>
+<div class="bg-tertiary/10 text-tertiary px-3 py-1 rounded-full font-bold text-sm">
+                            GOOD 5.9
+                        </div>
+</div>
+<div class="flex items-baseline gap-1 mt-4">
+<span class="text-4xl font-black text-primary">1.0</span>
+<span class="text-on-surface-variant font-bold">m</span>
+</div>
+<div class="mt-4 rounded-lg overflow-hidden h-24">
+<img class="w-full h-full object-cover" data-alt="cinematic view of a turquoise ocean wave crashing at Batu Bolong beach with a golden tropical sunset in the background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGaybRp6SRXQeiqKE2WwxKyDx4oAyCY_PEZ941gE8G5HIU95uWO8L4MF8bLca5lIUyM67_EZc_i1dAk3mQIpltOu7_SLUzcf5zfPzi-F0phPvLAoe0JmnDEf5x3SJsO1vPXhryrZp9xI8GfCcR1ZRPhi8S0ZN9bvUC-t9mUtfyLOsWiuZnaYwKFOkOcjcM6rC3RWIRIp_5TUkk2FWWaOrv2V297EprRiiT77cCorHdixLKYlGHyh1Cl3Kt9MXAXbPhuYtNAA8oP5Q"/>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="min-w-[280px] bg-surface-container-lowest rounded-DEFAULT p-5 shadow-[0_12px_40px_rgba(29,28,20,0.06)]">
+<div class="flex justify-between items-start mb-3">
+<div>
+<h3 class="font-bold text-lg leading-tight">Uluwatu</h3>
+<p class="text-on-surface-variant text-sm">The Peak</p>
+</div>
+<div class="bg-primary/10 text-primary px-3 py-1 rounded-full font-bold text-sm">
+                            SOLID 7.2
+                        </div>
+</div>
+<div class="flex items-baseline gap-1 mt-4">
+<span class="text-4xl font-black text-primary">1.8</span>
+<span class="text-on-surface-variant font-bold">m</span>
+</div>
+<div class="mt-4 rounded-lg overflow-hidden h-24">
+<img class="w-full h-full object-cover" data-alt="dramatic aerial view of Uluwatu cliffs with deep blue sea and powerful white surf breaking against the rocks" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCqAOvP_xAn1ChDGit-xJDo27V1NlwPW9Fgmu1ZzRI6bQUR4zLsKx64NGMWdf6DuEnFHVxVKLrpeWmfQsLzv3PQve8cDSwQ5T2HOapi6g3gqcQoGfaderEmsf0ltS3WvO31QGyix42w9PkIiiFV-Eygh4CyyFmyyokdHy-iz2xSwk2H3AC8aqUt_wEQ9tlvZV7heIodvBEHk4bbrk92W7ttd-_vcmPJVPBejKZTXsZAoXTT8zmq30uSUx8fOXZ_IYKFo0F1vaH5Hg"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Filter Chips -->
+<div class="flex overflow-x-auto gap-2 mb-8 hide-scrollbar">
+<button class="px-6 py-2 rounded-full bg-tertiary text-white font-bold whitespace-nowrap">All</button>
+<button class="px-6 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-medium whitespace-nowrap">Domestic</button>
+<button class="px-6 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-medium whitespace-nowrap">Bali</button>
+<button class="px-6 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-medium whitespace-nowrap">Favorites</button>
+</div>
+<!-- Spot List -->
+<div class="space-y-6">
+<!-- Spot Card 1 -->
+<div class="bg-surface-container-lowest rounded-DEFAULT p-6 shadow-sm border border-outline-variant/10">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="text-xl font-extrabold tracking-tight">Canggu - Batu Bolong</h3>
+<p class="text-on-surface-variant text-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="location_on">location_on</span>
+                            Bali - Canggu
+                        </p>
+</div>
+<div class="text-right">
+<div class="text-4xl font-black text-primary leading-none">1.0m</div>
+<div class="text-xs font-bold text-on-surface-variant mt-1 uppercase tracking-wider">Wave Height</div>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-4 py-4 border-y border-outline-variant/15">
+<div class="flex flex-col">
+<span class="text-[10px] uppercase font-black text-on-surface-variant/60 tracking-widest">Period</span>
+<span class="font-bold text-secondary">11s</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[10px] uppercase font-black text-on-surface-variant/60 tracking-widest">Wind</span>
+<span class="font-bold text-secondary">14km/h</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[10px] uppercase font-black text-on-surface-variant/60 tracking-widest">Tide</span>
+<span class="font-bold text-secondary">Low</span>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-4 py-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="cloud_queue">cloud_queue</span>
+<div class="flex flex-col">
+<span class="text-[10px] uppercase font-bold text-on-surface-variant/60">Sky</span>
+<span class="text-xs font-bold">Partly Cloudy</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary" data-icon="thermostat">thermostat</span>
+<div class="flex flex-col">
+<span class="text-[10px] uppercase font-bold text-on-surface-variant/60">Temp</span>
+<span class="text-xs font-bold">28°C</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="water">water</span>
+<div class="flex flex-col">
+<span class="text-[10px] uppercase font-bold text-on-surface-variant/60">Water</span>
+<span class="text-xs font-bold">30°C</span>
+</div>
+</div>
+</div>
+<div class="flex gap-2 mb-4">
+<span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase">Onshore</span>
+<span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase">Longboard</span>
+</div>
+<div class="bg-surface-container-low p-3 rounded-lg flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
+<p class="text-sm font-medium text-on-surface-variant italic">"Good conditions for surfing."</p>
+</div>
+</div>
+<!-- Spot Card 2 -->
+<div class="bg-surface-container-lowest rounded-DEFAULT p-6 shadow-sm border border-outline-variant/10 opacity-90 scale-[0.98]">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="text-xl font-extrabold tracking-tight">Kedungu</h3>
+<p class="text-on-surface-variant text-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="location_on">location_on</span>
+                            Bali - Tabanan
+                        </p>
+</div>
+<div class="text-right">
+<div class="text-4xl font-black text-primary leading-none">0.8m</div>
+<div class="text-xs font-bold text-on-surface-variant mt-1 uppercase tracking-wider">Wave Height</div>
+</div>
+</div>
+<div class="flex gap-2">
+<span class="bg-surface-container-high px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider">View Details</span>
+</div>
+</div>
+<!-- Spot Card 3 -->
+<div class="bg-surface-container-lowest rounded-DEFAULT p-6 shadow-sm border border-outline-variant/10 opacity-90 scale-[0.98]">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="text-xl font-extrabold tracking-tight">Old Man's</h3>
+<p class="text-on-surface-variant text-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="location_on">location_on</span>
+                            Bali - Canggu
+                        </p>
+</div>
+<div class="text-right">
+<div class="text-4xl font-black text-primary leading-none">1.2m</div>
+<div class="text-xs font-bold text-on-surface-variant mt-1 uppercase tracking-wider">Wave Height</div>
+</div>
+</div>
+<div class="flex gap-2">
+<span class="bg-surface-container-high px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider">View Details</span>
+</div>
+</div>
+</div>
+</main>
+<!-- FAB for high-emotion action -->
+<button class="fixed bottom-28 right-6 w-16 h-16 rounded-full ocean-gradient text-white shadow-2xl flex items-center justify-center z-50 active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-3xl" data-icon="add_a_photo" style="font-variation-settings: 'FILL' 1;">add_a_photo</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full h-24 bg-[#f9f3e7] dark:bg-stone-900 flex justify-around items-center px-4 pb-safe rounded-t-[3rem] shadow-[0_-10px_40px_rgba(29,28,20,0.08)] z-50">
+<a class="flex flex-col items-center justify-center bg-gradient-to-br from-[#12647b] to-[#367d95] text-white rounded-full px-5 py-2 scale-110 -translate-y-2 transition-all shadow-lg active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-bold tracking-wider uppercase mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#3f484c] dark:text-stone-400 opacity-70 hover:text-[#12647b] dark:hover:text-white transition-colors active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="explore">explore</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-bold tracking-wider uppercase mt-1">Explore</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#3f484c] dark:text-stone-400 opacity-70 hover:text-[#12647b] dark:hover:text-white transition-colors active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-bold tracking-wider uppercase mt-1">Guide</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#3f484c] dark:text-stone-400 opacity-70 hover:text-[#12647b] dark:hover:text-white transition-colors active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-bold tracking-wider uppercase mt-1">My Info</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Whale Log - My Info</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "background": "#fff9ed",
+                    "surface-bright": "#fff9ed",
+                    "inverse-primary": "#8cd0eb",
+                    "outline": "#70787d",
+                    "on-surface": "#1d1c14",
+                    "surface-container-highest": "#e8e2d6",
+                    "surface-variant": "#e8e2d6",
+                    "on-primary-fixed-variant": "#004d61",
+                    "surface-container-high": "#ede8dc",
+                    "on-tertiary-fixed": "#351000",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#3f484c",
+                    "on-primary-fixed": "#001f29",
+                    "secondary": "#476271",
+                    "inverse-surface": "#333028",
+                    "secondary-fixed-dim": "#afcadc",
+                    "primary": "#12647b",
+                    "surface": "#fff9ed",
+                    "on-background": "#1d1c14",
+                    "on-error": "#ffffff",
+                    "on-primary-container": "#fafdff",
+                    "on-tertiary-fixed-variant": "#7a3000",
+                    "tertiary": "#974311",
+                    "surface-dim": "#dfd9ce",
+                    "secondary-container": "#cae7f9",
+                    "primary-container": "#367d95",
+                    "tertiary-fixed": "#ffdbcc",
+                    "error": "#ba1a1a",
+                    "error-container": "#ffdad6",
+                    "primary-fixed-dim": "#8cd0eb",
+                    "inverse-on-surface": "#f6f0e4",
+                    "on-error-container": "#93000a",
+                    "tertiary-fixed-dim": "#ffb693",
+                    "secondary-fixed": "#cae7f9",
+                    "on-secondary-fixed": "#001e2b",
+                    "tertiary-container": "#b75a28",
+                    "on-secondary": "#ffffff",
+                    "outline-variant": "#bfc8cd",
+                    "primary-fixed": "#b9eaff",
+                    "surface-tint": "#17667e",
+                    "on-secondary-fixed-variant": "#2f4a59",
+                    "on-secondary-container": "#4d6877",
+                    "on-tertiary-container": "#fffbff",
+                    "on-primary": "#ffffff",
+                    "surface-container": "#f3ede1",
+                    "surface-container-low": "#f9f3e7"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>body {
+    font-family: "Plus Jakarta Sans", sans-serif
+    }
+.material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24
+    }
+.grain-overlay {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuCg3We7laluEhVn3ukPFu_YXmvrtAUwy0x9PqkNpJKE8xQa1UhAoFRLGEHjDpkTa3SG5BcBKh4MgwwPohXB1YugishhonTffob1HpfTXmGa2OHQf28qoW5IPpwiePBgfFXvImlUiq2RJHkvH0UfjE2ON0F0JuTN_DDkkFoijerFi1HAcQpPVIIT6g47ThwfXbv6iLI4fqJWMxj45PAA0BJVg5KqBFUloDZQuJaAFWoreFiE0mS1Rd17eMLoBfjFfmDUqI9fM55xAZ0);
+    opacity: 0.03;
+    pointer-events: none
+    }</style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface min-h-screen pb-32">
+<div class="fixed inset-0 grain-overlay z-0"></div>
+<!-- Top Navigation -->
+<header class="fixed top-0 w-full z-50 bg-[#fff9ed]/80 dark:bg-stone-950/80 backdrop-blur-md shadow-[0_8px_30px_rgb(29,28,20,0.06)] flex items-center justify-between px-6 h-16 w-full">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#12647b]" data-icon="waves">waves</span>
+<span class="text-2xl font-black text-[#12647b] dark:text-[#367d95] italic font-['Plus_Jakarta_Sans'] tracking-tight">Whale Log</span>
+</div>
+<button class="w-10 h-10 rounded-full flex items-center justify-center bg-surface-container-low active:scale-95 transition-all">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="settings">settings</span>
+</button>
+</header>
+<main class="relative z-10 pt-24 px-6 max-w-2xl mx-auto">
+<!-- Profile Header Section -->
+<section class="flex flex-col items-center mb-8">
+<div class="relative mb-4 group">
+<div class="absolute -inset-1 bg-gradient-to-br from-primary to-primary-container rounded-full blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+<div class="relative w-32 h-32 rounded-full overflow-hidden bg-surface-container-lowest border-4 border-surface shadow-xl">
+<img alt="chloe profile" class="w-full h-full object-cover" data-alt="Illustration of a young female surfer with sea-salt hair and a warm smile, coastal vintage artistic style with soft grain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDLc4TPeHLkQn8WBqb8JqDu4dP9PmT5pOTK__7rXbu6MfoBxoIcSGrPXMQQvxpoiligIrl5jxlgClI5UEgVa78zutmH-kYjTxcbBJmJpic4jYXDP8Gt77i0Misjmor8sCakoB6JX8ECF14CklRu7KKggUvUYucKYG1B5ifjgKJ1MBuhFRgHJoYDlz9VEjQmQr5jkjrkAyMEX0tHVKfpoxX2QExlkJ8zPq7g1rOLxUQVJYNi73zDHoOavi5fcw2AVpMQU7p194QvoxM"/>
+</div>
+<div class="absolute bottom-1 right-1 bg-tertiary text-on-tertiary w-8 h-8 rounded-full flex items-center justify-center border-2 border-surface">
+<span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+</div>
+</div>
+<h1 class="text-3xl font-extrabold text-on-surface tracking-tight mb-1">chloe</h1>
+<p class="text-on-surface-variant text-sm font-medium mb-4">poungkoo@naver.com</p>
+<div class="flex gap-2">
+<span class="bg-secondary-container text-on-secondary-container px-4 py-1 rounded-full text-xs font-bold tracking-wider uppercase">Beginner</span>
+<span class="bg-surface-container-high text-on-surface-variant px-4 py-1 rounded-full text-xs font-bold tracking-wider uppercase">Unset</span>
+</div>
+</section>
+<!-- Profile Tabs -->
+<nav class="flex justify-between p-1 bg-surface-container-low rounded-full mb-8">
+<button class="flex-1 py-3 text-sm font-extrabold rounded-full bg-surface-container-lowest shadow-sm text-primary transition-all">Profile</button>
+<button class="flex-1 py-3 text-sm font-bold text-on-surface-variant opacity-60 hover:opacity-100 transition-all">Stats</button>
+<button class="flex-1 py-3 text-sm font-bold text-on-surface-variant opacity-60 hover:opacity-100 transition-all">Badges</button>
+</nav>
+<!-- Stats Bento Grid -->
+<div class="grid grid-cols-2 gap-4 mb-8">
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border-b-4 border-primary/10">
+<span class="text-xs font-bold text-primary/60 uppercase tracking-widest block mb-2">Total Logs</span>
+<span class="text-4xl font-extrabold text-primary leading-none">24</span>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border-b-4 border-tertiary/10">
+<span class="text-xs font-bold text-tertiary/60 uppercase tracking-widest block mb-2">Days Out</span>
+<span class="text-4xl font-extrabold text-tertiary leading-none">12</span>
+</div>
+</div>
+<!-- Action Card: Pose Practice -->
+<div class="relative bg-gradient-to-br from-primary to-primary-container p-6 rounded-lg mb-8 shadow-xl overflow-hidden group active:scale-95 transition-all">
+<div class="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+<div class="relative flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="bg-white/20 p-3 rounded-full backdrop-blur-sm">
+<span class="material-symbols-outlined text-white" data-icon="photo_camera" style="font-variation-settings: 'FILL' 1;">photo_camera</span>
+</div>
+<div>
+<h3 class="text-white font-bold text-lg">Pose Practice</h3>
+<p class="text-white/80 text-sm">Real-time pose detection</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-white" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<!-- Settings List -->
+<div class="bg-surface-container-low rounded-lg p-2 space-y-1 mb-8">
+<div class="flex items-center justify-between p-4 bg-surface-container-lowest rounded-md">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary" data-icon="surfing">surfing</span>
+<span class="font-bold text-on-surface-variant">Surfing Level</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-primary font-extrabold uppercase text-xs tracking-tighter">Beginner</span>
+<span class="material-symbols-outlined text-outline-variant text-sm" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-lowest rounded-md">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary" data-icon="width">width</span>
+<span class="font-bold text-on-surface-variant">Board Type</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-outline-variant font-extrabold uppercase text-xs tracking-tighter">Unset</span>
+<span class="material-symbols-outlined text-outline-variant text-sm" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-lowest rounded-md opacity-50">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary" data-icon="notifications">notifications</span>
+<span class="font-bold text-on-surface-variant">Notifications</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant text-sm" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<!-- Badge Spotlight -->
+<div class="bg-surface-container-high/50 p-6 rounded-lg border-2 border-dashed border-outline-variant/30 text-center mb-8">
+<div class="w-16 h-16 bg-tertiary-fixed rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
+<span class="material-symbols-outlined text-tertiary text-3xl" data-icon="temp_night" style="font-variation-settings: 'FILL' 1;">mode_night</span>
+</div>
+<h4 class="font-black text-on-surface italic text-sm tracking-widest uppercase">Dawn Patroller</h4>
+<p class="text-on-surface-variant text-xs mt-1">3 sessions before 7:00 AM</p>
+</div>
+</main>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 left-0 w-full h-24 flex justify-around items-center px-4 pb-safe bg-[#f9f3e7] dark:bg-stone-900 rounded-t-[3rem] z-50 shadow-[0_-10px_40px_rgba(29,28,20,0.08)]">
+<button class="flex flex-col items-center justify-center text-[#3f484c] dark:text-stone-400 opacity-70 hover:text-[#12647b] transition-colors active:scale-90 duration-300">
+<span class="material-symbols-outlined mb-1" data-icon="home">home</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-bold tracking-wider uppercase">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#3f484c] dark:text-stone-400 opacity-70 hover:text-[#12647b] transition-colors active:scale-90 duration-300">
+<span class="material-symbols-outlined mb-1" data-icon="explore">explore</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-bold tracking-wider uppercase">Explore</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#3f484c] dark:text-stone-400 opacity-70 hover:text-[#12647b] transition-colors active:scale-90 duration-300">
+<span class="material-symbols-outlined mb-1" data-icon="menu_book">menu_book</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-bold tracking-wider uppercase">Guide</span>
+</button>
+<button class="flex flex-col items-center justify-center bg-gradient-to-br from-[#12647b] to-[#367d95] text-white rounded-full px-5 py-2 scale-110 -translate-y-2 transition-all shadow-lg active:scale-90 duration-300">
+<span class="material-symbols-outlined mb-1" data-icon="person" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-bold tracking-wider uppercase">My Info</span>
+</button>
+</nav>
+</body></html>

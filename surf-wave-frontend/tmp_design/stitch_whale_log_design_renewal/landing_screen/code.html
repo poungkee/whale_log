@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta_Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "background": "#fff9ed",
+                      "surface-bright": "#fff9ed",
+                      "inverse-primary": "#8cd0eb",
+                      "outline": "#70787d",
+                      "on-surface": "#1d1c14",
+                      "surface-container-highest": "#e8e2d6",
+                      "surface-variant": "#e8e2d6",
+                      "on-primary-fixed-variant": "#004d61",
+                      "surface-container-high": "#ede8dc",
+                      "on-tertiary-fixed": "#351000",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary": "#ffffff",
+                      "on-surface-variant": "#3f484c",
+                      "on-primary-fixed": "#001f29",
+                      "secondary": "#476271",
+                      "inverse-surface": "#333028",
+                      "secondary-fixed-dim": "#afcadc",
+                      "primary": "#12647b",
+                      "surface": "#fff9ed",
+                      "on-background": "#1d1c14",
+                      "on-error": "#ffffff",
+                      "on-primary-container": "#fafdff",
+                      "on-tertiary-fixed-variant": "#7a3000",
+                      "tertiary": "#974311",
+                      "surface-dim": "#dfd9ce",
+                      "secondary-container": "#cae7f9",
+                      "primary-container": "#367d95",
+                      "tertiary-fixed": "#ffdbcc",
+                      "error": "#ba1a1a",
+                      "error-container": "#ffdad6",
+                      "primary-fixed-dim": "#8cd0eb",
+                      "inverse-on-surface": "#f6f0e4",
+                      "on-error-container": "#93000a",
+                      "tertiary-fixed-dim": "#ffb693",
+                      "secondary-fixed": "#cae7f9",
+                      "on-secondary-fixed": "#001e2b",
+                      "tertiary-container": "#b75a28",
+                      "on-secondary": "#ffffff",
+                      "outline-variant": "#bfc8cd",
+                      "primary-fixed": "#b9eaff",
+                      "surface-tint": "#17667e",
+                      "on-secondary-fixed-variant": "#2f4a59",
+                      "on-secondary-container": "#4d6877",
+                      "on-tertiary-container": "#fffbff",
+                      "on-primary": "#ffffff",
+                      "surface-container": "#f3ede1",
+                      "surface-container-low": "#f9f3e7"
+              },
+              "borderRadius": {
+                      "DEFAULT": "1rem",
+                      "lg": "2rem",
+                      "xl": "3rem",
+                      "full": "9999px"
+              },
+              "fontFamily": {
+                      "headline": ["Plus Jakarta Sans"],
+                      "body": ["Plus Jakarta Sans"],
+                      "label": ["Plus Jakarta Sans"]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bg-ocean-overlay {
+            background: linear-gradient(180deg, rgba(18, 100, 123, 0.4) 0%, rgba(29, 28, 20, 0.9) 100%);
+        }
+        .whale-badge-shadow {
+            filter: drop-shadow(0 0 20px rgba(54, 125, 149, 0.3));
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-[#12647b] text-on-primary antialiased selection:bg-tertiary selection:text-white">
+<!-- Hero Section with Background Image & Gradient Overlay -->
+<main class="relative min-h-screen flex flex-col items-center justify-center px-6 pt-12 pb-24 overflow-hidden">
+<!-- Background Layer -->
+<div class="absolute inset-0 z-0">
+<img alt="" class="w-full h-full object-cover object-center grayscale-[20%] brightness-50" data-alt="dramatic wide shot of a powerful ocean wave cresting during deep twilight with deep teal and navy hues and soft spray" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfxCbPGTs9BqONUyjAz7NZxbk7O3LXNeJgd9JpG9kTVQjMc6yXVePxbafX73ots0jI-XnvG3OTK-F5zvdVw5NpAadXWzvN2esnUD_YBgkH8q7N6Va5xkcfXXoQ2Ewv0jKfew0ZFt_9LVKwjengv8sVeNcgAWZudNGHRB78ym902LNGw6Js9ZEPFRhLkGjVZp7jCu3bNEHaiU8srLNWvtu86fBObnxHb4MZqGd8UwRsBHpuXhlm5-wUQPJeKaoPdvdaI0Zptdt3-Fk"/>
+<div class="absolute inset-0 bg-ocean-overlay"></div>
+</div>
+<!-- Content Canvas -->
+<div class="relative z-10 w-full max-w-md flex flex-col items-center text-center">
+<!-- Logo & Badge Area -->
+<div class="mb-10 animate-fade-in">
+<div class="whale-badge-shadow mb-4 inline-flex items-center justify-center w-28 h-28 rounded-full border-2 border-primary-fixed/30 bg-surface/5 backdrop-blur-sm">
+<span class="material-symbols-outlined text-6xl text-primary-fixed" style="font-variation-settings: 'FILL' 1;">waves</span>
+</div>
+<h1 class="text-5xl font-black italic tracking-tighter text-surface-bright mb-2">Whale Log</h1>
+<p class="text-lg font-medium text-primary-fixed-dim/90 tracking-wide">Your personal surfing coach.</p>
+</div>
+<!-- Bento Feature Grid -->
+<div class="w-full grid grid-cols-1 gap-4 mb-12">
+<!-- Feature 1 -->
+<div class="bg-surface-bright/10 backdrop-blur-md border border-surface-bright/10 rounded-lg p-5 flex items-center space-x-4 transition-transform hover:scale-[1.02] cursor-default">
+<div class="bg-primary/40 p-3 rounded-full">
+<span class="material-symbols-outlined text-primary-fixed">recommend</span>
+</div>
+<div class="text-left">
+<h3 class="font-bold text-surface-bright text-base">Recommended waves for you</h3>
+<p class="text-sm text-surface-bright/70 font-medium leading-tight">AI-curated surf conditions based on your level.</p>
+</div>
+</div>
+<!-- Feature 2 -->
+<div class="bg-surface-bright/10 backdrop-blur-md border border-surface-bright/10 rounded-lg p-5 flex items-center space-x-4 transition-transform hover:scale-[1.02] cursor-default">
+<div class="bg-tertiary/40 p-3 rounded-full">
+<span class="material-symbols-outlined text-tertiary-fixed">bar_chart_4_bars</span>
+</div>
+<div class="text-left">
+<h3 class="font-bold text-surface-bright text-base">Surfing Diary with auto wave charts</h3>
+<p class="text-sm text-surface-bright/70 font-medium leading-tight">Visualize your sessions with automatic swell data.</p>
+</div>
+</div>
+<!-- Feature 3 -->
+<div class="bg-surface-bright/10 backdrop-blur-md border border-surface-bright/10 rounded-lg p-5 flex items-center space-x-4 transition-transform hover:scale-[1.02] cursor-default">
+<div class="bg-secondary/40 p-3 rounded-full">
+<span class="material-symbols-outlined text-secondary-fixed">map</span>
+</div>
+<div class="text-left">
+<h3 class="font-bold text-surface-bright text-base">124 spots in Korea + Bali</h3>
+<p class="text-sm text-surface-bright/70 font-medium leading-tight">Comprehensive guides for the world's best peaks.</p>
+</div>
+</div>
+</div>
+<!-- CTA Actions -->
+<div class="w-full space-y-4">
+<button class="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-full font-extrabold text-lg shadow-xl shadow-primary/20 active:scale-95 transition-all">
+                    Login
+                </button>
+<button class="w-full py-4 border-2 border-surface-bright/30 text-surface-bright rounded-full font-bold text-lg hover:bg-white/10 active:scale-95 transition-all backdrop-blur-sm">
+                    Sign Up
+                </button>
+</div>
+</div>
+<!-- Decorative Elements: Asymmetric Journal Aesthetic -->
+<div class="absolute -top-10 -right-10 w-48 h-48 bg-tertiary/10 rounded-full blur-3xl"></div>
+<div class="absolute -bottom-10 -left-10 w-64 h-64 bg-primary/20 rounded-full blur-3xl"></div>
+<!-- Footer -->
+<footer class="absolute bottom-8 left-0 w-full text-center px-6">
+<p class="text-surface-bright/40 text-[11px] font-bold tracking-[0.2em] uppercase">
+                © 2026 Whale Log. All rights reserved.
+            </p>
+</footer>
+</main>
+<!-- Optional Visual Texture -->
+<div class="fixed inset-0 pointer-events-none opacity-[0.03] z-[60]" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCAl44nZonbZcJp-ufDH4Q8NP89VMTKLjPPCo3x6rkw1RRDQnLYYcaUJjj4uGv4Sa9JyvLRojdFZObDR8a9IeevR6OD247ejgnb-jt40U48MN3WjDpXfICzAPORM8uoRgXOT17MtN-TrwpIKo2nXCi-0sP3S474pj3IGupxks_FzYMgL-quLlMRtJyNzHVqrWhTsQo2NogvXmnSXM8EVneosjZ-ivBbTxCwWcCvzAZsSVV4uZp2WKfTlNZlhCVRtl1tvzFQxE2S6rE');"></div>
+</body></html>

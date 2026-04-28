@@ -1,14 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { MyPageStackParamList } from '../../navigation/types';
-import Button from '../../components/common/Button';
 import { colors, spacing, typography } from '../../theme';
 
-type Props = NativeStackScreenProps<MyPageStackParamList, 'GuideDetail'>;
-
-const GuideDetailScreen: React.FC<Props> = ({ route }) => {
-  const { guideId } = route.params;
+// 미사용 화면 — GuideListScreen에 아코디언으로 통합됨
+const GuideDetailScreen: React.FC<any> = ({ route }) => {
+  const guideId = route?.params?.guideId;
 
   const guide = {
     id: guideId,
@@ -61,11 +57,9 @@ Push up with your arms, bring your feet under you, and stand in one smooth motio
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button
-          title={guide.isCompleted ? 'Completed!' : 'Mark as Complete'}
-          onPress={() => {}}
-          disabled={guide.isCompleted}
-        />
+        <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>
+          {guide.isCompleted ? '읽음' : ''}
+        </Text>
       </View>
     </View>
   );

@@ -18,10 +18,12 @@ export interface AuthResponse {
   user: {
     id: string;
     email: string;
+    username: string;
     nickname: string;
     avatarUrl: string | null;
     role: string;
     surfLevel: string | null;
+    boardType: string | null;
   };
 }
 

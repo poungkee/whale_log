@@ -641,7 +641,13 @@ const MyPageScreen: React.FC<Props> = ({ navigation }) => {
             {/* 관리자 패널 (ADMIN만 노출) */}
             {user?.role === 'ADMIN' && (
               <>
-                <TouchableOpacity style={s.settingsRow} onPress={() => setShowSettings(false)}>
+                <TouchableOpacity
+                  style={s.settingsRow}
+                  onPress={() => {
+                    setShowSettings(false);
+                    navigation.navigate('Admin');
+                  }}
+                >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                     <Shield size={16} color={colors.error} />
                     <Text style={[s.settingsRowLabel, { color: colors.error }]}>관리자 패널</Text>

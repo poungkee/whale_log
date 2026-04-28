@@ -21,7 +21,12 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0a4f6e"
       },
-      "package": "com.whalelog.app"
+      "package": "com.whalelog.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyANZ8tkur7d3IUPukd0lfQv5k4PUmq87HE"
+        }
+      }
     },
     "plugins": [
       "expo-secure-store",
@@ -44,7 +49,8 @@
           "icon": "./assets/icon.png",
           "color": "#0a4f6e"
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {}
   }

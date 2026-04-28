@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Whale Log - Surfing Guide</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "background": "#fff9ed",
+                    "surface-bright": "#fff9ed",
+                    "inverse-primary": "#8cd0eb",
+                    "outline": "#70787d",
+                    "on-surface": "#1d1c14",
+                    "surface-container-highest": "#e8e2d6",
+                    "surface-variant": "#e8e2d6",
+                    "on-primary-fixed-variant": "#004d61",
+                    "surface-container-high": "#ede8dc",
+                    "on-tertiary-fixed": "#351000",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#3f484c",
+                    "on-primary-fixed": "#001f29",
+                    "secondary": "#476271",
+                    "inverse-surface": "#333028",
+                    "secondary-fixed-dim": "#afcadc",
+                    "primary": "#12647b",
+                    "surface": "#fff9ed",
+                    "on-background": "#1d1c14",
+                    "on-error": "#ffffff",
+                    "on-primary-container": "#fafdff",
+                    "on-tertiary-fixed-variant": "#7a3000",
+                    "tertiary": "#974311",
+                    "surface-dim": "#dfd9ce",
+                    "secondary-container": "#cae7f9",
+                    "primary-container": "#367d95",
+                    "tertiary-fixed": "#ffdbcc",
+                    "error": "#ba1a1a",
+                    "error-container": "#ffdad6",
+                    "primary-fixed-dim": "#8cd0eb",
+                    "inverse-on-surface": "#f6f0e4",
+                    "on-error-container": "#93000a",
+                    "tertiary-fixed-dim": "#ffb693",
+                    "secondary-fixed": "#cae7f9",
+                    "on-secondary-fixed": "#001e2b",
+                    "tertiary-container": "#b75a28",
+                    "on-secondary": "#ffffff",
+                    "outline-variant": "#bfc8cd",
+                    "primary-fixed": "#b9eaff",
+                    "surface-tint": "#17667e",
+                    "on-secondary-fixed-variant": "#2f4a59",
+                    "on-secondary-container": "#4d6877",
+                    "on-tertiary-container": "#fffbff",
+                    "on-primary": "#ffffff",
+                    "surface-container": "#f3ede1",
+                    "surface-container-low": "#f9f3e7"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body {
+            background-color: #F5EFE3; /* Custom background from user prompt */
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #1d1c14;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="pb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#fff9ed]/80 dark:bg-stone-950/80 backdrop-blur-md shadow-[0_8px_30px_rgb(29,28,20,0.06)]">
+<div class="flex items-center justify-between px-6 h-16 w-full">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#12647b] text-2xl">waves</span>
+<h1 class="text-2xl font-black text-[#12647b] dark:text-[#367d95] italic font-['Plus_Jakarta_Sans'] tracking-tight">Whale Log</h1>
+</div>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-[#12647b]/20 active:scale-95 duration-200 transition-opacity hover:opacity-80">
+<img alt="User Profile" data-alt="close-up portrait of a young surfer with sun-kissed skin and messy hair, soft beach lighting, artistic profile photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLd5DhAl9SDdFVFhQD_f8tskaIApldmacfvyGQ4p7-ScvBNbgsn9Im5myUCzey9iM4YDDvbSqbMWVNVYgSlB38RBFlL4VhtdIpwb5sof1Dpk1qGNyW9rnyxoohvSudVQBILbV7Ujg5-iZjUws4XPltUA-m_8V9-1NkYLELdIGkz2hyi4sLhYJ4-U3eK4Dub1cqtsJF44C4sfH3d4QpIbV0yFt2fOqk6DRPItSwJu0W4pd9WgCckravYM6IotYQIv9_2rLNR9aHgFI"/>
+</div>
+</div>
+</header>
+<main class="pt-24 px-6 max-w-2xl mx-auto">
+<!-- Hero Section -->
+<section class="mb-10">
+<h2 class="text-4xl font-extrabold text-primary tracking-tight leading-tight mb-2">Surfing Guide</h2>
+<p class="text-on-surface-variant font-medium text-lg leading-relaxed">Things every beginner surfer must know before heading out.</p>
+</section>
+<!-- Category Icons (Horizontal Scroll) -->
+<div class="flex gap-4 overflow-x-auto hide-scrollbar pb-6 -mx-6 px-6">
+<!-- Ocean Rules (Active) -->
+<button class="flex-shrink-0 flex items-center gap-2 bg-gradient-to-br from-[#12647b] to-[#367d95] text-white px-5 py-3 rounded-full shadow-lg scale-105 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-xl">water_drop</span>
+<span class="text-sm font-bold tracking-wide uppercase">Ocean Rules</span>
+</button>
+<button class="flex-shrink-0 flex items-center gap-2 bg-surface-container-low text-on-surface-variant px-5 py-3 rounded-full hover:bg-surface-container-high active:scale-95 transition-all">
+<span class="material-symbols-outlined text-xl">health_and_safety</span>
+<span class="text-sm font-bold tracking-wide uppercase">Safety Tips</span>
+</button>
+<button class="flex-shrink-0 flex items-center gap-2 bg-surface-container-low text-on-surface-variant px-5 py-3 rounded-full hover:bg-surface-container-high active:scale-95 transition-all">
+<span class="material-symbols-outlined text-xl">dictionary</span>
+<span class="text-sm font-bold tracking-wide uppercase">Glossary</span>
+</button>
+<button class="flex-shrink-0 flex items-center gap-2 bg-surface-container-low text-on-surface-variant px-5 py-3 rounded-full hover:bg-surface-container-high active:scale-95 transition-all">
+<span class="material-symbols-outlined text-xl">accessibility_new</span>
+<span class="text-sm font-bold tracking-wide uppercase">Basic Stance</span>
+</button>
+<button class="flex-shrink-0 flex items-center gap-2 bg-surface-container-low text-on-surface-variant px-5 py-3 rounded-full hover:bg-surface-container-high active:scale-95 transition-all">
+<span class="material-symbols-outlined text-xl">surfing</span>
+<span class="text-sm font-bold tracking-wide uppercase">Equipment</span>
+</button>
+</div>
+<!-- Featured Illustration / Bento Moment -->
+<div class="relative w-full h-48 rounded-lg overflow-hidden mb-10 shadow-sm border-4 border-surface-container-lowest rotate-1">
+<img class="w-full h-full object-cover" data-alt="vintage style photo of a lone surfer walking on a foggy morning beach with a longboard under their arm, grain texture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxf1mjcGjpfpcoH5UldHI0XUIvVxqkPA6D7KOzxq-wSgpOD5YQPeR-QRRu2pEpt4CFfnSpkDAcn9gcqNrLIC8Ko9ahMkq6CA9FKmkr2KdkciAT2xVzBnf0ZZc0VbytcnIibhfEdHU_zmM_NtL-9VLR2p9EP-NAz_3fOVHPOXtUg99KxUzmuqsliHGQUyf0awcDJi_yfug6SI-wJ6oNH50OsmqfKm0Vr18lMX-ffcCWFZSvDW9GpWwOcwuIeILN1aythvbJ5-uItnE"/>
+<div class="absolute inset-0 bg-gradient-to-t from-[#12647b]/60 to-transparent flex items-end p-6">
+<span class="text-white font-bold text-xl">Master the Lineup</span>
+</div>
+</div>
+<!-- Accordion List of Ocean Rules -->
+<div class="space-y-4">
+<!-- Item 1 -->
+<div class="bg-surface-container-lowest rounded-DEFAULT p-5 shadow-[0_4px_20px_rgba(29,28,20,0.04)] flex items-center justify-between group active:scale-[0.98] transition-transform">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-tertiary-fixed flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-2xl">block</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface leading-none mb-1">No Drop-ins</h4>
+<p class="text-xs text-on-surface-variant font-medium uppercase tracking-wider">The Golden Rule</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">expand_more</span>
+</div>
+<!-- Item 2 -->
+<div class="bg-surface-container-lowest rounded-DEFAULT p-5 shadow-[0_4px_20px_rgba(29,28,20,0.04)] flex items-center justify-between group active:scale-[0.98] transition-transform">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-2xl">workspace_premium</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface leading-none mb-1">Priority</h4>
+<p class="text-xs text-on-surface-variant font-medium uppercase tracking-wider">Closest to the Peak</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">expand_more</span>
+</div>
+<!-- Item 3 -->
+<div class="bg-surface-container-lowest rounded-DEFAULT p-5 shadow-[0_4px_20px_rgba(29,28,20,0.04)] flex items-center justify-between group active:scale-[0.98] transition-transform">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-2xl">waves</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface leading-none mb-1">Paddling out - Channels</h4>
+<p class="text-xs text-on-surface-variant font-medium uppercase tracking-wider">Avoid the Impact Zone</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">expand_more</span>
+</div>
+<!-- Item 4 -->
+<div class="bg-surface-container-lowest rounded-DEFAULT p-5 shadow-[0_4px_20px_rgba(29,28,20,0.04)] flex items-center justify-between group active:scale-[0.98] transition-transform">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-2xl">surfing</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface leading-none mb-1">Holding the Board</h4>
+<p class="text-xs text-on-surface-variant font-medium uppercase tracking-wider">Safety for everyone</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">expand_more</span>
+</div>
+<!-- Item 5 -->
+<div class="bg-surface-container-lowest rounded-DEFAULT p-5 shadow-[0_4px_20px_rgba(29,28,20,0.04)] flex items-center justify-between group active:scale-[0.98] transition-transform">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-2xl">handshake</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface leading-none mb-1">Local Respect</h4>
+<p class="text-xs text-on-surface-variant font-medium uppercase tracking-wider">Respect the spot</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">expand_more</span>
+</div>
+<!-- Item 6 -->
+<div class="bg-surface-container-lowest rounded-DEFAULT p-5 shadow-[0_4px_20px_rgba(29,28,20,0.04)] flex items-center justify-between group active:scale-[0.98] transition-transform">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-2xl">map</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface leading-none mb-1">Spot Selection</h4>
+<p class="text-xs text-on-surface-variant font-medium uppercase tracking-wider">Know your limits</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">expand_more</span>
+</div>
+<!-- Item 7 -->
+<div class="bg-surface-container-lowest rounded-DEFAULT p-5 shadow-[0_4px_20px_rgba(29,28,20,0.04)] flex items-center justify-between group active:scale-[0.98] transition-transform">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-2xl">flag</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface leading-none mb-1">Beach Flags/Signs</h4>
+<p class="text-xs text-on-surface-variant font-medium uppercase tracking-wider">Watch the colors</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">expand_more</span>
+</div>
+</div>
+<!-- Tip Box -->
+<div class="mt-12 bg-[#fff9ed] border-2 border-dashed border-[#12647b]/30 rounded-lg p-6 relative overflow-hidden">
+<div class="absolute top-0 right-0 w-16 h-16 bg-[#12647b]/5 rounded-bl-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[#12647b] opacity-40">lightbulb</span>
+</div>
+<p class="text-[#12647b] font-bold text-sm mb-2 uppercase tracking-widest">Pro Tip</p>
+<p class="text-on-surface-variant font-medium leading-relaxed italic">
+                "For safe surfing, we recommend taking a lesson first. This guide is for reference only."
+            </p>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full h-24 bg-[#f9f3e7] dark:bg-stone-900 flex justify-around items-center px-4 pb-safe rounded-t-[3rem] z-50 shadow-[0_-10px_40px_rgba(29,28,20,0.08)]">
+<a class="flex flex-col items-center justify-center text-[#3f484c] dark:text-stone-400 opacity-70 hover:text-[#12647b] dark:hover:text-white transition-colors active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-bold tracking-wider uppercase">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#3f484c] dark:text-stone-400 opacity-70 hover:text-[#12647b] dark:hover:text-white transition-colors active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">explore</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-bold tracking-wider uppercase">Explore</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-gradient-to-br from-[#12647b] to-[#367d95] text-white rounded-full px-5 py-2 scale-110 -translate-y-2 transition-all shadow-lg active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-bold tracking-wider uppercase">Guide</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#3f484c] dark:text-stone-400 opacity-70 hover:text-[#12647b] dark:hover:text-white transition-colors active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-bold tracking-wider uppercase">My Info</span>
+</a>
+</nav>
+</body></html>
