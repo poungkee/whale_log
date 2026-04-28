@@ -5,11 +5,10 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { Home, BookOpen, User, Compass } from 'lucide-react-native';
+import { User, Compass } from 'lucide-react-native';
 import { MainTabParamList } from './types';
 import HomeStack from './HomeStack';
 import ExploreStack from './ExploreStack';
-import DiaryStack from './DiaryStack';
 import GuideStack from './GuideStack';
 import MyPageStack from './MyPageStack';
 import { colors } from '../theme/colors';
@@ -43,13 +42,12 @@ function SurferIcon({ color }: { color: string }) {
   );
 }
 
-// 탭 정의
+// 탭 정의 — 웹앱과 동일한 4개 (홈/탐색/가이드/마이)
 const TAB_ITEMS = [
-  { name: 'HomeTab'    as const, label: '홈',      Icon: SurferIcon },
-  { name: 'ExploreTab' as const, label: '탐색',    Icon: ({ color }: { color: string }) => <Compass size={22} color={color} /> },
-  { name: 'DiaryTab'   as const, label: '다이어리', Icon: ({ color }: { color: string }) => <BookOpen size={22} color={color} /> },
-  { name: 'MyPageTab'  as const, label: '마이',    Icon: ({ color }: { color: string }) => <User size={22} color={color} /> },
-  { name: 'GuideTab'   as const, label: '가이드',  Icon: GuideIcon },
+  { name: 'HomeTab'    as const, label: 'HOME',    Icon: SurferIcon },
+  { name: 'ExploreTab' as const, label: 'EXPLORE', Icon: ({ color }: { color: string }) => <Compass size={22} color={color} /> },
+  { name: 'GuideTab'   as const, label: 'GUIDE',   Icon: GuideIcon },
+  { name: 'MyPageTab'  as const, label: 'MY INFO', Icon: ({ color }: { color: string }) => <User size={22} color={color} /> },
 ];
 
 // 커스텀 탭 바 — pill 디자인 (웹앱 동일)
@@ -127,9 +125,8 @@ const MainTabNavigator: React.FC = () => {
     >
       <Tab.Screen name="HomeTab"    component={HomeStack} />
       <Tab.Screen name="ExploreTab" component={ExploreStack} />
-      <Tab.Screen name="DiaryTab"   component={DiaryStack} />
-      <Tab.Screen name="MyPageTab"  component={MyPageStack} />
       <Tab.Screen name="GuideTab"   component={GuideStack} />
+      <Tab.Screen name="MyPageTab"  component={MyPageStack} />
     </Tab.Navigator>
   );
 };

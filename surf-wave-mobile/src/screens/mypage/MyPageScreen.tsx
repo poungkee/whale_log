@@ -459,7 +459,7 @@ const MyPageScreen: React.FC<Props> = ({ navigation }) => {
                 {/* 다이어리 바로가기 */}
                 <TouchableOpacity
                   style={s.menuItem}
-                  onPress={() => navigation.getParent<any>()?.navigate('DiaryTab')}
+                  onPress={() => navigation.navigate('DiaryList')}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <BookOpen size={16} color={colors.primary} />
@@ -477,7 +477,7 @@ const MyPageScreen: React.FC<Props> = ({ navigation }) => {
                 <Text style={s.emptyDesc}>다이어리에 기록을 남기면 통계가 표시돼요</Text>
                 <TouchableOpacity
                   style={s.emptyBtn}
-                  onPress={() => navigation.getParent<any>()?.navigate('DiaryTab')}
+                  onPress={() => navigation.navigate('DiaryList')}
                 >
                   <BookOpen size={14} color="#fff" />
                   <Text style={s.emptyBtnText}>다이어리 열기</Text>

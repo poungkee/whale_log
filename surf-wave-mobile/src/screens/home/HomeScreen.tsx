@@ -29,6 +29,16 @@ interface SpotForecast {
   surfRating: number;
   recommendationKo: string;
   simpleCondition: { waveStatus: string; windStatus: string; overall: string };
+  // 레벨 적합도 (PASS/WARNING/BLOCKED)
+  levelFit?: Record<string, string>;
+  // 안전 경고 이유
+  safetyReasons?: string[];
+  // hints 메시지 + 태그
+  hints?: { message: string; tags: string[] };
+  // KHOA 정부 서핑지수
+  khoaEnrichment?: {
+    levelFit: string; levelFitIndex: string; levelFitDesc: string; waveHeight: string;
+  };
 }
 
 interface DashboardResponse {
@@ -114,6 +124,59 @@ const getRatingLabel = (r: number) => {
   if (r >= 6) return '좋음';
   if (r >= 4) return '보통';
   return '나쁨';
+};
+
+// 레벨 적합도 색상
+const getLevelFitColor = (fit: string) => {
+  if (fit === 'BLOCKED') return colors.error;
+  if (fit === 'WARNING') return colors.warning;
+  return colors.success;
+};
+
+// 레벨 적합도 한국어 라벨
+const getLevelFitLabel = (fit: string) => {
+  if (fit === 'BLOCKED') return '⛔ 위험';
+  if (fit === 'WARNING') return '⚠️ 주의';
+  return '✅ 적합';
+};
+
+// hints 태그 색상
+const getHintTagColor = (tag: string): string => {
+  const dangerTags = ['SAFETY_WARNING', 'WAVE_TOO_BIG', 'STRONG_WIND', 'ONSHORE_WIND'];
+  const goodTags = ['GOOD_SWELL', 'OFFSHORE_WIND', 'IDEAL_PERIOD', 'WARM_WATER'];
+  const infoTags = ['LONGBOARD_DAY', 'FLAT_CONDITION', 'BEGINNER_FRIENDLY'];
+  if (dangerTags.includes(tag)) return colors.error;
+  if (goodTags.includes(tag)) return colors.success;
+  if (infoTags.includes(tag)) return colors.primary;
+  return colors.textSecondary;
+};
+
+// hints 태그 한국어 라벨
+const getHintTagLabel = (tag: string): string => {
+  const map: Record<string, string> = {
+    SAFETY_WARNING: '안전주의',
+    WAVE_TOO_BIG: '파도 큼',
+    STRONG_WIND: '강풍',
+    ONSHORE_WIND: '안쪽바람',
+    OFFSHORE_WIND: '오프쇼어',
+    GOOD_SWELL: '굿스웰',
+    IDEAL_PERIOD: '좋은주기',
+    WARM_WATER: '따뜻한수온',
+    LONGBOARD_DAY: '롱보드데이',
+    FLAT_CONDITION: '잔잔함',
+    BEGINNER_FRIENDLY: '입문자OK',
+    CHOPPY: '파도 불규칙',
+    SIDE_WIND: '측풍',
+  };
+  return map[tag] || tag;
+};
+
+// KHOA 서핑지수 색상
+const getKhoaColor = (index: string): string => {
+  if (index === '매우좋음') return colors.perfect;
+  if (index === '좋음') return colors.good;
+  if (index === '보통') return colors.fair;
+  return colors.poor;
 };
 
 // 지역 필터 매칭 함수 (웹앱 matchRegionFilter와 동일)
@@ -603,7 +666,35 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                         {item.simpleCondition.overall}
                       </Text>
                     </View>
+                    {/* 레벨 적합도 배지 */}
+                    {item.levelFit?.[selectedLevel] && (
+                      <View style={[styles.levelFitBadge, { backgroundColor: getLevelFitColor(item.levelFit[selectedLevel]) + '20', borderColor: getLevelFitColor(item.levelFit[selectedLevel]) + '60' }]}>
+                        <Text style={[styles.levelFitText, { color: getLevelFitColor(item.levelFit[selectedLevel]) }]}>
+                          {getLevelFitLabel(item.levelFit[selectedLevel])}
+                        </Text>
+                      </View>
+                    )}
                   </View>
+
+                  {/* 안전 경고 (BLOCKED 시) */}
+                  {item.levelFit?.[selectedLevel] === 'BLOCKED' && item.safetyReasons && item.safetyReasons.length > 0 && (
+                    <View style={styles.safetyRow}>
+                      <Text style={styles.safetyText}>⛔ {item.safetyReasons[0]}</Text>
+                    </View>
+                  )}
+
+                  {/* hints 태그 */}
+                  {item.hints?.tags && item.hints.tags.length > 0 && (
+                    <View style={styles.hintsRow}>
+                      {item.hints.tags.slice(0, 4).map(tag => (
+                        <View key={tag} style={[styles.hintTag, { borderColor: getHintTagColor(tag) + '50', backgroundColor: getHintTagColor(tag) + '15' }]}>
+                          <Text style={[styles.hintTagText, { color: getHintTagColor(tag) }]}>
+                            {getHintTagLabel(tag)}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
 
                   {/* 데이터 행 */}
                   <View style={styles.dataRow}>
@@ -632,9 +723,21 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                     </View>
                   </View>
 
-                  {/* 한줄 추천 */}
-                  <Text style={styles.recommendation} numberOfLines={1}>
-                    💬 {item.recommendationKo}
+                  {/* KHOA 정부 서핑지수 (한국 스팟만) */}
+                  {item.khoaEnrichment && (
+                    <View style={styles.khoaRow}>
+                      <Text style={styles.khoaLabel}>🏛 정부 서핑지수</Text>
+                      <View style={[styles.khoaBadge, { backgroundColor: getKhoaColor(item.khoaEnrichment.levelFitIndex) + '20', borderColor: getKhoaColor(item.khoaEnrichment.levelFitIndex) + '60' }]}>
+                        <Text style={[styles.khoaBadgeText, { color: getKhoaColor(item.khoaEnrichment.levelFitIndex) }]}>
+                          {item.khoaEnrichment.levelFitIndex}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+
+                  {/* 한줄 추천 (hints 메시지 우선) */}
+                  <Text style={styles.recommendation} numberOfLines={2}>
+                    💬 {item.hints?.message || item.recommendationKo}
                   </Text>
                 </TouchableOpacity>
               ))
@@ -828,6 +931,45 @@ const styles = StyleSheet.create({
     ...typography.caption, color: colors.textSecondary,
     fontStyle: 'italic', paddingHorizontal: spacing.md, paddingBottom: spacing.sm,
   },
+
+  // 레벨 적합도 배지
+  levelFitBadge: {
+    paddingHorizontal: spacing.sm, paddingVertical: 3,
+    borderRadius: 8, borderWidth: 1,
+  },
+  levelFitText: { fontSize: 10, fontWeight: '700' },
+
+  // 안전 경고
+  safetyRow: {
+    marginHorizontal: spacing.sm,
+    backgroundColor: colors.error + '10',
+    borderRadius: 8, borderWidth: 1, borderColor: colors.error + '30',
+    paddingHorizontal: spacing.sm, paddingVertical: 5,
+  },
+  safetyText: { fontSize: 11, color: colors.error, fontWeight: '600' },
+
+  // hints 태그
+  hintsRow: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: 4,
+    paddingHorizontal: spacing.sm, paddingBottom: 4,
+  },
+  hintTag: {
+    paddingHorizontal: 7, paddingVertical: 2,
+    borderRadius: 6, borderWidth: 1,
+  },
+  hintTagText: { fontSize: 10, fontWeight: '600' },
+
+  // KHOA 정부 서핑지수
+  khoaRow: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    paddingHorizontal: spacing.md, paddingBottom: 4,
+  },
+  khoaLabel: { fontSize: 11, color: colors.textSecondary, fontWeight: '600' },
+  khoaBadge: {
+    paddingHorizontal: 8, paddingVertical: 2,
+    borderRadius: 6, borderWidth: 1,
+  },
+  khoaBadgeText: { fontSize: 11, fontWeight: '700' },
 });
 
 export default HomeScreen;
