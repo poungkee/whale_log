@@ -418,6 +418,16 @@ export class AuthService {
         data.properties?.nickname ||
         undefined;
 
+      /**
+       * [임시 진단 로그] 카카오 응답에서 닉네임/동의 정보가 어떻게 오는지 추적
+       * 닉네임 자동 부여 안 되는 원인 분석 용도. 안정화되면 제거 예정.
+       */
+      this.logger.log(`[KAKAO DEBUG] kakaoId=${kakaoId} email=${email}`);
+      this.logger.log(`[KAKAO DEBUG] nickname extracted: ${JSON.stringify(nickname)}`);
+      this.logger.log(`[KAKAO DEBUG] kakao_account keys: ${JSON.stringify(Object.keys(data.kakao_account || {}))}`);
+      this.logger.log(`[KAKAO DEBUG] profile object: ${JSON.stringify(data.kakao_account?.profile)}`);
+      this.logger.log(`[KAKAO DEBUG] profile_nickname_needs_agreement: ${data.kakao_account?.profile_nickname_needs_agreement}`);
+
       return this.socialLogin(kakaoId, finalEmail, 'KAKAO', nickname);
     } catch (error) {
       if (error instanceof UnauthorizedException || error instanceof ConflictException) {
