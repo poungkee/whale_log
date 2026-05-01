@@ -304,6 +304,20 @@ export class AuthService {
       }
     }
 
+    /**
+     * 기존 사용자라도 username이 null이면 자동 부여 (백필).
+     * 자동 부여 로직 도입 이전에 가입한 카카오/구글 사용자를 위한 보완 처리.
+     * - 카카오: 닉네임이 있으면 그걸 사용 (충돌 시 suffix), 없으면 시퀀스로 폴백
+     * - 구글:  시퀀스로 "서퍼N"
+     */
+    if (user && !user.username) {
+      const autoUsername = provider === 'KAKAO' && kakaoNickname
+        ? await this.usersService.findAvailableUsername(kakaoNickname)
+        : await this.usersService.nextGoogleTempUsername();
+      await this.usersService.update(user.id, { username: autoUsername });
+      user = await this.usersService.findById(user.id);
+    }
+
     if (user.isSuspended) {
       throw new UnauthorizedException('정지된 계정입니다');
     }

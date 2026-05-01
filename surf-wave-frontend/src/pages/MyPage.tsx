@@ -11,7 +11,7 @@
  * - 설정 시트: 다이어리·자세연습 바로가기, 알림, 앱정보, 관리자, 로그아웃
  */
 
-import { Settings, ChevronRight, Waves, Clock, MapPin, Star, BookOpen, Camera, Shield, Trophy, Bell, X, AtSign, Check, AlertCircle } from 'lucide-react';
+import { Settings, ChevronRight, Waves, Clock, MapPin, Star, BookOpen, Camera, Shield, Trophy, Bell, X, Check, AlertCircle, Pencil } from 'lucide-react';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import type { SurfLevel, BoardType, UserInfo } from '../types';
 import { api } from '../lib/api';
@@ -391,16 +391,31 @@ export function MyPage({
           {/* ══════════════════════════════ 프로필 탭 ══════════════════════════════ */}
           {activeTab === 'profile' && (
             <div className="space-y-4">
-              {/* 프로필 카드 */}
-              <div className="bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl p-6 border border-primary/30">
+              {/* 프로필 카드 — 우측 상단 ✏️ 클릭 시 아이디 변경 모달 */}
+              <div className="bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl p-6 border border-primary/30 relative">
+                {/* 우측 상단 수정 버튼 — 아이디 변경 모달 트리거 */}
+                <button
+                  onClick={() => {
+                    setUsernameInput(userInfo?.username || '');
+                    setUsernameAvailable(null);
+                    setUsernameError(null);
+                    setShowUsernameEditor(true);
+                    setTimeout(() => usernameInputRef.current?.focus(), 100);
+                  }}
+                  className="absolute top-3 right-3 p-2 rounded-full bg-card/70 hover:bg-card transition-colors"
+                  aria-label="아이디 변경"
+                >
+                  <Pencil className="w-3.5 h-3.5 text-foreground" />
+                </button>
+
                 <div className="flex items-center gap-4">
                   <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center text-3xl">
                     🏄‍♂️
                   </div>
-                  <div className="flex-1">
-                    <h2 className="text-xl font-bold mb-1">{userInfo?.username || '서퍼'}</h2>
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-xl font-bold mb-1 truncate">{userInfo?.username || '서퍼'}</h2>
                     {userInfo?.email && (
-                      <p className="text-sm text-muted-foreground mb-2">{userInfo.email}</p>
+                      <p className="text-sm text-muted-foreground mb-2 truncate">{userInfo.email}</p>
                     )}
                     <div className="flex gap-2 flex-wrap">
                       <div
@@ -435,80 +450,6 @@ export function MyPage({
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </button>
 
-              {/* ───── 아이디 변경 ───── */}
-              <div className="bg-card border border-border rounded-xl">
-                <button
-                  onClick={() => {
-                    const next = !showUsernameEditor;
-                    setShowUsernameEditor(next);
-                    if (next) {
-                      setUsernameInput(userInfo?.username || '');
-                      setTimeout(() => usernameInputRef.current?.focus(), 100);
-                    }
-                  }}
-                  className="w-full flex items-center justify-between p-4 hover:bg-secondary transition-colors rounded-xl"
-                >
-                  <div className="flex items-center gap-3">
-                    <AtSign className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-medium">아이디 변경</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">{userInfo?.username || '미설정'}</span>
-                    <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${showUsernameEditor ? 'rotate-90' : ''}`} />
-                  </div>
-                </button>
-
-                {showUsernameEditor && (
-                  <div className="p-4 border-t border-border space-y-3">
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      2~15자 한글/영문/숫자/언더스코어(_)만 사용 가능해요.
-                    </p>
-
-                    {/* 입력 + 중복확인 */}
-                    <div className="flex gap-2">
-                      <input
-                        ref={usernameInputRef}
-                        type="text"
-                        value={usernameInput}
-                        onChange={(e) => handleUsernameInputChange(e.target.value)}
-                        placeholder="새 아이디"
-                        maxLength={15}
-                        className="flex-1 px-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                      />
-                      <button
-                        onClick={handleCheckUsername}
-                        disabled={!usernameInput || usernameChecking || !!validateUsername(usernameInput)}
-                        className="px-3 py-2 bg-primary text-primary-foreground text-xs rounded-lg font-medium disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        {usernameChecking ? '확인중...' : '중복확인'}
-                      </button>
-                    </div>
-
-                    {/* 검증 결과 메시지 */}
-                    {usernameError && (
-                      <div className="flex items-center gap-1.5 text-[11px] text-destructive">
-                        <AlertCircle className="w-3 h-3" />
-                        <span>{usernameError}</span>
-                      </div>
-                    )}
-                    {usernameAvailable === true && (
-                      <div className="flex items-center gap-1.5 text-[11px] text-green-600">
-                        <Check className="w-3 h-3" />
-                        <span>사용 가능한 아이디예요</span>
-                      </div>
-                    )}
-
-                    {/* 저장 버튼 */}
-                    <button
-                      onClick={handleSaveUsername}
-                      disabled={usernameAvailable !== true || usernameSaving}
-                      className="w-full py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      {usernameSaving ? '저장 중...' : '아이디 저장'}
-                    </button>
-                  </div>
-                )}
-              </div>
 
               {/* 레벨 · 보드 변경 */}
               <div className="bg-card border border-border rounded-xl divide-y divide-border">
@@ -781,6 +722,78 @@ export function MyPage({
 
         </div>
       </div>
+
+      {/* ── 아이디 변경 모달 — 프로필 카드 ✏️ 클릭 시 노출 ── */}
+      {showUsernameEditor && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4"
+          onClick={() => setShowUsernameEditor(false)}
+        >
+          <div
+            className="bg-card rounded-2xl w-full max-w-sm p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 헤더 */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-bold">아이디 변경</h3>
+              <button
+                onClick={() => setShowUsernameEditor(false)}
+                className="p-1 hover:bg-secondary rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* 안내 문구 */}
+            <p className="text-[11px] text-muted-foreground leading-relaxed mb-3">
+              2~15자 한글/영문/숫자/언더스코어(_)만 사용 가능해요.
+            </p>
+
+            {/* 입력 + 중복확인 */}
+            <div className="flex gap-2 mb-2">
+              <input
+                ref={usernameInputRef}
+                type="text"
+                value={usernameInput}
+                onChange={(e) => handleUsernameInputChange(e.target.value)}
+                placeholder="새 아이디"
+                maxLength={15}
+                className="flex-1 px-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+              <button
+                onClick={handleCheckUsername}
+                disabled={!usernameInput || usernameChecking || !!validateUsername(usernameInput)}
+                className="px-3 py-2 bg-primary text-primary-foreground text-xs rounded-lg font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {usernameChecking ? '확인중...' : '중복확인'}
+              </button>
+            </div>
+
+            {/* 검증 결과 메시지 */}
+            {usernameError && (
+              <div className="flex items-center gap-1.5 text-[11px] text-destructive mb-3">
+                <AlertCircle className="w-3 h-3" />
+                <span>{usernameError}</span>
+              </div>
+            )}
+            {usernameAvailable === true && (
+              <div className="flex items-center gap-1.5 text-[11px] text-green-600 mb-3">
+                <Check className="w-3 h-3" />
+                <span>사용 가능한 아이디예요</span>
+              </div>
+            )}
+
+            {/* 저장 버튼 */}
+            <button
+              onClick={handleSaveUsername}
+              disabled={usernameAvailable !== true || usernameSaving}
+              className="w-full py-3 bg-primary text-primary-foreground rounded-xl text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed mt-2"
+            >
+              {usernameSaving ? '저장 중...' : '아이디 저장'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── 뱃지 상세 팝업 ── */}
       {selectedBadge && (
