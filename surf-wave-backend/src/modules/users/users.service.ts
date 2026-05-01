@@ -120,29 +120,38 @@ export class UsersService {
    * 카카오 가입 시 닉네임 자동 저장 위해 사용.
    * 예) "포웅" 충돌 시 → "포웅1", "포웅2", ...
    * 최대 15자 제한이라 base가 길면 자르고 시도.
+   *
+   * @returns
+   * - username: 최종 부여될 아이디
+   * - usedFallback: 시퀀스로 fallback됐으면 true (정규식 위반 닉네임/999회 충돌 등)
+   *   → 프론트에서 "아이디 설정하기" 팝업 노출 판단에 사용
    */
-  async findAvailableUsername(base: string): Promise<string> {
+  async findAvailableUsername(
+    base: string,
+  ): Promise<{ username: string; usedFallback: boolean }> {
     /** 정규식에 안 맞는 문자 제거 후 최대 13자로 자름 (suffix 2자리 여유) */
     const sanitized = base.replace(/[^a-zA-Z0-9_가-힣]/g, '').slice(0, 13);
 
-    /** sanitize 결과 2자 미만이면 fallback (카카오에서 닉네임이 특수문자뿐인 경우) */
+    /** sanitize 결과 2자 미만이면 fallback (카카오에서 닉네임이 특수문자/이모지뿐인 경우) */
     if (sanitized.length < 2) {
-      return this.nextGoogleTempUsername();
+      const username = await this.nextGoogleTempUsername();
+      return { username, usedFallback: true };
     }
 
     /** base 그대로 사용 가능? */
     const exists = await this.findByUsername(sanitized);
-    if (!exists) return sanitized;
+    if (!exists) return { username: sanitized, usedFallback: false };
 
     /** 1~999 까지 suffix 시도 */
     for (let i = 1; i <= 999; i++) {
       const candidate = `${sanitized}${i}`.slice(0, 15);
       const c = await this.findByUsername(candidate);
-      if (!c) return candidate;
+      if (!c) return { username: candidate, usedFallback: false };
     }
 
     /** 999까지도 충돌 시 시퀀스 fallback (사실상 거의 발생 안 함) */
-    return this.nextGoogleTempUsername();
+    const username = await this.nextGoogleTempUsername();
+    return { username, usedFallback: true };
   }
 
   /** update - 사용자 정보 부분 업데이트 (프로필 수정) */
