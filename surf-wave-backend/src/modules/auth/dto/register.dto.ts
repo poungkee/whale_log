@@ -4,8 +4,8 @@
  *
  * 유효성 검증 규칙:
  * - email: 이메일 형식 필수 (예: user@example.com)
- * - password: 최소 6자 이상 문자열
- * - nickname: 2~30자 문자열 (서비스 내 표시 이름, 고유값)
+ * - password: 최소 8자, 영문+숫자 조합
+ * - username: 2~15자 (한글/영문/숫자/언더스코어), 고유값
  *
  * 사용처: POST /api/v1/auth/register
  */
@@ -14,12 +14,12 @@ import { IsString, IsEmail, IsNotEmpty, MinLength, MaxLength, Matches } from 'cl
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterDto {
-  /** 로그인 아이디 - 영문/숫자/언더스코어 조합, 4~20자, 고유값 */
-  @ApiProperty({ description: '로그인 아이디 (4~20자, 영문/숫자/언더스코어)', example: 'surfer_kim' })
+  /** 로그인 아이디 - 한글/영문/숫자/언더스코어 조합, 2~15자, 고유값 */
+  @ApiProperty({ description: '로그인 아이디 (2~15자, 한글/영문/숫자/언더스코어)', example: 'surfer_kim' })
   @IsString({ message: '아이디는 문자열이어야 합니다' })
-  @MinLength(4, { message: '아이디는 최소 4자 이상이어야 합니다' })
-  @MaxLength(20, { message: '아이디는 최대 20자까지 가능합니다' })
-  @Matches(/^[a-zA-Z0-9_]+$/, { message: '아이디는 영문, 숫자, 언더스코어(_)만 사용 가능합니다' })
+  @MinLength(2, { message: '아이디는 최소 2자 이상이어야 합니다' })
+  @MaxLength(15, { message: '아이디는 최대 15자까지 가능합니다' })
+  @Matches(/^[a-zA-Z0-9_가-힣]+$/, { message: '아이디는 한글, 영문, 숫자, 언더스코어(_)만 사용 가능합니다' })
   username: string;
 
   /** 사용자 이메일 - 비밀번호 찾기용 */

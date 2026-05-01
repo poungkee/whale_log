@@ -163,7 +163,8 @@ export class AuthController {
       const result = await this.authService.kakaoLoginWithCode(code, MOBILE_REDIRECT);
       const token = encodeURIComponent(result.accessToken);
       const user = encodeURIComponent(JSON.stringify(result.user));
-      return res.redirect(`whalelog://oauth?token=${token}&user=${user}`);
+      const isNewUser = result.isNewUser ? '1' : '0';
+      return res.redirect(`whalelog://oauth?token=${token}&user=${user}&isNewUser=${isNewUser}`);
     } catch (e) {
       return res.redirect(`whalelog://oauth?error=auth_failed`);
     }
@@ -189,7 +190,8 @@ export class AuthController {
       const result = await this.authService.googleLoginWithCode(code, MOBILE_REDIRECT);
       const token = encodeURIComponent(result.accessToken);
       const user = encodeURIComponent(JSON.stringify(result.user));
-      return res.redirect(`whalelog://oauth?token=${token}&user=${user}`);
+      const isNewUser = result.isNewUser ? '1' : '0';
+      return res.redirect(`whalelog://oauth?token=${token}&user=${user}&isNewUser=${isNewUser}`);
     } catch (e) {
       return res.redirect(`whalelog://oauth?error=auth_failed`);
     }

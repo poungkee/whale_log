@@ -44,10 +44,6 @@ export class User extends BaseEntity {
   @Column({ name: 'password_hash', type: 'varchar', nullable: true })
   passwordHash: string | null;
 
-  /** 자기소개 - 프로필에 표시되는 간단한 소개글 */
-  @Column({ type: 'text', nullable: true })
-  bio: string | null;
-
   /** 프로필 사진 URL - S3에 업로드된 이미지 경로 */
   @Column({ name: 'avatar_url', type: 'varchar', nullable: true })
   avatarUrl: string | null;

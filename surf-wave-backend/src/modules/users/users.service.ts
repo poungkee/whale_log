@@ -96,6 +96,55 @@ export class UsersService {
     return this.userRepository.findOne({ where: { username } });
   }
 
+  /**
+   * 구글 가입자용 임시 username 생성 - "서퍼1", "서퍼2"...
+   *
+   * PostgreSQL Sequence 사용 (google_temp_username_seq) — 동시성 안전.
+   * 시퀀스가 없으면 자동 생성 (운영 DB에서 한 번만 실행).
+   */
+  async nextGoogleTempUsername(): Promise<string> {
+    /** 시퀀스가 없으면 생성 — IF NOT EXISTS로 멱등성 보장 */
+    await this.userRepository.query(
+      `CREATE SEQUENCE IF NOT EXISTS google_temp_username_seq START 1`,
+    );
+    const result = await this.userRepository.query(
+      `SELECT nextval('google_temp_username_seq')::int as seq`,
+    );
+    const num = result[0]?.seq ?? 1;
+    return `서퍼${num}`;
+  }
+
+  /**
+   * 사용 가능한 username 찾기 - base 그대로 사용 가능하면 그대로, 충돌 시 suffix 부여
+   *
+   * 카카오 가입 시 닉네임 자동 저장 위해 사용.
+   * 예) "포웅" 충돌 시 → "포웅1", "포웅2", ...
+   * 최대 15자 제한이라 base가 길면 자르고 시도.
+   */
+  async findAvailableUsername(base: string): Promise<string> {
+    /** 정규식에 안 맞는 문자 제거 후 최대 13자로 자름 (suffix 2자리 여유) */
+    const sanitized = base.replace(/[^a-zA-Z0-9_가-힣]/g, '').slice(0, 13);
+
+    /** sanitize 결과 2자 미만이면 fallback (카카오에서 닉네임이 특수문자뿐인 경우) */
+    if (sanitized.length < 2) {
+      return this.nextGoogleTempUsername();
+    }
+
+    /** base 그대로 사용 가능? */
+    const exists = await this.findByUsername(sanitized);
+    if (!exists) return sanitized;
+
+    /** 1~999 까지 suffix 시도 */
+    for (let i = 1; i <= 999; i++) {
+      const candidate = `${sanitized}${i}`.slice(0, 15);
+      const c = await this.findByUsername(candidate);
+      if (!c) return candidate;
+    }
+
+    /** 999까지도 충돌 시 시퀀스 fallback (사실상 거의 발생 안 함) */
+    return this.nextGoogleTempUsername();
+  }
+
   /** update - 사용자 정보 부분 업데이트 (프로필 수정) */
   async update(id: string, updateData: Partial<User>): Promise<User> {
     await this.userRepository.update(id, updateData);
@@ -150,7 +199,6 @@ export class UsersService {
     id: string;
     username: string | null;
     email: string;
-    bio: string | null;
     avatarUrl: string | null;
     role: string;
     surfLevel: string | null;
@@ -164,7 +212,6 @@ export class UsersService {
       id: user.id,
       username: user.username,
       email: user.email,
-      bio: user.bio,
       avatarUrl: user.avatarUrl,
       role: user.role,
       surfLevel: user.surfLevel,
@@ -180,7 +227,6 @@ export class UsersService {
   async getPublicProfile(userId: string): Promise<{
     id: string;
     username: string | null;
-    bio: string | null;
     avatarUrl: string | null;
     surfLevel: string | null;
     createdAt: Date;
@@ -189,7 +235,6 @@ export class UsersService {
     return {
       id: user.id,
       username: user.username,
-      bio: user.bio,
       avatarUrl: user.avatarUrl,
       surfLevel: user.surfLevel,
       createdAt: user.createdAt,

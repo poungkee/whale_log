@@ -37,6 +37,7 @@ import { BadgeEarnedPopup } from './components/BadgeEarnedPopup';
 import { BadgeProvider, useBadgeQueue, useBadgeNotify } from './contexts/BadgeContext';
 import { GlobalAlertBanner, AlertEntryModal } from './components/WeatherAlertBanner';
 import type { SurfAlertSummary } from './components/WeatherAlertBanner';
+import { UsernameSetupDialog } from './components/UsernameSetupDialog';
 import { api } from './lib/api';
 
 function AppInner() {
@@ -56,6 +57,11 @@ function AppInner() {
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   /** 프로필 탭 서브 페이지 - 'main'(마이페이지) / 'diary'(서핑 다이어리) / 'poseTraining'(자세 연습) */
   const [profileSubPage, setProfileSubPage] = useState<'main' | 'diary' | 'poseTraining'>('main');
+
+  /** 구글 신규 가입자 아이디 설정 팝업 노출 여부 - isNewUser+GOOGLE일 때 true */
+  const [showUsernameSetup, setShowUsernameSetup] = useState(false);
+  /** 마이페이지에서 아이디 변경 섹션 자동 열기 플래그 - "지금 설정" 클릭 시 true */
+  const [autoOpenUsernameEditor, setAutoOpenUsernameEditor] = useState(false);
 
   /** 기상청 기상특보 — 서핑 관련 특보 요약 */
   const [surfAlert, setSurfAlert] = useState<SurfAlertSummary | null>(null);
@@ -304,6 +310,15 @@ function AppInner() {
 
     /** 로그인 성공 시 즐겨찾기 목록도 가져오기 */
     fetchFavorites(authData.accessToken);
+
+    /**
+     * 구글 신규 가입자 → 아이디 설정 안내 팝업 노출 플래그 ON
+     * 카카오는 닉네임이 자동 부여되므로 팝업 안 띄움
+     * (실제 팝업은 메인 진입 후 표시 — 온보딩 도중에는 가리지 않게)
+     */
+    if (authData.isNewUser && authData.user.provider === 'GOOGLE') {
+      setShowUsernameSetup(true);
+    }
 
     /** surfLevel + boardType 유무에 따라 화면 전환 결정 */
     if (authData.user.surfLevel) {
@@ -626,6 +641,12 @@ function AppInner() {
             onNavigateToDiary={() => setProfileSubPage('diary')}
             onNavigateToPoseTraining={() => setProfileSubPage('poseTraining')}
             onNavigateToAdmin={() => setScreen('admin')}
+            autoOpenUsernameEditor={autoOpenUsernameEditor}
+            onUsernameEditorOpened={() => setAutoOpenUsernameEditor(false)}
+            onUserInfoUpdated={(updated) => {
+              setUserInfo(updated);
+              localStorage.setItem('user', JSON.stringify(updated));
+            }}
           />
         );
       case 'explore':
@@ -679,6 +700,20 @@ function AppInner() {
         }
         setMainTab(tab);
       }} />
+
+      {/* ── 구글 신규 가입자 아이디 설정 안내 팝업 ── */}
+      {showUsernameSetup && screen === 'main' && (
+        <UsernameSetupDialog
+          currentUsername={userInfo?.username ?? null}
+          onSetupNow={() => {
+            setShowUsernameSetup(false);
+            setMainTab('profile');
+            setProfileSubPage('main');
+            setAutoOpenUsernameEditor(true);
+          }}
+          onLater={() => setShowUsernameSetup(false)}
+        />
+      )}
 
       {/* ── 뱃지 획득 팝업 ── */}
       <BadgePopupRenderer />

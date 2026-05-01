@@ -10,23 +10,34 @@ interface User {
   role: string;
   surfLevel: string | null;
   boardType: string | null;
+  /** 소셜 로그인 제공자 - 'GOOGLE' | 'KAKAO' | null (일반 가입자) */
+  provider?: string | null;
 }
 
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  /** 구글 신규 가입자 아이디 설정 팝업 노출 여부 — 로그인 직후 true로 설정 */
+  showUsernameSetup: boolean;
   initialize: () => Promise<void>;
-  login: (token: string, user: User) => Promise<void>;
+  /**
+   * 로그인 처리
+   * @param isNewUser - 소셜 로그인 신규 가입자 여부 (구글 + true면 팝업 노출)
+   */
+  login: (token: string, user: User, isNewUser?: boolean) => Promise<void>;
   logout: () => Promise<void>;
   // 프로필 부분 업데이트 (레벨/보드 변경 등)
   updateUser: (partial: Partial<User>) => void;
+  /** 아이디 설정 팝업 닫기 — [나중에] 또는 [지금 설정] 클릭 시 호출 */
+  dismissUsernameSetup: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
   isLoading: true,
+  showUsernameSetup: false,
 
   initialize: async () => {
     try {
@@ -44,20 +55,29 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  login: async (token: string, user: User) => {
+  login: async (token: string, user: User, isNewUser?: boolean) => {
     await Promise.all([
       storage.setToken(token),
       storage.setUser(user),
     ]);
-    set({ user, isAuthenticated: true, isLoading: false });
+    /** 구글 신규 가입자만 아이디 설정 팝업 노출 (카카오는 닉네임 자동 부여됨) */
+    const showSetup = !!isNewUser && user.provider === 'GOOGLE';
+    set({ user, isAuthenticated: true, isLoading: false, showUsernameSetup: showSetup });
   },
 
   logout: async () => {
     await storage.clearAll();
-    set({ user: null, isAuthenticated: false, isLoading: false });
+    set({ user: null, isAuthenticated: false, isLoading: false, showUsernameSetup: false });
   },
 
   updateUser: (partial) => {
-    set(s => ({ user: s.user ? { ...s.user, ...partial } : s.user }));
+    set(s => {
+      const updated = s.user ? { ...s.user, ...partial } : s.user;
+      /** 변경된 user를 storage에도 반영 */
+      if (updated) storage.setUser(updated).catch(() => {});
+      return { user: updated };
+    });
   },
+
+  dismissUsernameSetup: () => set({ showUsernameSetup: false }),
 }));

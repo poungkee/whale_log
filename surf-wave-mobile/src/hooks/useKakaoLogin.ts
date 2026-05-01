@@ -40,11 +40,14 @@ export function useKakaoLogin() {
 
         const tokenMatch = url.match(/[?&]token=([^&]+)/);
         const userMatch = url.match(/[?&]user=([^&]+)/);
+        /** 신규 가입자 플래그 — 카카오는 닉네임 자동 부여라 팝업 안 띄움. 일관성 위해 파싱만 함 */
+        const isNewUserMatch = url.match(/[?&]isNewUser=([01])/);
 
         if (tokenMatch && userMatch) {
           const accessToken = decodeURIComponent(tokenMatch[1]);
           const user = JSON.parse(decodeURIComponent(userMatch[1]));
-          await login(accessToken, user);
+          const isNewUser = isNewUserMatch?.[1] === '1';
+          await login(accessToken, user, isNewUser);
         } else {
           Alert.alert('카카오 로그인 실패', '토큰을 받지 못했어요.');
         }

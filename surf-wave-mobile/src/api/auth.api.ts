@@ -22,7 +22,12 @@ export interface AuthResponse {
     role: string;
     surfLevel: string | null;
     boardType: string | null;
+    /** 소셜 로그인 제공자 - 'GOOGLE' | 'KAKAO' | null (일반 가입자) */
+    provider: string | null;
+    notificationsEnabled?: boolean;
   };
+  /** 신규 가입자 여부 - 소셜 로그인 첫 가입 시 true (구글: 아이디 설정 팝업 노출용) */
+  isNewUser?: boolean;
 }
 
 export const authApi = {

@@ -256,25 +256,50 @@ export class AuthService {
 
   /**
    * 소셜 로그인/가입 공통 처리 (Google, Kakao 공용)
-   * 신규 소셜 가입 시 username은 null — 프론트에서 온보딩(아이디 설정)으로 유도
+   *
+   * username 자동 부여 정책:
+   * - 카카오: 받아온 닉네임을 username으로 자동 저장 (충돌 시 "포웅1" suffix)
+   * - 구글: PostgreSQL 시퀀스로 "서퍼1", "서퍼2"... 자동 부여
+   *
+   * 응답에 isNewUser 포함:
+   * - 신규 가입자(첫 소셜 로그인) → 프론트에서 아이디 설정 팝업 노출 (구글만)
+   *
+   * @param socialId - 소셜 ID (google_xxx, kakao_xxx)
+   * @param email - 소셜 계정 이메일
+   * @param provider - GOOGLE | KAKAO
+   * @param kakaoNickname - 카카오에서 받아온 닉네임 (카카오 전용)
    */
-  async socialLogin(socialId: string, email: string, provider: 'GOOGLE' | 'KAKAO') {
+  async socialLogin(
+    socialId: string,
+    email: string,
+    provider: 'GOOGLE' | 'KAKAO',
+    kakaoNickname?: string,
+  ) {
     let user = await this.usersService.findByFirebaseUid(socialId);
+    let isNewUser = false;
 
     if (!user) {
       const existingEmail = await this.usersService.findByEmail(email);
 
       if (existingEmail) {
+        /** 기존 이메일 가입자 → 소셜 연동만 추가 */
         await this.usersService.update(existingEmail.id, {
           firebaseUid: socialId,
           provider: provider as any,
         });
         user = await this.usersService.findById(existingEmail.id);
       } else {
+        /** 완전 신규 가입 — username 자동 부여 */
+        isNewUser = true;
+        const autoUsername = provider === 'KAKAO' && kakaoNickname
+          ? await this.usersService.findAvailableUsername(kakaoNickname)
+          : await this.usersService.nextGoogleTempUsername();
+
         user = await this.usersService.create({
           firebaseUid: socialId,
           email,
           provider: provider as any,
+          username: autoUsername,
         });
       }
     }
@@ -285,7 +310,7 @@ export class AuthService {
 
     await this.usersService.updateLastLogin(user.id);
     const token = this.generateToken(user);
-    return { accessToken: token, user: this.sanitizeUser(user) };
+    return { accessToken: token, user: this.sanitizeUser(user), isNewUser };
   }
 
   /** Google 소셜 로그인 */
@@ -360,7 +385,7 @@ export class AuthService {
     }
   }
 
-  /** Kakao 소셜 로그인 */
+  /** Kakao 소셜 로그인 — 닉네임도 함께 가져와서 username 자동 저장에 활용 */
   async kakaoLogin(accessToken: string) {
     try {
       const { data } = await firstValueFrom(
@@ -373,7 +398,13 @@ export class AuthService {
       const email = data.kakao_account?.email;
       const finalEmail = email || `kakao_${data.id}@kakao.user`;
 
-      return this.socialLogin(kakaoId, finalEmail, 'KAKAO');
+      /** 카카오 닉네임 추출 — kakao_account.profile.nickname 우선, 없으면 properties.nickname */
+      const nickname =
+        data.kakao_account?.profile?.nickname ||
+        data.properties?.nickname ||
+        undefined;
+
+      return this.socialLogin(kakaoId, finalEmail, 'KAKAO', nickname);
     } catch (error) {
       if (error instanceof UnauthorizedException || error instanceof ConflictException) {
         throw error;

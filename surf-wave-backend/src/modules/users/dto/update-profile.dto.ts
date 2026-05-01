@@ -6,10 +6,10 @@
  * 모든 필드가 선택적(optional)이므로 변경하고 싶은 필드만 전달하면 됩니다.
  *
  * 수정 가능한 필드:
- * - nickname: 닉네임 (2~30자)
- * - bio: 자기소개 (최대 500자)
+ * - username: 아이디 (2~15자, 한글/영문/숫자/언더스코어)
  * - avatarUrl: 프로필 사진 URL (S3 업로드 후 URL)
  * - surfLevel: 서핑 레벨 (BEGINNER | INTERMEDIATE | ADVANCED | EXPERT)
+ * - boardType, boardSizeFt: 보드 정보
  * - notificationsEnabled: 푸시 알림 수신 여부
  */
 
@@ -19,21 +19,14 @@ import { Difficulty } from '../../../common/enums/difficulty.enum';
 import { UserBoardType } from '../../../common/enums/user-board-type.enum';
 
 export class UpdateProfileDto {
-  /** 아이디(userId) 변경 - 소셜 로그인 후 온보딩 시 설정 (4~20자, 영문/숫자/언더스코어) */
-  @ApiPropertyOptional({ description: '아이디 (4~20자, 영문/숫자/언더스코어)', minLength: 4, maxLength: 20, example: 'surfer_kim' })
+  /** 아이디(userId) 변경 - 소셜 로그인 후 마이페이지에서 설정 (2~15자, 한글/영문/숫자/언더스코어) */
+  @ApiPropertyOptional({ description: '아이디 (2~15자, 한글/영문/숫자/언더스코어)', minLength: 2, maxLength: 15, example: 'surfer_kim' })
   @IsOptional()
   @IsString({ message: '아이디는 문자열이어야 합니다' })
-  @MinLength(4, { message: '아이디는 최소 4자 이상이어야 합니다' })
-  @MaxLength(20, { message: '아이디는 최대 20자까지 가능합니다' })
-  @Matches(/^[a-zA-Z0-9_]+$/, { message: '아이디는 영문, 숫자, 언더스코어(_)만 사용 가능합니다' })
+  @MinLength(2, { message: '아이디는 최소 2자 이상이어야 합니다' })
+  @MaxLength(15, { message: '아이디는 최대 15자까지 가능합니다' })
+  @Matches(/^[a-zA-Z0-9_가-힣]+$/, { message: '아이디는 한글, 영문, 숫자, 언더스코어(_)만 사용 가능합니다' })
   username?: string;
-
-  /** 자기소개 변경 - 프로필에 표시되는 소개글 (최대 500자) */
-  @ApiPropertyOptional({ description: '자기소개 (최대 500자)', maxLength: 500 })
-  @IsOptional()
-  @IsString({ message: '자기소개는 문자열이어야 합니다' })
-  @MaxLength(500, { message: '자기소개는 최대 500자까지 가능합니다' })
-  bio?: string;
 
   /** 프로필 사진 URL 변경 - S3에 업로드한 이미지 URL */
   @ApiPropertyOptional({ description: '프로필 사진 URL' })

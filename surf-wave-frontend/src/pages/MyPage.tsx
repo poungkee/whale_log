@@ -11,8 +11,8 @@
  * - 설정 시트: 다이어리·자세연습 바로가기, 알림, 앱정보, 관리자, 로그아웃
  */
 
-import { Settings, ChevronRight, Waves, Clock, MapPin, Star, BookOpen, Camera, Shield, Trophy, Bell, X } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
+import { Settings, ChevronRight, Waves, Clock, MapPin, Star, BookOpen, Camera, Shield, Trophy, Bell, X, AtSign, Check, AlertCircle } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import type { SurfLevel, BoardType, UserInfo } from '../types';
 import { api } from '../lib/api';
 
@@ -26,6 +26,12 @@ interface MyPageProps {
   onNavigateToDiary: () => void;
   onNavigateToPoseTraining?: () => void;
   onNavigateToAdmin?: () => void;
+  /** 아이디 변경 섹션 자동 열기 - 구글 가입자 팝업 [지금 설정]에서 true로 전달됨 */
+  autoOpenUsernameEditor?: boolean;
+  /** 자동 열기 처리 완료 알림 - App.tsx의 플래그 리셋용 */
+  onUsernameEditorOpened?: () => void;
+  /** 사용자 정보 갱신 알림 - 아이디/기타 프로필 변경 후 부모 상태 동기화용 */
+  onUserInfoUpdated?: (updated: UserInfo) => void;
 }
 
 interface DiaryEntry {
@@ -137,6 +143,7 @@ const ALL_BOARDS: BoardType[] = ['LONGBOARD', 'FUNBOARD', 'MIDLENGTH', 'FISH', '
 export function MyPage({
   surfLevel, userInfo, onLogout, onLevelChange, onBoardTypeChange,
   onNotificationToggle, onNavigateToDiary, onNavigateToPoseTraining, onNavigateToAdmin,
+  autoOpenUsernameEditor, onUsernameEditorOpened, onUserInfoUpdated,
 }: MyPageProps) {
   /** 현재 내부 탭 */
   const [activeTab, setActiveTab] = useState<MyInfoTab>('profile');
@@ -160,6 +167,105 @@ export function MyPage({
   const currentBoard: BoardType = userInfo?.boardType ?? 'UNSET';
   const currentBoardFt = userInfo?.boardSizeFt;
   const [boardFtInput, setBoardFtInput] = useState(currentBoardFt?.toString() || '');
+
+  /** ───── 아이디(username) 변경 상태 ───── */
+  /** 아이디 변경 섹션 펼침 여부 (구글 신규가입자는 자동 펼침) */
+  const [showUsernameEditor, setShowUsernameEditor] = useState(false);
+  /** 입력 중인 새 아이디 */
+  const [usernameInput, setUsernameInput] = useState('');
+  /** 중복 확인 결과 - null=미확인, true=사용가능, false=중복 */
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  /** 중복 확인/저장 진행 중 상태 */
+  const [usernameChecking, setUsernameChecking] = useState(false);
+  const [usernameSaving, setUsernameSaving] = useState(false);
+  /** 에러 메시지 (정규식 위반, 길이 등) */
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  /** 입력 필드 ref - 자동 펼침 시 포커스 이동 */
+  const usernameInputRef = useRef<HTMLInputElement>(null);
+
+  /** App.tsx에서 autoOpenUsernameEditor=true로 전달되면 자동 펼침 + 포커스 */
+  useEffect(() => {
+    if (autoOpenUsernameEditor) {
+      setActiveTab('profile');
+      setShowUsernameEditor(true);
+      setTimeout(() => usernameInputRef.current?.focus(), 100);
+      onUsernameEditorOpened?.();
+    }
+  }, [autoOpenUsernameEditor, onUsernameEditorOpened]);
+
+  /** 아이디 정규식 검증 — 백엔드 DTO와 동일 (2~15자, 한글/영문/숫자/언더스코어) */
+  const validateUsername = (val: string): string | null => {
+    if (val.length < 2) return '아이디는 최소 2자 이상이어야 합니다';
+    if (val.length > 15) return '아이디는 최대 15자까지 가능합니다';
+    if (!/^[a-zA-Z0-9_가-힣]+$/.test(val)) return '한글, 영문, 숫자, 언더스코어(_)만 사용 가능합니다';
+    return null;
+  };
+
+  /** 입력 변경 시 - 검증 + 중복 확인 결과 초기화 */
+  const handleUsernameInputChange = (val: string) => {
+    setUsernameInput(val);
+    setUsernameAvailable(null);
+    setUsernameError(val ? validateUsername(val) : null);
+  };
+
+  /** 아이디 중복 확인 - POST /api/v1/auth/check-username */
+  const handleCheckUsername = async () => {
+    const err = validateUsername(usernameInput);
+    if (err) { setUsernameError(err); return; }
+    if (usernameInput === userInfo?.username) {
+      setUsernameError('현재 아이디와 동일합니다');
+      return;
+    }
+    setUsernameChecking(true);
+    setUsernameError(null);
+    try {
+      const res = await fetch(api('/api/v1/auth/check-username'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: usernameInput }),
+      });
+      const data = await res.json();
+      setUsernameAvailable(data.available);
+      if (!data.available) setUsernameError('이미 사용 중인 아이디입니다');
+    } catch {
+      setUsernameError('중복 확인 중 오류가 발생했습니다');
+    } finally {
+      setUsernameChecking(false);
+    }
+  };
+
+  /** 아이디 저장 - PATCH /api/v1/users/me */
+  const handleSaveUsername = async () => {
+    if (usernameAvailable !== true) return;
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+    setUsernameSaving(true);
+    try {
+      const res = await fetch(api('/api/v1/users/me'), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ username: usernameInput }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setUsernameError(data?.message || '저장에 실패했습니다');
+        return;
+      }
+      const updated = await res.json();
+      /** 부모(App.tsx)에 갱신된 userInfo 전달 → 전체 화면 동기화 */
+      if (userInfo) {
+        onUserInfoUpdated?.({ ...userInfo, username: updated.username });
+      }
+      /** 입력 초기화 + 섹션 닫기 */
+      setUsernameInput('');
+      setUsernameAvailable(null);
+      setShowUsernameEditor(false);
+    } catch {
+      setUsernameError('저장 중 오류가 발생했습니다');
+    } finally {
+      setUsernameSaving(false);
+    }
+  };
 
   /** 다이어리 데이터 조회 (통계 계산용) */
   useEffect(() => {
@@ -328,6 +434,81 @@ export function MyPage({
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </button>
+
+              {/* ───── 아이디 변경 ───── */}
+              <div className="bg-card border border-border rounded-xl">
+                <button
+                  onClick={() => {
+                    const next = !showUsernameEditor;
+                    setShowUsernameEditor(next);
+                    if (next) {
+                      setUsernameInput(userInfo?.username || '');
+                      setTimeout(() => usernameInputRef.current?.focus(), 100);
+                    }
+                  }}
+                  className="w-full flex items-center justify-between p-4 hover:bg-secondary transition-colors rounded-xl"
+                >
+                  <div className="flex items-center gap-3">
+                    <AtSign className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium">아이디 변경</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">{userInfo?.username || '미설정'}</span>
+                    <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${showUsernameEditor ? 'rotate-90' : ''}`} />
+                  </div>
+                </button>
+
+                {showUsernameEditor && (
+                  <div className="p-4 border-t border-border space-y-3">
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      2~15자 한글/영문/숫자/언더스코어(_)만 사용 가능해요.
+                    </p>
+
+                    {/* 입력 + 중복확인 */}
+                    <div className="flex gap-2">
+                      <input
+                        ref={usernameInputRef}
+                        type="text"
+                        value={usernameInput}
+                        onChange={(e) => handleUsernameInputChange(e.target.value)}
+                        placeholder="새 아이디"
+                        maxLength={15}
+                        className="flex-1 px-3 py-2 bg-secondary border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                      />
+                      <button
+                        onClick={handleCheckUsername}
+                        disabled={!usernameInput || usernameChecking || !!validateUsername(usernameInput)}
+                        className="px-3 py-2 bg-primary text-primary-foreground text-xs rounded-lg font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        {usernameChecking ? '확인중...' : '중복확인'}
+                      </button>
+                    </div>
+
+                    {/* 검증 결과 메시지 */}
+                    {usernameError && (
+                      <div className="flex items-center gap-1.5 text-[11px] text-destructive">
+                        <AlertCircle className="w-3 h-3" />
+                        <span>{usernameError}</span>
+                      </div>
+                    )}
+                    {usernameAvailable === true && (
+                      <div className="flex items-center gap-1.5 text-[11px] text-green-600">
+                        <Check className="w-3 h-3" />
+                        <span>사용 가능한 아이디예요</span>
+                      </div>
+                    )}
+
+                    {/* 저장 버튼 */}
+                    <button
+                      onClick={handleSaveUsername}
+                      disabled={usernameAvailable !== true || usernameSaving}
+                      className="w-full py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {usernameSaving ? '저장 중...' : '아이디 저장'}
+                    </button>
+                  </div>
+                )}
+              </div>
 
               {/* 레벨 · 보드 변경 */}
               <div className="bg-card border border-border rounded-xl divide-y divide-border">

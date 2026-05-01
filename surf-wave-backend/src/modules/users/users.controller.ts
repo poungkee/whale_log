@@ -21,6 +21,7 @@ import {
   Param,
   Body,
   ParseUUIDPipe,
+  ConflictException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
@@ -65,8 +66,8 @@ export class UsersController {
    *
    * 요청 예시:
    * - 레벨 선택: { "surfLevel": "BEGINNER" }
-   * - 닉네임 변경: { "nickname": "새닉네임" }
-   * - 여러 필드 동시 변경: { "nickname": "파도왕", "bio": "서핑 좋아요" }
+   * - 아이디 변경: { "username": "surfer_kim" }
+   * - 여러 필드 동시 변경: { "username": "파도왕", "boardType": "LONGBOARD" }
    *
    * @param user - JWT에서 추출한 사용자 정보
    * @param updateProfileDto - 수정할 프로필 데이터 (모든 필드 선택적)
@@ -78,6 +79,14 @@ export class UsersController {
     @CurrentUser() user: RequestUser,
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
+    /** username 변경 요청이면 중복 체크 — 다른 사용자가 이미 사용 중이면 409 */
+    if (updateProfileDto.username) {
+      const existing = await this.usersService.findByUsername(updateProfileDto.username);
+      if (existing && existing.id !== user.id) {
+        throw new ConflictException('이미 사용 중인 아이디입니다');
+      }
+    }
+
     const updated = await this.usersService.update(user.id, updateProfileDto);
 
     /** 뱃지 체크 — 레벨/보드 등 프로필 변경 시 PROFILE_COMPLETE, PRO_SURFER 체크 */
@@ -130,7 +139,7 @@ export class UsersController {
    * 지정한 사용자 ID의 공개 프로필 정보만 반환합니다.
    * 비공개 정보(이메일, FCM 토큰 등)는 제외됩니다.
    *
-   * 응답: { id, nickname, bio, avatarUrl, surfLevel, createdAt }
+   * 응답: { id, username, avatarUrl, surfLevel, createdAt }
    *
    * @param userId - 조회할 사용자의 UUID
    */

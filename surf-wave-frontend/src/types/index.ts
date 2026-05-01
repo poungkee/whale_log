@@ -93,6 +93,8 @@ export interface AuthResponse {
   accessToken: string;
   /** 사용자 정보 - 민감 정보(passwordHash 등)가 제거된 안전한 사용자 데이터 */
   user: UserInfo;
+  /** 신규 가입자 여부 - 소셜 로그인에서 첫 가입 시 true (구글: 아이디 설정 팝업 노출용) */
+  isNewUser?: boolean;
 }
 
 /**

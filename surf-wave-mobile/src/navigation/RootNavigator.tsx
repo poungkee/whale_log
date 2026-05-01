@@ -13,6 +13,8 @@ import {
   AlertEntryModal,
   type SurfAlertSummary,
 } from '../components/WeatherAlertBanner';
+import UsernameSetupDialog from '../components/UsernameSetupDialog';
+import { navigationRef } from '../App';
 import { View, StyleSheet } from 'react-native';
 
 // 알림 핸들러 설정 — 앱 포그라운드에서도 알림 표시
@@ -29,7 +31,7 @@ Notifications.setNotificationHandler({
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const RootNavigator: React.FC = () => {
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, showUsernameSetup, dismissUsernameSetup } = useAuthStore();
 
   // ── 기상특보 상태 ──────────────────────────────────────────────────
   const [surfAlert, setSurfAlert] = useState<SurfAlertSummary | null>(null);
@@ -135,6 +137,23 @@ const RootNavigator: React.FC = () => {
           )}
         </Stack.Navigator>
       </View>
+
+      {/* ── 구글 신규 가입자 아이디 설정 안내 모달 ── */}
+      <UsernameSetupDialog
+        visible={showUsernameSetup && isAuthenticated}
+        currentUsername={user?.username ?? null}
+        onSetupNow={() => {
+          dismissUsernameSetup();
+          /** 마이페이지 탭 → 프로필 편집 화면으로 이동 (중첩 네비게이터 deep link) */
+          if (navigationRef.isReady()) {
+            (navigationRef.navigate as any)('MainTab', {
+              screen: 'MyPageTab',
+              params: { screen: 'EditProfile' },
+            });
+          }
+        }}
+        onLater={dismissUsernameSetup}
+      />
     </View>
   );
 };
