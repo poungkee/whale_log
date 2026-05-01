@@ -16,6 +16,8 @@ const DiaryStack: React.FC = () => {
         headerStyle: { backgroundColor: colors.surface },
         headerTintColor: colors.text,
         headerTitleStyle: { fontWeight: '700' },
+        /** iOS 백 라벨 숨김 — 영문 라우트 이름("DiaryList")이 노출되지 않도록 */
+        headerBackTitle: '',
       }}
     >
       <Stack.Screen name="DiaryList" component={DiaryListScreen} options={{ headerShown: false }} />
