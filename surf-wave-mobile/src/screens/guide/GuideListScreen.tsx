@@ -289,13 +289,15 @@ const styles = StyleSheet.create({
   title: { ...typography.h2, color: colors.text, fontWeight: '700' },
   subtitle: { ...typography.body2, color: colors.textSecondary, marginTop: 2 },
 
-  tabsScroll: { maxHeight: 56 },
+  tabsScroll: { maxHeight: 56, flexGrow: 0 },
   tabsContent: { paddingHorizontal: spacing.lg, gap: spacing.sm, paddingVertical: spacing.sm },
   categoryTab: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: spacing.md, paddingVertical: 7,
     borderRadius: 20, backgroundColor: colors.surface,
     borderWidth: 1, borderColor: colors.border,
+    /** flexShrink: 0 — ScrollView horizontal 안에서 탭이 압축되지 않고 본인 폭 유지하도록 */
+    flexShrink: 0,
   },
   categoryLabel: { ...typography.caption, color: colors.textSecondary, fontWeight: '500' },
 

@@ -204,9 +204,13 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const [activeTab, setActiveTab] = useState<DetailTab>('wave');
 
   // ── 예보 데이터 ──────────────────────────────────────────────
+  /**
+   * level 파라미터 제거 — 사용자 레벨에 안 맞는 스팟(예: BEGINNER가 발리 고급 스팟)도
+   * 상세 화면에서는 봐야 함. 레벨 필터는 홈 추천 리스트에만 적용.
+   */
   const { data: dashData, isLoading } = useQuery<{ spots: SpotForecast[] }>({
-    queryKey: ['dashboard', level],
-    queryFn: () => api.get('/dashboard/forecasts', { params: { level } }).then(r => r.data),
+    queryKey: ['dashboard', 'all'],
+    queryFn: () => api.get('/dashboard/forecasts').then(r => r.data),
     staleTime: 15 * 60 * 1000,
   });
   const spotData = dashData?.spots.find(s => s.spot.id === spotId);

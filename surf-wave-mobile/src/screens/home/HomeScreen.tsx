@@ -436,7 +436,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <Search size={15} color={colors.textTertiary} />
         <TextInput
           style={styles.searchInput}
-          placeholder="스팟 이름, 지역 검색... (짱구, 양양 등)"
+          placeholder="스팟 또는 지역 검색"
           placeholderTextColor={colors.textTertiary}
           value={searchQuery}
           onChangeText={setSearchQuery}
