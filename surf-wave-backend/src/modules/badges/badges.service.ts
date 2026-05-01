@@ -446,13 +446,24 @@ export class BadgesService {
     if (read >= total && total > 0) await award('GUIDE_ALL');
   }
 
-  /** 로그인 시 체크 — 개근상 (앱 기념일 ±3일 이내) */
+  /**
+   * 로그인 시 체크 — 개근상 + 가입 뱃지 백필
+   *
+   * 가입 백필: REGISTER 트리거 도입 이전 가입자(예: day20~21에 가입한 카카오/구글 사용자)에게
+   * WELCOME/FOUNDER/EARLY_BIRD를 소급 부여. award는 이미 보유한 뱃지는 건너뛰므로 영향 없음.
+   */
   private async checkLoginBadges(ctx: BadgeContext, award: (key: string) => Promise<void>) {
-    const now = new Date();
-    const month = now.getMonth() + 1;
-    const day = now.getDate();
+    /** 가입 뱃지 백필 */
+    await award('WELCOME');
+    const totalUsers = await this.dataSource.query(
+      `SELECT COUNT(*) as cnt FROM users WHERE deleted_at IS NULL`,
+    );
+    const userCount = parseInt(totalUsers[0].cnt, 10);
+    if (userCount <= 10) await award('FOUNDER');
+    if (userCount <= 100) await award('EARLY_BIRD');
 
-    /** 기념일 ±3일 범위 체크 */
+    /** 개근상 — 앱 기념일 ±3일 이내 로그인 */
+    const now = new Date();
     const anniversaryDate = new Date(now.getFullYear(), APP_ANNIVERSARY_MONTH - 1, APP_ANNIVERSARY_DAY);
     const diffDays = Math.abs((now.getTime() - anniversaryDate.getTime()) / (1000 * 60 * 60 * 24));
     if (diffDays <= 3) {

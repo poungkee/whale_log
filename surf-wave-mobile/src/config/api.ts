@@ -1,7 +1,8 @@
-// Axios 인스턴스 — JWT 토큰 자동 첨부 + 401 처리
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+// Axios 인스턴스 — JWT 토큰 자동 첨부 + 401 처리 + 뱃지 획득 알림 자동 큐잉
+import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { ENV } from './env';
 import { storage } from './storage';
+import { useBadgeNotificationStore } from '../stores/badgeNotificationStore';
 
 export const api = axios.create({
   baseURL: ENV.API_URL,
@@ -23,9 +24,25 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// 응답 인터셉터 — 401이면 토큰 삭제 (자동 로그아웃은 authStore에서 처리)
+/**
+ * 응답에서 newBadges 배열을 발견하면 알림 큐에 자동 push.
+ * 백엔드는 PATCH /users/me, POST /spots/:id/favorite, POST /diary 등의 응답에
+ * newBadges: BadgeKey[] 또는 BadgeItem[] 형태로 신규 획득 뱃지를 포함시킴.
+ */
+function autoEnqueueBadges(data: any) {
+  if (!data || typeof data !== 'object') return;
+  const badges = data.newBadges;
+  if (Array.isArray(badges) && badges.length > 0) {
+    useBadgeNotificationStore.getState().enqueue(badges);
+  }
+}
+
+// 응답 인터셉터 — 401이면 토큰 삭제 + 뱃지 획득 자동 알림
 api.interceptors.response.use(
-  (response) => response,
+  (response: AxiosResponse) => {
+    autoEnqueueBadges(response.data);
+    return response;
+  },
   (error: AxiosError) => {
     if (error.response?.status === 401) {
       storage.clearAll();

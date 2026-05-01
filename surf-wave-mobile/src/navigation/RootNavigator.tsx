@@ -14,6 +14,7 @@ import {
   type SurfAlertSummary,
 } from '../components/WeatherAlertBanner';
 import UsernameSetupDialog from '../components/UsernameSetupDialog';
+import BadgeEarnedToast from '../components/BadgeEarnedToast';
 import { navigationRef } from '../App';
 import { View, StyleSheet } from 'react-native';
 
@@ -154,6 +155,9 @@ const RootNavigator: React.FC = () => {
         }}
         onLater={dismissUsernameSetup}
       />
+
+      {/* ── 뱃지 획득 토스트 (큐 자동 소비) ── */}
+      <BadgeEarnedToast />
     </View>
   );
 };

@@ -1,11 +1,18 @@
 // 서핑 가이드 화면 — 5개 카테고리 아코디언 (웹앱 동일 콘텐츠)
-import React, { useState } from 'react';
+//
+// 뱃지 트래킹: 가이드는 콘텐츠가 모바일에 하드코딩이라 백엔드 guide_progress를 안 씀.
+// 사용자가 항목을 펼치면 SecureStore에 ID 저장 + POST /badges/track-guide-read 호출 →
+// 백엔드가 GUIDE_5/GUIDE_ALL 부여 → 인터셉터가 newBadges 자동 토스트.
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronDown, ChevronUp, Shield, BookOpen, Users, Footprints, Wrench } from 'lucide-react-native';
 import { colors, spacing, typography } from '../../theme';
+import { api } from '../../config/api';
+import { storage } from '../../config/storage';
+import { useAuthStore } from '../../stores/authStore';
 
 // 가이드 항목 타입
 interface GuideItem {
@@ -186,14 +193,29 @@ const GUIDE_CONTENT: Record<CategoryId, GuideItem[]> = {
   gear: GEAR_ITEMS,
 };
 
-// 아코디언 항목 컴포넌트
-const AccordionItem: React.FC<{ item: GuideItem; categoryColor: string }> = ({ item, categoryColor }) => {
+// 아코디언 항목 컴포넌트 — 펼칠 때 onFirstOpen 한 번만 호출 (뱃지 트래킹용)
+const AccordionItem: React.FC<{
+  item: GuideItem;
+  categoryColor: string;
+  guideId: string;
+  alreadyRead: boolean;
+  onFirstOpen: (guideId: string) => void;
+}> = ({ item, categoryColor, guideId, alreadyRead, onFirstOpen }) => {
   const [open, setOpen] = useState(false);
+  const reportedRef = useRef(alreadyRead);
   return (
     <View style={accordionStyles.container}>
       <TouchableOpacity
         style={accordionStyles.header}
-        onPress={() => setOpen(!open)}
+        onPress={() => {
+          const next = !open;
+          setOpen(next);
+          /** 처음 펼친 시점에만 트래킹 호출 — 동일 항목 반복 펼침은 무시 */
+          if (next && !reportedRef.current) {
+            reportedRef.current = true;
+            onFirstOpen(guideId);
+          }
+        }}
         activeOpacity={0.7}
       >
         <Text style={accordionStyles.icon}>{item.icon}</Text>
@@ -230,10 +252,44 @@ const accordionStyles = StyleSheet.create({
   content: { ...typography.body2, color: colors.textSecondary, lineHeight: 22 },
 });
 
+/** 전체 가이드 항목 수 (모든 카테고리 합계) — GUIDE_ALL 뱃지 조건 산정에 사용 */
+const TOTAL_GUIDE_COUNT = Object.values(GUIDE_CONTENT).reduce((sum, arr) => sum + arr.length, 0);
+
 const GuideListScreen: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<CategoryId>('rules');
   const category = CATEGORIES.find(c => c.id === selectedCategory)!;
   const items = GUIDE_CONTENT[selectedCategory];
+
+  /** 사용자가 이미 펼쳐 본 가이드 ID Set (앱 재시작 시 SecureStore에서 복원) */
+  const [readGuides, setReadGuides] = useState<Set<string>>(new Set());
+  const isAuthenticated = useAuthStore(s => s.isAuthenticated);
+
+  /** 마운트 시 SecureStore에서 읽은 가이드 목록 복원 */
+  useEffect(() => {
+    storage.getReadGuides().then(ids => setReadGuides(new Set(ids))).catch(() => {});
+  }, []);
+
+  /**
+   * 가이드 항목 첫 펼침 시 호출:
+   *  1. SecureStore에 추가 저장 (앱 재시작해도 유지)
+   *  2. 백엔드에 카운트 동기화 → newBadges 응답은 인터셉터가 토스트로 표시
+   */
+  const handleFirstOpen = async (guideId: string) => {
+    if (!isAuthenticated) return; // 비로그인 상태는 트래킹 안 함
+    setReadGuides(prev => {
+      if (prev.has(guideId)) return prev;
+      const next = new Set(prev);
+      next.add(guideId);
+      const ids = Array.from(next);
+      storage.setReadGuides(ids).catch(() => {});
+      /** 백엔드에 진행도 동기화 — 응답 newBadges는 axios 인터셉터가 큐에 자동 enqueue */
+      api.post('/badges/track-guide-read', {
+        guideReadCount: ids.length,
+        totalGuideCount: TOTAL_GUIDE_COUNT,
+      }).catch(() => {});
+      return next;
+    });
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -274,9 +330,20 @@ const GuideListScreen: React.FC = () => {
 
       {/* 아코디언 목록 */}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
-        {items.map((item, idx) => (
-          <AccordionItem key={idx} item={item} categoryColor={category.color} />
-        ))}
+        {items.map((item, idx) => {
+          /** guideId — 카테고리+인덱스 조합으로 unique 보장 */
+          const guideId = `${selectedCategory}-${idx}`;
+          return (
+            <AccordionItem
+              key={guideId}
+              item={item}
+              categoryColor={category.color}
+              guideId={guideId}
+              alreadyRead={readGuides.has(guideId)}
+              onFirstOpen={handleFirstOpen}
+            />
+          );
+        })}
         <View style={{ height: spacing.xl }} />
       </ScrollView>
     </SafeAreaView>

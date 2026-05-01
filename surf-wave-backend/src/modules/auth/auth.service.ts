@@ -104,6 +104,11 @@ export class AuthService {
       passwordHash,
     });
 
+    /** 가입 뱃지 부여 (WELCOME/FOUNDER/EARLY_BIRD) — 실패해도 가입은 성공 처리 */
+    this.badgesService
+      .checkAndAward({ userId: user.id, trigger: 'REGISTER' })
+      .catch(() => {});
+
     const token = this.generateToken(user);
     return { accessToken: token, user: this.sanitizeUser(user) };
   }
@@ -325,6 +330,11 @@ export class AuthService {
           provider: provider as any,
           username: r.username,
         });
+
+        /** 가입 뱃지 부여 (WELCOME/FOUNDER/EARLY_BIRD) — 소셜 신규 가입자에게도 적용 */
+        this.badgesService
+          .checkAndAward({ userId: user.id, trigger: 'REGISTER' })
+          .catch(() => {});
       }
     }
 
