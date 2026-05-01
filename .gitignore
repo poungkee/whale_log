@@ -58,3 +58,6 @@ surf-wave-backend/uploads/
 !**/package.json
 !**/package-lock.json
 !**/vercel.json
+
+# 임시 유틸리티 스크립트 (이미지 압축, 마이그레이션 헬퍼 등)
+/scripts/

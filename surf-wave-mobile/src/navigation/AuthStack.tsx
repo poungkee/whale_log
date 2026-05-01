@@ -27,8 +27,9 @@ const AuthStack: React.FC = () => {
           headerStyle: { backgroundColor: colors.surface },
           headerTintColor: colors.text,
           headerTitleStyle: { fontWeight: '700' },
-          /** iOS 백 라벨 숨김 — 영문 "Login" 노출 방지 */
+          /** 백 라벨 완전 숨김 — 화살표(<)만 표시 */
           headerBackTitle: '',
+          headerBackTitleVisible: false,
         }}
       />
     </Stack.Navigator>

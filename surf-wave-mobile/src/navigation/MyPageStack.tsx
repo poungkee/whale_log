@@ -22,10 +22,12 @@ const MyPageStack: React.FC = () => {
         headerTintColor: colors.text,
         headerTitleStyle: { fontWeight: '700' },
         /**
-         * iOS 백 라벨 숨김 — 이전 화면 이름("MyPage")이 영문 그대로 보이는 문제 해결.
-         * 화살표만 표시하여 한국어 UI와 통일감 유지.
+         * iOS 백 라벨 완전 숨김 — 화살표(<)만 표시.
+         * headerBackTitle:''만으로는 일부 케이스에서 이전 화면 이름이 노출되어
+         * headerBackTitleVisible:false 옵션을 함께 적용.
          */
         headerBackTitle: '',
+        headerBackTitleVisible: false,
       }}
     >
       <Stack.Screen name="MyPage"      component={MyPageScreen}      options={{ headerShown: false }} />
