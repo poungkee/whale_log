@@ -189,9 +189,12 @@ export function Login({ onBack, onAuthSuccess, onGoRegister, onGoForgotPassword 
       return;
     }
 
-    /** 카카오 인증 페이지로 직접 리다이렉트 - REST API 키를 client_id로 사용 */
+    /**
+     * 카카오 인증 페이지로 직접 리다이렉트 - REST API 키를 client_id로 사용
+     * scope: profile_nickname (닉네임 자동 부여용) + account_email (이메일 받기)
+     */
     const redirectUri = `${window.location.origin}/auth/kakao/callback`;
-    const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${kakaoRestApiKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`;
+    const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${kakaoRestApiKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=profile_nickname,account_email`;
     window.location.href = kakaoAuthUrl;
   };
 
