@@ -99,6 +99,18 @@ function getWindStrength(kmh: number): string {
   return '매우 강함';
 }
 
+/** KHOA 서핑지수 → 색상 (웹앱 SpotDetailModal과 동일) */
+function getKhoaIndexColor(index: string): string {
+  switch (index) {
+    case '매우좋음': return '#10B981';
+    case '좋음':     return '#2AAFC6';
+    case '보통':     return '#F59E0B';
+    case '나쁨':     return '#F97316';
+    case '매우나쁨': return '#d4183d';
+    default:         return '#95A5A6';
+  }
+}
+
 /** 날씨 이모지 매핑 — 차트/카드에서 사용 */
 function getWeatherEmoji(condition: string | null | undefined): string {
   if (!condition) return '';
@@ -318,8 +330,12 @@ const HourlyChart: React.FC<{ data: HourlyForecast[] }> = ({ data }) => {
 
   const waves = data.map(d => Number(d.waveHeight) || 0);
   const winds = data.map(d => Number(d.windSpeed) || 0);
-  const maxWave = Math.max(...waves, 0.5);
-  const maxWind = Math.max(...winds, 1);
+  /**
+   * Y축 max를 데이터의 1.15배로 설정 — 위쪽 여백 + 변화 시각화 향상.
+   * 이전엔 max(waves, 0.5)라서 작은 파고에서는 답답하게 0~0.5 범위로만 그려짐.
+   */
+  const maxWave = Math.max(...waves) * 1.15 || 1;
+  const maxWind = Math.max(...winds) * 1.15 || 1;
   const n = data.length;
   const iW = CHART_W - P.left - P.right;
   const iH = CHART_H - P.top - P.bottom;
@@ -565,23 +581,26 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* ─── 히어로 이미지 ─── */}
-        <ImageBackground source={getSpotImage(spot.region, spot.name)} style={s.hero} imageStyle={{}}>
-          <View style={s.heroOverlay} />
-          <View style={s.heroContent}>
-            <View style={s.heroLeft}>
-              <Text style={s.heroName}>{spot.name}</Text>
-              <Text style={s.heroRegion}>{spot.region}</Text>
-              <View style={s.diffBadge}>
+        {/*
+         * 히어로 컴팩트 — 큰 이미지 대신 텍스트 헤더 (웹앱과 통일).
+         * 큰 이미지는 면적만 차지하고 정보 전달엔 도움 안 됨 → 점수+스팟명+지역+난이도만 한 카드에.
+         */}
+        <View style={s.heroCompact}>
+          <View style={s.heroLeft}>
+            <Text style={s.heroNameCompact}>{spot.name}</Text>
+            <View style={s.heroMetaRow}>
+              <Text style={s.heroRegionCompact}>{spot.region}</Text>
+              <Text style={s.heroDot}>·</Text>
+              <View style={s.diffBadgeCompact}>
                 <Text style={s.diffText}>{DIFFICULTY_LABEL[spot.difficulty] || spot.difficulty}</Text>
               </View>
             </View>
-            <View style={[s.ratingCircle, { backgroundColor: ratingColor }]}>
-              <Text style={s.ratingNum}>{surfRating}</Text>
-              <Text style={s.ratingLbl}>{getRatingLabel(surfRating)}</Text>
-            </View>
           </View>
-        </ImageBackground>
+          <View style={[s.ratingCircleCompact, { backgroundColor: ratingColor + '22' }]}>
+            <Text style={[s.ratingNumCompact, { color: ratingColor }]}>{surfRating}</Text>
+            <Text style={[s.ratingLblCompact, { color: ratingColor }]}>{getRatingLabel(surfRating)}</Text>
+          </View>
+        </View>
 
         {/* ─── 안전 경고 배너 ─── */}
         {safetyReasons && safetyReasons.length > 0 && (
@@ -815,11 +834,78 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                 </View>
               </View>
 
-              {/* KHOA 정부 서핑지수 카드 (한국 스팟만) — KHOA 실측 데이터 비교 포함 */}
+              {/* ── 국립해양조사원 실측 데이터 카드 (한국 스팟 전용, 웹앱 인라인 패턴) ── */}
               {khoaEnrichment?.khoaIndex && (
                 <View style={s.card}>
-                  <Text style={s.cardTitle}>🏛 정부 서핑지수</Text>
-                  <KhoaBadge enrichment={khoaEnrichment} currentLevel={undefined} />
+                  {/* 헤더 + 레벨별 지수 배지 */}
+                  <View style={s.khoaHeaderRow}>
+                    <Text style={s.cardTitle}>🏛 국립해양조사원 실측</Text>
+                    <View style={s.khoaLevelRow}>
+                      {[
+                        { label: '초급', value: khoaEnrichment.beginnerIndex },
+                        { label: '중급', value: khoaEnrichment.intermediateIndex },
+                        { label: '상급', value: khoaEnrichment.advancedIndex },
+                      ].filter(l => l.value).map(l => {
+                        const c = getKhoaIndexColor(l.value!);
+                        return (
+                          <View key={l.label} style={[s.khoaLevelBadge, { backgroundColor: c + '20' }]}>
+                            <Text style={[s.khoaLevelText, { color: c }]}>{l.label} {l.value}</Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  </View>
+
+                  {/* 파고 비교 — Open-Meteo vs KHOA */}
+                  {khoaEnrichment.khoaWaveHeight !== null && (
+                    <View style={s.khoaCompareBox}>
+                      <Text style={s.khoaCompareLabel}>파고 비교 (연안 보정)</Text>
+                      <View style={s.khoaCompareRow}>
+                        <View style={s.khoaCompareSide}>
+                          <Text style={s.khoaCompareSubLbl}>Open-Meteo</Text>
+                          <Text style={s.khoaCompareNumDim}>
+                            {parseFloat(forecast.waveHeight).toFixed(1)}<Text style={s.khoaCompareUnit}>m</Text>
+                          </Text>
+                          <Text style={s.khoaCompareSubLbl}>외해 예보</Text>
+                        </View>
+                        <View style={s.khoaCompareArrow}>
+                          <Text style={s.khoaCompareArrowText}>→</Text>
+                          {khoaEnrichment.waveHeightRatio !== null && khoaEnrichment.waveHeightRatio > 0 && (
+                            <Text style={s.khoaCompareRatio}>×{khoaEnrichment.waveHeightRatio.toFixed(2)}</Text>
+                          )}
+                        </View>
+                        <View style={s.khoaCompareSide}>
+                          <Text style={s.khoaCompareSubLbl}>KHOA 실측</Text>
+                          <Text style={[s.khoaCompareNum, { color: '#10B981' }]}>
+                            {khoaEnrichment.khoaWaveHeight.toFixed(1)}<Text style={s.khoaCompareUnit}>m</Text>
+                          </Text>
+                          <Text style={s.khoaCompareSubLbl}>연안 실측</Text>
+                        </View>
+                      </View>
+                    </View>
+                  )}
+
+                  {/* 기타 KHOA 수치 — 파주기/풍속/수온 */}
+                  <View style={s.khoaStatsRow}>
+                    {khoaEnrichment.khoaWavePeriod !== null && (
+                      <View style={s.khoaStatItem}>
+                        <Text style={s.khoaStatVal}>{khoaEnrichment.khoaWavePeriod.toFixed(1)}s</Text>
+                        <Text style={s.khoaStatLbl}>파주기</Text>
+                      </View>
+                    )}
+                    {khoaEnrichment.khoaWindSpeed !== null && (
+                      <View style={s.khoaStatItem}>
+                        <Text style={s.khoaStatVal}>{khoaEnrichment.khoaWindSpeed.toFixed(1)}m/s</Text>
+                        <Text style={s.khoaStatLbl}>풍속</Text>
+                      </View>
+                    )}
+                    {khoaEnrichment.khoaWaterTemperature !== null && (
+                      <View style={s.khoaStatItem}>
+                        <Text style={s.khoaStatVal}>{khoaEnrichment.khoaWaterTemperature.toFixed(1)}°C</Text>
+                        <Text style={s.khoaStatLbl}>수온</Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
               )}
 
@@ -1094,6 +1180,74 @@ const s = StyleSheet.create({
   detailLabel: { fontSize: 13, color: colors.textSecondary, fontWeight: '500' },
   detailValue: { fontSize: 13, color: colors.text, fontWeight: '700', textAlign: 'right' },
   detailSubInline: { fontSize: 11, color: colors.textTertiary, fontWeight: '500' },
+
+  /** ── 히어로 컴팩트 (큰 이미지 제거, 텍스트 헤더만) ── */
+  heroCompact: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
+    gap: spacing.sm,
+  },
+  heroNameCompact: { ...typography.h3, fontWeight: '800', color: colors.text },
+  heroMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
+  heroRegionCompact: { fontSize: 12, color: colors.textSecondary },
+  heroDot: { fontSize: 12, color: colors.textTertiary },
+  diffBadgeCompact: {
+    paddingHorizontal: 8, paddingVertical: 2,
+    backgroundColor: colors.surfaceSecondary, borderRadius: 4,
+  },
+  ratingCircleCompact: {
+    width: 56, height: 56, borderRadius: 28,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  ratingNumCompact: { fontSize: 18, fontWeight: '900' },
+  ratingLblCompact: { fontSize: 10, fontWeight: '700' },
+
+  /** ── KHOA 실측 카드 ── */
+  khoaHeaderRow: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', marginBottom: spacing.sm,
+  },
+  khoaLevelRow: { flexDirection: 'row', gap: 4 },
+  khoaLevelBadge: {
+    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4,
+  },
+  khoaLevelText: { fontSize: 10, fontWeight: '700' },
+
+  /** 파고 비교 박스 — Open-Meteo vs KHOA */
+  khoaCompareBox: {
+    backgroundColor: colors.surfaceSecondary,
+    borderRadius: 10,
+    padding: spacing.sm, marginBottom: spacing.sm,
+  },
+  khoaCompareLabel: {
+    fontSize: 11, color: colors.textSecondary, marginBottom: 8,
+  },
+  khoaCompareRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+  },
+  khoaCompareSide: { flex: 1, alignItems: 'center' },
+  khoaCompareSubLbl: { fontSize: 10, color: colors.textTertiary },
+  khoaCompareNumDim: {
+    fontSize: 22, fontWeight: '900', color: colors.textSecondary,
+    marginVertical: 2,
+  },
+  khoaCompareNum: {
+    fontSize: 22, fontWeight: '900', marginVertical: 2,
+  },
+  khoaCompareUnit: { fontSize: 11, fontWeight: '500' },
+  khoaCompareArrow: { alignItems: 'center', justifyContent: 'center' },
+  khoaCompareArrowText: { fontSize: 18, color: colors.textSecondary },
+  khoaCompareRatio: { fontSize: 10, fontWeight: '700', color: '#10B981', marginTop: 2 },
+
+  /** KHOA 기타 수치 (파주기/풍속/수온) */
+  khoaStatsRow: { flexDirection: 'row', gap: 6 },
+  khoaStatItem: {
+    flex: 1, alignItems: 'center',
+    backgroundColor: colors.surfaceSecondary, borderRadius: 8,
+    paddingVertical: 8,
+  },
+  khoaStatVal: { fontSize: 13, fontWeight: '700', color: colors.text },
+  khoaStatLbl: { fontSize: 10, color: colors.textSecondary, marginTop: 2 },
 
   /** 날씨 타임라인 — 8개 박스(3시간 간격) 가로 배열 */
   weatherTimelineRow: { flexDirection: 'row', gap: 4 },
