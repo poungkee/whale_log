@@ -1,4 +1,4 @@
-// 서핑 가이드 화면 — 5개 카테고리 아코디언 (웹앱 동일 콘텐츠)
+// 서핑 가이드 화면 — 5개 카테고리 아코디언 (웹앱 Guide.tsx 1:1 동일 콘텐츠)
 //
 // 뱃지 트래킹: 가이드는 콘텐츠가 모바일에 하드코딩이라 백엔드 guide_progress를 안 씀.
 // 사용자가 항목을 펼치면 SecureStore에 ID 저장 + POST /badges/track-guide-read 호출 →
@@ -21,7 +21,7 @@ interface GuideItem {
   content: string;
 }
 
-// 가이드 카테고리 정의
+// 가이드 카테고리 정의 (웹앱과 동일)
 const CATEGORIES = [
   { id: 'rules',  icon: Users,      label: '바다 규칙',  desc: '서핑 에티켓과 우선권', color: '#3B82F6' },
   { id: 'safety', icon: Shield,     label: '안전 상식',  desc: '위험 상황 대처법',     color: '#EF4444' },
@@ -32,156 +32,653 @@ const CATEGORIES = [
 
 type CategoryId = typeof CATEGORIES[number]['id'];
 
-// ===== 가이드 콘텐츠 =====
+// ===== 가이드 콘텐츠 (웹앱 src/pages/Guide.tsx와 1:1 동기화) =====
 
 const RULES_ITEMS: GuideItem[] = [
   {
     title: '드롭인 금지 (Drop-in)', icon: '🚫',
-    content: '파도의 피크에 가장 가까운 서퍼가 우선권을 가져요. 이미 누군가 파도를 타고 있을 때 같은 파도에 끼어드는 것을 "드롭인"이라 해요.\n\n• 충돌 사고의 가장 큰 원인\n• 파도 타기 전 항상 양쪽 확인\n• 누군가 이미 타고 있으면 포기!',
+    content: `서핑에서 가장 중요한 규칙이에요.
+
+파도의 피크(가장 높은 지점)에 가장 가까운 서퍼가 우선권을 가져요. 이미 누군가 파도를 타고 있는데 같은 파도에 끼어드는 것을 "드롭인"이라고 해요.
+
+드롭인은:
+• 충돌 사고의 가장 큰 원인
+• 서퍼 사이에서 가장 무례한 행동
+• 초보자가 가장 많이 하는 실수
+
+🔑 핵심: 파도를 타기 전에 항상 양쪽을 확인하세요. 누군가 이미 타고 있으면 포기!`,
   },
   {
     title: '피크 우선권 (Priority)', icon: '👑',
-    content: '파도의 피크(Peak)에 가장 가까운 서퍼가 우선권을 가져요.\n\n우선권 순서:\n1. 피크에 가장 가까운 사람\n2. 먼저 패들링을 시작한 사람\n3. 로컬 서퍼\n\n⚠️ A-프레임 파도에서는 양쪽 각각 1명씩 탈 수 있어요.',
+    content: `파도의 피크(Peak)에 가장 가까운 서퍼가 우선권을 가져요.
+
+우선권 순서:
+1. 피크에 가장 가까운 사람
+2. 먼저 패들링을 시작한 사람
+3. 로컬 서퍼 (해당 스팟을 자주 이용하는 사람)
+
+⚠️ A-프레임 파도 (양쪽으로 갈라지는 파도)에서는 양쪽 각각 1명씩 탈 수 있어요.`,
   },
   {
     title: '패들 아웃 — 채널(길) 찾기', icon: '🏊',
-    content: '라이딩 후 라인업으로 돌아갈 때 채널(파도가 안 부서지는 구간)을 이용하세요.\n\n• 물 색이 더 짙고 파도 거품이 없는 구간\n• 다른 서퍼들이 패들 아웃하는 경로 따르기\n• 절대 서퍼의 앞을 가로지르지 않기\n\n💡 "길이 보인다"는 말은 채널을 찾았다는 뜻!',
+    content: `라이딩 후 라인업으로 돌아갈 때, 파도가 부서지는 구간을 정면으로 뚫으면 계속 파도를 맞아요.
+
+🛤️ 채널 (Channel)이란:
+• 파도가 부서지지 않는 구간 — "길"이 보인다고 표현
+• 물이 바다 쪽으로 빠져나가는 흐름이 있어서 패들이 편함
+• 보통 파도가 부서지는 구간 양옆에 있음
+
+채널 찾는 법:
+• 해변에서 15분 관찰 → 파도가 안 부서지는 곳이 채널
+• 물 색이 더 짙고 파도 거품이 없는 구간
+• 다른 서퍼들이 패들 아웃하는 경로를 따라가기
+
+패들 아웃 규칙:
+• 채널을 이용해서 나가기 (체력 절약!)
+• 라이딩 중인 서퍼의 뒤쪽으로 우회
+• 절대 서퍼의 앞을 가로지르지 않기
+
+❌ 잘못된 예: 파도 부서지는 구간을 정면 돌파 → 체력 소진
+✅ 올바른 예: 채널(길)을 찾아서 돌아 나가기
+
+💡 "길이 보인다"는 말은 채널을 찾았다는 뜻이에요!`,
   },
   {
     title: '보드 잡고 있기', icon: '🏄',
-    content: '파도가 올 때 보드를 놓으면 뒤에 있는 사람이 맞을 수 있어요.\n\n• 리쉬(발줄) 항상 착용\n• 파도가 덮칠 때 보드를 몸 옆으로 잡기\n• 덕다이브 또는 터틀롤로 파도 넘기\n\n💡 리쉬는 생명줄이에요. 절대 빼지 마세요!',
+    content: `파도가 올 때 보드를 놓으면 뒤에 있는 사람이 맞을 수 있어요.
+
+기본 수칙:
+• 리쉬(발줄) 항상 착용
+• 파도가 덮칠 때 보드를 몸 옆으로 잡기
+• 보드를 앞으로 밀지 않기 (뒤에 사람이 있을 수 있음)
+• 덕다이브 또는 터틀롤로 파도 넘기
+
+💡 리쉬는 생명줄이에요. 절대 빼지 마세요!`,
   },
   {
     title: '로컬 존중', icon: '🤝',
-    content: '각 서핑 스팟에는 자주 오는 로컬 서퍼들이 있어요.\n\n• 인사하기 — 물에 들어갈 때 가볍게\n• 양보하기 — 파도 독점 금지\n• 쓰레기 가져가기\n\n🌊 서핑은 자연과 사람을 존중하는 스포츠예요.',
+    content: `각 서핑 스팟에는 자주 오는 로컬 서퍼들이 있어요.
+
+에티켓:
+• 인사하기 — 물에 들어갈 때 눈 마주치면 가볍게 인사
+• 양보하기 — 모든 파도를 독점하지 않기
+• 스팟 규칙 따르기 — 스팟마다 비공식 규칙이 있을 수 있음
+• 쓰레기 가져가기 — 해변 깨끗이
+
+🌊 서핑은 자연과 사람을 존중하는 스포츠예요.`,
   },
   {
     title: '내 레벨에 맞는 스팟 선택', icon: '🗺️',
-    content: '초급자 적합 조건:\n• 비치 브레이크(모래 바닥)\n• 파고 0.3~1.0m\n• 완만하게 부서지는 파도\n• 해류가 약한 곳\n\n⚠️ 리프 브레이크(산호/바위)는 초보 금지!',
+    content: `자기 실력에 안 맞는 스팟에 가면 위험해요.
+
+초급자 적합 스팟 조건:
+• 비치 브레이크 (모래 바닥) — 넘어져도 안전
+• 파고 0.3~1.0m — 허리 이하
+• 완만하게 부서지는 파도 (급하지 않은 것)
+• 해류가 약한 곳
+• 인명구조대가 있는 해변
+
+피해야 할 스팟:
+• 리프 브레이크 (산호/바위 바닥) — 넘어지면 다침
+• 로컬리즘이 강한 곳 — 초보가 가면 눈총
+• 파도가 빠르게 부서지는 곳 — 반응 시간 부족
+
+💡 이 앱의 스팟 상세에서 "난이도"를 꼭 확인하세요!
+💡 처음 가는 스팟은 서핑숍 레슨을 통해 가는 게 안전해요.`,
   },
   {
     title: '해변 깃발/표지판 읽기', icon: '🚩',
-    content: '해변에 꽂혀 있는 깃발은 중요한 안전 신호예요.\n\n🔴 빨간 깃발 — 수영/서핑 금지\n🟡 노란 깃발 — 주의 (조심)\n🟢 초록 깃발 — 안전\n🔴🟡 빨강+노랑 — 인명구조대 감시 구역\n⚫ 검정/흰색 체크 — 서핑/보드 전용 구역\n\n⚠️ 깃발이 없는 해변은 인명구조대가 없다는 뜻!',
+    content: `해변에 꽂혀 있는 깃발은 중요한 안전 신호예요.
+
+깃발 종류:
+🔴 빨간 깃발 — 수영/서핑 금지 (위험한 해류, 높은 파도)
+🟡 노란 깃발 — 주의 (수영 가능하지만 조심)
+🟢 초록 깃발 — 안전 (수영 OK)
+🔴🟡 빨강+노랑 — 인명구조대 감시 구역 (이 사이에서 수영)
+⚫ 검정/흰색 체크 — 서핑/보드 전용 구역
+
+서핑 구역 규칙:
+• 서퍼는 수영 구역(빨강+노랑 사이)을 피해야 함
+• 서핑 전용 구역(체크 깃발)이 있으면 그 안에서 서핑
+• 빨간 깃발일 때는 경험자도 자제
+
+⚠️ 깃발이 없는 해변은 인명구조대가 없다는 뜻 — 더 조심!`,
   },
 ];
 
 const SAFETY_ITEMS: GuideItem[] = [
   {
     title: '이안류 (Rip Current) 대처법', icon: '🌊',
-    content: '이안류는 해변에서 바다 쪽으로 강하게 빠져나가는 해류예요.\n\n대처법:\n1. ❌ 절대 해변 방향으로 맞서 수영하지 않기\n2. ✅ 해변과 평행하게(옆으로) 수영\n3. 이안류 벗어난 후 대각선으로 해변 향해 수영\n4. 체력 소진 시 보드에 올라타 대기\n\n💡 이안류는 보통 폭 10~30m. 옆으로만 이동하면 벗어나요.',
+    content: `이안류는 해변에서 바다 쪽으로 강하게 빠져나가는 해류예요. 서핑 중 가장 위험한 상황 중 하나.
+
+발생 징후:
+• 주변보다 파도가 안 부서지는 구간
+• 물 색이 탁하거나 거품이 바다로 빠져나감
+• 떠다니는 물체가 바다로 빠르게 이동
+
+대처법:
+1. ❌ 절대 해변 방향으로 맞서 수영하지 않기 (체력 소진)
+2. ✅ 해변과 평행하게 (옆으로) 수영
+3. 이안류를 벗어난 후 대각선으로 해변을 향해 수영
+4. 체력이 없으면 보드에 올라타고 떠서 기다리기 → 구조 요청
+
+💡 이안류는 보통 폭 10~30m. 옆으로 조금만 이동하면 벗어날 수 있어요.`,
   },
   {
     title: '파도 크기별 위험도', icon: '📏',
-    content: '🟢 0.3~0.8m (무릎~허리): 초보 적합\n🟡 0.8~1.2m (허리~가슴): 초중급\n🟠 1.2~1.8m (가슴~머리): 중급 이상\n🔴 1.8m+ (머리 이상): 상급자 전용\n\n⚠️ 파고 수치보다 실제 파도가 더 크게 느껴져요!',
-  },
-  {
-    title: '세트파도(귀신파도) 주의', icon: '👻',
-    content: '"귀신파도"는 일정 간격으로 갑자기 오는 큰 파도 그룹이에요.\n\n• 10~20분 간격으로 3~5개 연속 도착\n• 평소 파도보다 1.5~2배 큼\n• 잔잔하다가 갑자기 와서 "귀신파도"\n\n대처법:\n• 항상 바다 쪽을 바라보고 있기\n• 큰 파도가 오면 라인업 더 바깥으로',
-  },
-  {
-    title: '준비운동 필수', icon: '🧘',
-    content: '바다 들어가기 전 10분 스트레칭:\n\n• 어깨 — 패들링에 가장 많이 사용\n• 허리 — 팝업 시 아치백 동작\n• 목 — 패들링 중 계속 들고 있어야 함\n\n추천: 팔 돌리기 → 고양이-소 자세 → 런지\n\n⚠️ 차가운 물에 갑자기 들어가면 근육 경련 위험!',
-  },
-  {
-    title: '혼자 서핑 금지', icon: '👥',
-    content: '초보자는 절대 혼자 서핑하지 마세요.\n\n• 이안류에 빠졌을 때 구조 요청 불가\n• 보드에 부딪혀 기절하면 익사 위험\n\n안전 수칙:\n• 최소 2인 이상\n• 서로 시야에 있는 거리 유지\n• 인명구조대 있는 해변 이용',
+    content: `파도 높이에 따른 서핑 난이도와 위험도:
+
+🟢 0.3~0.8m (무릎~허리): 초보 적합
+  • 안전하게 연습 가능
+  • 화이트워터에서 팝업 연습
+
+🟡 0.8~1.2m (허리~가슴): 초중급
+  • 파도의 힘이 세짐
+  • 기본기가 있어야 안전
+
+🟠 1.2~1.8m (가슴~머리): 중급 이상
+  • 초보자 위험
+  • 덕다이브 필수
+
+🔴 1.8m+ (머리 이상): 상급자 전용
+  • 초보자 절대 금지
+  • 경험자도 주의 필요
+
+⚠️ 파고 수치보다 실제 파도가 더 크게 느껴져요. 처음엔 작은 파도에서 시작하세요!`,
   },
   {
     title: '해파리·산호 주의', icon: '🪼',
-    content: '열대 지역(발리 등)에서 특히 주의:\n\n해파리:\n• 우기(11~3월)에 발리 해변에 많음\n• 쏘이면 식초로 세척 (민물 ❌)\n• 심하면 즉시 병원\n\n산호:\n• 리프 브레이크 스팟에서 주의 (울루와투 등)\n• 서핑 부츠 착용 권장\n• 긁히면 소독 + 항생제 연고',
+    content: `열대 지역(발리 등)에서 특히 주의:
+
+해파리:
+• 우기(11~3월)에 발리 해변에 많음
+• 쏘이면 식초로 세척 (민물 ❌)
+• 심하면 즉시 병원
+
+산호:
+• 리프 브레이크 스팟에서 주의 (울루와투, 파당파당 등)
+• 서핑 부츠 착용 권장
+• 긁히면 소독 + 항생제 연고
+
+🏥 심한 통증/부종이면 반드시 병원! 가볍게 보면 안 돼요.`,
+  },
+  {
+    title: '혼자 서핑 금지', icon: '👥',
+    content: `초보자는 절대 혼자 서핑하지 마세요.
+
+이유:
+• 이안류에 빠졌을 때 구조 요청 불가
+• 보드에 부딪혀 기절하면 익사 위험
+• 체력 소진 시 도움 받을 사람 필요
+
+안전 수칙:
+• 최소 2인 이상
+• 서로 시야에 있는 거리 유지
+• 해변에서 관찰하는 사람이 있으면 더 좋음
+• 인명구조대가 있는 해변 이용
+
+💡 서핑 레슨을 받으면 안전하게 시작할 수 있어요!`,
+  },
+  {
+    title: '준비운동 필수', icon: '🧘',
+    content: `바다 들어가기 전 10분 스트레칭:
+
+필수 부위:
+• 어깨 — 패들링에 가장 많이 사용
+• 허리 — 팝업 시 아치백 동작
+• 목 — 패들링 중 계속 들고 있어야 함
+• 손목/발목 — 보드 위 밸런스
+
+추천 동작:
+1. 팔 돌리기 (앞뒤 각 10회)
+2. 고양이-소 자세 (허리 유연성)
+3. 런지 (하체 활성화)
+4. 손목 돌리기
+
+⚠️ 차가운 물에 갑자기 들어가면 근육 경련 위험!`,
+  },
+  {
+    title: '세트파도 / 귀신파도 주의', icon: '👻',
+    content: `"귀신파도"라 불리는 세트파도는 초보자가 가장 많이 당하는 위험이에요.
+
+세트파도란:
+• 일정 간격(10~20분)으로 갑자기 밀려오는 큰 파도 그룹
+• 보통 3~5개가 연속으로 오며, 평소 파도보다 1.5~2배 큼
+• 잔잔하다가 갑자기 오기 때문에 "귀신파도"라 부름
+
+왜 위험한가:
+• 라인업 밖에서 쉬고 있다가 갑자기 덮침
+• 초보자가 인사이드(얕은 곳)에 있으면 연속으로 맞음
+• 준비 안 된 상태에서 맞으면 보드 놓치고 패닉
+
+대처법:
+1. 바다에 들어가기 전 15분간 세트 주기를 관찰
+2. 세트가 오면 무리하게 파도를 타지 말고 아웃사이드로 패들
+3. 인사이드에 오래 머물지 않기
+4. 세트 사이 잔잔한 구간(룰)에서 패들 아웃
+
+💡 "바다가 갑자기 조용해지면 큰 세트가 온다"는 말이 있어요!`,
   },
   {
     title: '보드 부상 대처', icon: '🩹',
-    content: '서핑에서 가장 흔한 부상은 보드에 맞는 것.\n\n예방법:\n• 리쉬 꼭 착용\n• 와이프아웃 시 팔로 머리 감싸기\n• 물에서 올라올 때 팔 먼저 올려서 보드 확인\n\n응급 처치:\n• 핀에 베임 → 세척 + 압박 지혈\n• 머리 부딪힘 → 즉시 물에서 나오기\n\n🏥 피가 많이 나면 즉시 119!',
+    content: `서핑에서 가장 흔한 부상은 자기 보드나 다른 사람 보드에 맞는 것.
+
+흔한 부상:
+• 핀에 베임 (가장 흔함) — 발, 다리, 손
+• 보드 노즈에 부딪힘 — 얼굴, 머리
+• 와이프아웃 후 보드에 맞음 — 등, 갈비뼈
+
+예방법:
+• 리쉬 꼭 착용 (보드가 날아가지 않게)
+• 와이프아웃 시 팔로 머리 감싸기
+• 물 속에서 올라올 때 바로 서지 말고 팔을 먼저 올려서 보드 위치 확인
+• 다른 서퍼와 충분한 거리 유지
+
+응급 처치:
+• 핀에 베임 → 깨끗한 물로 세척 + 압박 지혈 + 병원
+• 머리 부딪힘 → 즉시 물에서 나오기 + 의식 확인
+• 경미한 타박상 → 얼음찜질
+
+🏥 피가 많이 나거나 의식이 흐리면 즉시 119!`,
   },
   {
     title: '자외선/일사병 주의', icon: '☀️',
-    content: '서핑은 장시간 야외 활동이라 자외선 피해가 커요.\n\n필수 준비물:\n• 래시가드 (긴팔 추천)\n• 서핑용 선크림 (SPF50+, 워터프루프)\n• 30분마다 재도포\n\n일사병 증상:\n• 어지러움, 두통, 구역질\n• 땀이 갑자기 안 남\n\n대처: 그늘로 이동 → 시원한 물 마시기\n\n💡 한여름 11~14시는 자외선 최강 시간대!',
+    content: `서핑은 장시간 야외 활동이라 자외선 피해가 큽니다.
+
+필수 준비물:
+• 래시가드 (긴팔 추천) — 자외선 + 보드 찰과상 방지
+• 서핑용 선크림 (SPF50+, 워터프루프) — 30분마다 재도포
+• 서핑 모자/캡 (바람에 안 날아가는 고정끈 타입)
+• 선글라스 (해변에서 대기 시)
+
+일사병 증상:
+• 어지러움, 두통, 구역질
+• 땀이 갑자기 안 남
+• 피부가 뜨겁고 붉어짐
+
+대처:
+1. 즉시 그늘로 이동
+2. 시원한 물 마시기
+3. 목/겨드랑이에 차가운 물 적시기
+4. 증상 지속되면 병원
+
+💡 한여름 11~14시는 자외선 최강 시간대 — 이 시간은 쉬는 게 좋아요!`,
   },
   {
     title: '체력 관리 — 언제 나와야 할까', icon: '🔋',
-    content: '물에서 나와야 할 신호:\n• 패들링할 때 팔에 힘이 안 들어감\n• 파도 넘을 때 숨이 차고 겁이 남\n• 추위로 몸이 떨림 (저체온증 초기)\n\n권장 서핑 시간:\n• 초보: 40~60분 → 휴식 → 재입수\n• 중급: 60~90분\n\n💡 "한 파도만 더" 심리가 가장 위험해요!',
+    content: `초보자는 체력을 과신하기 쉬워요. 물에서 나올 타이밍을 알아야 해요.
+
+물에서 나와야 할 신호:
+• 패들링할 때 팔에 힘이 안 들어감
+• 파도를 넘을 때 숨이 차고 겁이 남
+• 추위로 몸이 떨림 (저체온증 초기)
+• 판단력이 흐려짐 (피로 누적)
+
+권장 서핑 시간:
+• 초보: 40~60분 → 휴식 → 재입수
+• 중급: 60~90분
+• 물이 차가우면 더 짧게
+
+체력 관리 팁:
+• 서핑 전에 밥 먹고 가기 (공복 서핑 ❌)
+• 물 충분히 마시기 (바다에선 갈증을 못 느낌)
+• "한 파도만 더" 심리가 가장 위험 — 정해놓은 시간에 나오기
+• 해변에서 충분히 쉬었다가 재입수
+
+💡 프로 서퍼도 체력 관리가 핵심이에요. 무리하면 다음 서핑을 못 해요!`,
   },
   {
     title: '베일 아웃 — 큰 파도에서 살아남기', icon: '🆘',
-    content: '"베일 아웃"은 큰 파도에 보드를 버리고 잠수하는 생존 기술이에요.\n\n방법:\n1. 보드를 옆으로 밀어내기 (앞으로 ❌)\n2. 최대한 깊이 잠수\n3. 3~5초 기다리기\n4. 올라오기 전 리쉬 당겨 보드 위치 확인\n\n⚠️ 베일 아웃은 최후의 수단 — 덕다이브/터틀롤을 먼저 연습!',
+    content: `"베일 아웃(Bail Out)"은 큰 파도에 덮힐 때 보드를 버리고 잠수하는 생존 기술이에요.
+
+언제 베일 아웃 하나:
+• 덕다이브/터틀롤로 못 넘길 만큼 큰 파도가 올 때
+• 세트파도에 연속으로 맞을 때
+• 패닉 상태가 올 때 — 보드를 잡고 있으면 오히려 위험
+
+베일 아웃 방법:
+1. 보드를 옆으로 밀어내기 (앞으로 ❌ — 돌아와서 맞음)
+2. 최대한 깊이 잠수 (파도 에너지는 수면 근처에 집중)
+3. 바닥에 가까울수록 안전 (단, 리프 브레이크는 주의)
+4. 파도가 지나갈 때까지 3~5초 기다리기
+5. 올라오기 전 리쉬를 당겨 보드 위치 확인
+
+⚠️ 리쉬가 있으니 보드는 멀리 안 가요. 근데 뒤에 사람이 맞을 수 있으니 주변 확인!
+⚠️ 베일 아웃은 최후의 수단 — 평소에 덕다이브/터틀롤을 연습하세요.`,
   },
   {
     title: '커버 업 — 수면 위로 올라올 때', icon: '🛡️',
-    content: '와이프아웃 후 올라올 때 보드가 바로 위에 있을 수 있어요!\n\n방법:\n1. 올라오기 전 한 팔을 머리 위로 올리기\n2. 팔로 머리+얼굴 감싸기\n3. 천천히 올라오며 보드 위치 확인\n\n왜 중요한가:\n• 파도에 밀려온 보드 핀이 머리에 맞으면 큰 부상\n• 다른 서퍼 보드가 날아올 수도 있음\n\n💡 항상 "물에서 올라올 때는 팔로 머리 감싸기"!',
+    content: `와이프아웃이나 베일 아웃 후 수면 위로 올라올 때 가장 위험한 순간이에요. 보드가 바로 위에 떠있을 수 있거든요!
+
+커버 업(Cover Up) 방법:
+1. 물 속에서 올라오기 전에 한 팔을 머리 위로 올리기
+2. 팔과 손으로 머리+얼굴을 감싸듯 보호
+3. 천천히 올라오면서 보드가 어디 있는지 확인
+4. 보드가 안 보이면 리쉬 방향(발 쪽)을 확인
+
+왜 꼭 해야 하나:
+• 파도에 밀려온 보드 핀이 머리에 맞으면 큰 부상
+• 다른 서퍼 보드가 떠내려오고 있을 수도 있음
+• 수면 바로 아래에 보드 바닥(핀)이 있는 경우가 많음
+
+💡 습관이 될 때까지 연습! "물에서 올라올 때는 항상 팔로 머리 감싸기"
+💡 특히 혼잡한 라인업에서는 필수 — 내 보드가 아니라 남의 보드가 날아올 수 있어요.`,
   },
 ];
 
 const TERMS_ITEMS: GuideItem[] = [
   {
     title: '파도 용어', icon: '🌊',
-    content: '• 피크(Peak) — 파도가 가장 높이 솟는 지점\n• 라인업(Line-up) — 서퍼들이 파도 기다리는 구역\n• 세트(Set) — 연속으로 오는 파도 그룹\n• 화이트워터(Whitewater) — 파도가 부서진 흰 거품\n• 그린 웨이브 — 아직 안 부서진 깨끗한 파도\n• 클로즈아웃(Close-out) — 한꺼번에 부서지는 파도',
+    content: `• 세트 (Set) — 연속으로 밀려오는 큰 파도 그룹 (보통 3~5개)
+• 피크 (Peak) — 파도가 처음 부서지기 시작하는 가장 높은 지점
+• 숄더 (Shoulder) — 피크 옆으로 아직 안 부서진 파도 면
+• 페이스 (Face) — 파도의 앞면 (서퍼가 타는 면)
+• 립 (Lip) — 파도 꼭대기가 넘어지는 부분
+• 화이트워터 (White Water) — 이미 부서진 거품 파도
+• 라인업 (Lineup) — 서퍼들이 파도를 기다리며 앉아있는 구간
+• 인사이드 (Inside) — 해변에 가까운 얕은 구간
+• 아웃사이드 (Outside) — 바다 쪽 깊은 구간
+• 클로즈아웃 (Close-out) — 파도가 한꺼번에 전부 부서지는 것 (타기 어려움)
+• 채널 (Channel) — 파도가 안 부서지는 구간 ("길이 보인다" = 채널을 찾았다)
+• 세트 (Set Wave) — 주기적으로 밀려오는 큰 파도 그룹 (귀신파도)
+• 룰 (Lull) — 세트와 세트 사이 잔잔한 구간 (패들 아웃 타이밍)`,
   },
   {
-    title: '서핑 동작 용어', icon: '🏄',
-    content: '• 팝업(Pop-up) — 보드 위로 올라서는 동작\n• 패들링(Paddling) — 손으로 물 저어 나아가기\n• 테이크오프(Take-off) — 파도 올라타는 순간\n• 덕다이브(Duck-dive) — 파도 아래로 잠수해 통과\n• 터틀롤(Turtle Roll) — 롱보드로 파도 넘기\n• 베일아웃(Bail-out) — 의도적으로 보드 버리고 뛰어내리기',
+    title: '동작 용어', icon: '🏄',
+    content: `• 팝업 (Pop-up) — 보드 위에서 누워있다가 한 번에 일어서는 동작
+• 테이크오프 (Take-off) — 파도를 잡고 일어서서 타기 시작하는 것
+• 패들링 (Paddling) — 팔로 물을 저어 이동하는 것
+• 덕다이브 (Duck Dive) — 보드와 함께 파도 아래로 잠수 (숏보드)
+• 터틀롤 (Turtle Roll) — 보드를 뒤집어 파도 아래로 통과 (롱보드)
+• 바텀턴 (Bottom Turn) — 파도 밑에서 방향 전환 (모든 기술의 기본)
+• 컷백 (Cutback) — 파도 파워존으로 되돌아오는 턴
+• 킥아웃 (Kick Out) — 파도에서 빠져나오는 동작
+• 와이프아웃 (Wipeout) — 파도에서 떨어지는 것 (넘어짐)
+• 베일 아웃 (Bail Out) — 큰 파도에 보드를 버리고 잠수하는 생존 기술
+• 커버 업 (Cover Up) — 수면 위로 올라올 때 팔로 머리를 감싸 보호
+• 노즈라이딩 (Nose Riding) — 롱보드 앞쪽에서 타기`,
   },
   {
     title: '바람 용어', icon: '💨',
-    content: '• 오프쇼어(Offshore) — 육지→바다 방향 바람 ✅ 서핑 최적\n• 온쇼어(Onshore) — 바다→육지 방향 바람 ❌ 파도 망침\n• 크로스쇼어(Cross-shore) — 측면 바람 (보통)\n• 글래시(Glassy) — 바람 없이 잔잔한 수면 ✅ 최고 컨디션',
+    content: `바람은 파도 컨디션에 가장 큰 영향을 미쳐요:
+
+• 오프쇼어 (Offshore) — 육지 → 바다 방향 바람
+  ✅ 최고! 파도 면이 깨끗하고 파도가 오래 유지됨
+
+• 온쇼어 (Onshore) — 바다 → 육지 방향 바람
+  ❌ 파도를 무너뜨려서 지저분해짐
+
+• 사이드쇼어 (Sideshore) — 옆에서 부는 바람
+  △ 보통. 약하면 괜찮음
+
+• 글래시 (Glassy) — 바람이 없는 상태
+  ✅ 수면이 유리처럼 매끄러움. 서핑 최적!
+
+• 초피 (Choppy) — 강한 바람으로 수면이 울퉁불퉁
+  ❌ 패들링 어렵고 파도 타기 힘듦
+
+💡 이 앱의 "바람" 정보에서 풍향/풍속을 확인하세요!`,
   },
   {
     title: '보드 용어', icon: '🛹',
-    content: '• 노즈(Nose) — 보드 앞부분\n• 테일(Tail) — 보드 뒷부분\n• 레일(Rail) — 보드 옆면\n• 덱(Deck) — 발이 올라가는 윗면\n• 핀(Fin) — 보드 밑 지느러미 (방향 제어)\n• 리쉬(Leash) — 발목과 보드 연결 줄\n• 왁스(Wax) — 미끄럼 방지용\n• 로커(Rocker) — 노즈/테일의 위로 휘어진 정도',
+    content: `• 노즈 (Nose) — 보드 앞부분 (둥글면 롱보드, 뾰족하면 숏보드)
+• 테일 (Tail) — 보드 뒷부분 (턴 성능에 영향)
+• 레일 (Rail) — 보드 옆면 (턴 시 물에 잠기는 부분)
+• 덱 (Deck) — 보드 윗면 (발을 올리는 면)
+• 바텀 (Bottom) — 보드 아랫면 (물과 접하는 면)
+• 핀 (Fin) — 보드 아래 붙은 날개 (방향 제어)
+• 리쉬 (Leash) — 발과 보드를 연결하는 줄 (안전 필수!)
+• 왁스 (Wax) — 미끄럼 방지용 (덱에 바름)
+• 스트링거 (Stringer) — 보드 중앙을 지나는 나무 심
+• 로커 (Rocker) — 노즈/테일의 위로 휘어진 정도`,
   },
   {
     title: '파도 종류', icon: '🏖️',
-    content: '• 비치 브레이크 — 모래 바닥에서 부서지는 파도\n  ✅ 초보 추천! 넘어져도 안전 (양양, 꾸따)\n\n• 리프 브레이크 — 산호/암초 위에서 부서지는 파도\n  ⚠️ 중급 이상! 바닥이 단단 (울루와투)\n\n• 포인트 브레이크 — 돌출 지형을 따라 부서지는 파도\n  🌟 길게 탈 수 있음 (메데위)\n\n• A-프레임 — 피크에서 양쪽으로 갈라지는 파도\n  양쪽 각각 1명씩 탈 수 있음\n\n💡 초보자는 비치 브레이크에서 시작하세요!',
+    content: `• 비치 브레이크 (Beach Break) — 모래 바닥에서 부서지는 파도
+  ✅ 초보 추천! 넘어져도 안전 (양양, 꾸따)
+
+• 리프 브레이크 (Reef Break) — 산호/암초 위에서 부서지는 파도
+  ⚠️ 중급 이상! 바닥이 단단해서 위험 (울루와투, 파당파당)
+
+• 포인트 브레이크 (Point Break) — 돌출된 지형을 따라 부서지는 파도
+  🌟 길게 탈 수 있음! (메데위)
+
+• A-프레임 (A-Frame) — 피크에서 양쪽으로 갈라지는 파도
+  양쪽에서 각각 1명씩 탈 수 있음
+
+💡 초보자는 비치 브레이크에서 시작하세요!`,
   },
 ];
 
 const BASICS_ITEMS: GuideItem[] = [
   {
-    title: '스탠스 결정하기', icon: '🦶',
-    content: '서핑 스탠스는 두 가지:\n\n• 레귤러(Regular) — 왼발 앞\n• 구피(Goofy) — 오른발 앞\n\n확인 방법: 누가 등 뒤에서 살짝 밀었을 때 먼저 나가는 발이 앞발!\n\n또는 스케이트보드/스노보드 경험이 있다면 그 스탠스 그대로.',
+    title: '스탠스 정하기 (레귤러 vs 구피)', icon: '🦶',
+    content: `서핑에서 가장 먼저 정해야 할 것: 어느 발이 앞인지!
+
+• 레귤러 (Regular) — 왼발이 앞, 오른발이 뒤
+• 구피 (Goofy) — 오른발이 앞, 왼발이 뒤
+
+확인 방법:
+1. 누군가에게 뒤에서 살짝 밀어달라고 하기
+2. 먼저 나가는 발 = 앞발
+3. 또는 미끄러운 바닥에서 슬라이딩 — 앞에 놓는 발이 앞발
+
+💡 정답은 없어요! 편한 쪽이 맞는 거예요.
+💡 이 앱의 "자세 연습" 기능에서 스탠스를 확인해보세요!`,
   },
   {
-    title: '팝업 (Pop-up) 마스터하기', icon: '⬆️',
-    content: '팝업 순서:\n1. 보드 위에 엎드려 노즈에서 30cm 아래 손 위치\n2. 팔굽혀펴기 자세로 올라오기\n3. 동시에 뒷발 → 앞발 순서로 올라서기\n4. 발은 어깨너비, 몸은 옆으로\n\n육지에서 100번 연습 후 바다로!\n\n⚠️ 무릎으로 올라오면 안 돼요 — 양발이 동시에!',
+    title: '팝업 5단계', icon: '💪',
+    content: `팝업은 서핑의 가장 기본이자 가장 중요한 동작!
+
+1단계: 패들링 자세
+  → 보드 중앙에 엎드려 팔로 패들
+
+2단계: 파도 잡기
+  → 파도가 보드를 밀어주는 순간 느끼기
+
+3단계: 가슴 올리기
+  → 양손을 가슴 옆에 짚고 상체를 들어올림 (코브라 자세)
+
+4단계: 뒷발 먼저
+  → 뒷발을 보드 뒤쪽 패드 위에 놓기
+
+5단계: 앞발 올리기 + 일어서기
+  → 앞발을 양손 사이로 가져와서 일어섬
+  → 무릎 굽히고, 시선은 앞으로!
+
+⚠️ 무릎으로 먼저 일어서지 마세요! 한 번에 일어서는 연습을 해야 해요.
+💡 육지에서 충분히 연습 → 바다에서 자연스럽게!`,
   },
   {
-    title: '패들링 자세', icon: '🤽',
-    content: '올바른 패들링:\n• 보드 중앙에 몸 위치 (노즈가 살짝 들리게)\n• 머리는 들고, 등은 아치형\n• 팔꿈치 높게 들고 깊게 젓기\n• S자 모양으로 물 당기기\n\n잘못된 패들링:\n• 노즈가 물속으로 → 앞으로 이동 (너무 앞에 탄 것)\n• 테일이 물속으로 → 뒤로 이동',
+    title: '올바른 패들링 자세', icon: '🏊',
+    content: `패들링은 서핑 시간의 80%를 차지해요. 효율적인 자세가 중요!
+
+보드 위 위치:
+• 너무 앞 → 노즈가 물에 잠김 (노즈다이브)
+• 너무 뒤 → 노즈가 들려서 속도 안 남
+• 적당 → 노즈가 수면에서 2~3cm 떠있는 위치
+
+팔 동작:
+• 팔을 쭉 뻗어서 앞에서 물 잡기
+• 손가락 붙이고 컵 모양으로
+• 보드 아래를 지나 허벅지까지 당기기
+• S자 곡선으로 저으면 더 효율적
+
+💡 패들링할 때 고개를 너무 들지 마세요. 목이 아파요!`,
   },
   {
-    title: '밸런스 잡기', icon: '⚖️',
-    content: '보드 위 밸런스 팁:\n\n• 시선은 항상 수평선 (발 보지 않기!)\n• 팔을 날개처럼 넓게 펴기\n• 무릎 살짝 구부리기 (스프링처럼)\n• 중심이 흔들리면 무릎을 더 굽혀서 안정\n\n💡 서핑은 균형 운동이에요. 처음엔 화이트워터에서 연습!',
+    title: '보드 위 밸런스', icon: '⚖️',
+    content: `일어선 후 밸런스 잡기:
+
+발 위치:
+• 뒷발: 보드 뒤쪽 1/3 지점 (핀 위쪽)
+• 앞발: 보드 중앙 (스트링거 위)
+• 발 간격: 어깨 너비보다 약간 넓게
+
+자세:
+• 무릎 살짝 굽히기 (서핑 스탠스)
+• 체중을 앞발 60%, 뒷발 40%로
+• 팔은 자연스럽게 벌려서 균형
+• 시선은 앞! (발 보면 넘어져요)
+• 엉덩이를 낮추면 안정감 UP
+
+💡 이 앱의 "자세 연습"에서 무릎 각도와 스탠스 너비를 확인해보세요!`,
   },
   {
     title: '파도 읽는 법', icon: '👀',
-    content: '좋은 파도를 고르는 눈을 키우세요:\n\n관찰할 것:\n• 세트가 오는 주기 (보통 5~15분)\n• 피크 위치 (파도가 처음 부서지는 곳)\n• 파도 방향 (왼/오른 어디로 달리는지)\n• 다른 서퍼들이 어디서 타는지\n\n좋은 파도: 한꺼번에 부서지지 않는 파도 (숄더가 있음)\n\n❌ 피할 것: 클로즈아웃, 너무 빠르게 부서지는 파도\n\n💡 15분 관찰 → 패턴 파악 → 물 들어가기!',
+    content: `좋은 파도를 고르는 눈을 키우세요:
+
+라인업에서 관찰할 것:
+• 세트가 오는 주기 (보통 5~15분 간격)
+• 피크 위치 (파도가 처음 부서지는 곳)
+• 파도 방향 (왼쪽/오른쪽 어디로 달리는지)
+• 다른 서퍼들이 어디서 타는지
+
+좋은 파도 고르기:
+• 한꺼번에 부서지지 않는 파도 (숄더가 있는 파도)
+• 너무 크지도 작지도 않은 파도
+• 세트의 2~3번째 파도가 보통 가장 좋음
+
+❌ 피할 파도:
+• 클로즈아웃 (한꺼번에 전부 부서짐)
+• 이미 부서진 화이트워터만 남은 파도
+• 너무 빠르게 부서지는 파도
+
+💡 15분간 해변에서 관찰 → 패턴 파악 → 물에 들어가기!`,
   },
   {
     title: '와이프아웃(넘어짐) 안전하게', icon: '💥',
-    content: '넘어지는 건 당연해요! 중요한 건 어떻게 넘어지느냐.\n\n올바른 넘어짐:\n1. 보드 뒤쪽/옆으로 뛰기 (앞으로 ❌)\n2. 옆으로 납작하게 입수 (얕은 곳 대비)\n3. 물 속에서 팔로 머리 감싸기\n4. 2~3초 기다린 후 올라오기\n5. 한 손 위로 올려 보드 위치 확인\n\n절대 금지:\n• 머리부터 다이빙 ❌\n• 보드 앞으로 뛰어내리기 ❌\n• 리쉬 잡고 보드 당기기 ❌',
+    content: `넘어지는 건 당연해요! 중요한 건 "어떻게 넘어지느냐".
+
+올바른 넘어짐:
+1. 보드에서 뒤쪽/옆으로 뛰기 (앞으로 ❌ — 보드가 밀려옴)
+2. 물에 들어갈 때 발부터 ❌ → 옆으로 납작하게 (얕은 곳 대비)
+3. 물 속에서 팔로 머리+얼굴 감싸기
+4. 바로 올라오지 말고 2~3초 기다리기 (보드가 지나갈 시간)
+5. 올라올 때 한 손을 위로 올려서 보드 위치 확인
+
+절대 하면 안 되는 것:
+• 머리부터 다이빙 ❌ (바닥이 얕을 수 있음)
+• 보드 앞으로 뛰어내리기 ❌ (보드가 파도에 밀려와서 맞음)
+• 리쉬 잡고 보드 당기기 ❌ (보드가 튕겨서 맞음)
+
+💡 초보 때 넘어지는 연습을 따로 하면 진짜 도움 돼요!`,
   },
   {
     title: '덕다이브 & 터틀롤', icon: '🦆',
-    content: '패들 아웃할 때 파도를 넘는 기술이에요.\n\n🦆 덕다이브 (숏보드/피쉬용):\n1. 파도 2~3m 앞에서 노즈를 양손으로 눌러 잠수\n2. 무릎/발로 테일을 밀어 보드 전체 잠수\n3. 파도가 지나가면 위로 올라오기\n\n🐢 터틀롤 (롱보드/펀보드용):\n1. 파도 직전에 보드를 뒤집어 매달리기\n2. 파도가 지나가면 다시 뒤집고 올라타기\n\n💡 롱보드는 부력이 커서 덕다이브 불가 — 터틀롤 연습!',
+    content: `바다로 나갈 때(패들 아웃) 파도를 넘는 기술이에요. 이거 못 하면 라인업까지 못 나감!
+
+🦆 덕다이브 (숏보드/피쉬용):
+1. 파도 2~3m 앞에서 보드 노즈를 양손으로 눌러 물 속으로
+2. 무릎이나 발로 보드 테일을 밀어 보드 전체를 잠수
+3. 파도가 지나가면 위로 올라오기
+
+핵심: 타이밍이 전부! 너무 빨라도, 너무 늦어도 안 됨.
+
+🐢 터틀롤 (롱보드/펀보드용):
+1. 파도 직전에 보드를 뒤집어서 바텀(아래면)이 위로
+2. 보드 레일을 잡고 물 속에 매달리기
+3. 파도가 지나가면 다시 뒤집어서 올라타기
+
+핵심: 보드를 꽉 잡기! 놓치면 보드가 날아감.
+
+💡 롱보드는 부력이 커서 덕다이브가 안 돼요 — 터틀롤을 연습하세요!
+💡 처음엔 화이트워터(거품 파도)에서 연습 → 점점 큰 파도로!`,
   },
 ];
 
 const GEAR_ITEMS: GuideItem[] = [
   {
-    title: '첫 보드 선택', icon: '🛹',
-    content: '초보자 추천 순서:\n\n1. 소프트보드(폼보드) — 안전, 저렴, 부력 최고\n2. 롱보드 (9ft+) — 안정적, 파도 잡기 쉬움\n3. 펀보드/미드렝스 (7~8ft) — 중급 넘어갈 때\n\n⚠️ 처음부터 숏보드 사면 후회해요!\n\n보드 선택 공식: 초보 = 키+30cm 이상 길이',
+    title: '초보자 보드 선택법', icon: '🏄',
+    content: `처음엔 크고 안정적인 보드가 좋아요.
+
+초보 추천 보드:
+• 롱보드 (9ft+) — 가장 안정적, 작은 파도에서도 잘 탐
+• 펀보드 (7~8ft) — 롱보드보다 기동성 있으면서 안정적
+• 소프트탑 — 스펀지 소재라 맞아도 덜 아픔 (초보 필수!)
+
+피해야 할 보드:
+• 숏보드 (~6ft) — 불안정하고 작은 파도에서 안 뜸
+• 하드탑 에폭시 — 초보가 맞으면 진짜 아픔
+
+보드 크기 기준:
+• 키 + 30~50cm (초보)
+• 키와 비슷하거나 +10cm (중급)
+• 키보다 짧은 보드 (상급)
+
+💡 처음엔 무조건 렌탈로! 자기 스타일 파악 후 구매하세요.
+💡 이 앱에서 보드 타입과 길이를 설정하면 맞춤 추천을 받을 수 있어요.`,
   },
   {
-    title: '웻슈트 가이드', icon: '🤿',
-    content: '수온별 웻슈트 두께:\n\n• 수온 24°C+ (발리 등): 래쉬가드만 OK\n• 수온 20~24°C: 2mm 스프링슈트\n• 수온 16~20°C (한국 여름): 3/2mm\n• 수온 12~16°C (한국 봄/가을): 4/3mm\n• 수온 12°C 이하 (한국 겨울): 5/4mm + 부츠',
+    title: '웻슈트 선택', icon: '🦈',
+    content: `수온에 따라 웻슈트 두께가 달라요.
+
+수온별 웻슈트:
+• 24°C 이상: 래시가드만 또는 스프링슈트 (반팔반바지)
+• 20~24°C: 3/2mm 풀슈트
+• 16~20°C: 4/3mm 풀슈트
+• 12~16°C: 5/4mm 풀슈트 + 부츠 + 글러브
+• 12°C 이하: 6/5mm + 후드 + 부츠 + 글러브
+
+숫자의 의미:
+• "3/2mm" → 몸통 3mm / 팔다리 2mm 두께
+• 몸통이 더 두꺼운 이유: 핵심 체온 보호
+
+구매 팁:
+• 빈틈 없이 딱 맞아야 함 (물이 들어오면 의미 없음)
+• 직접 입어보고 구매 (온라인 ❌)
+• 뒷지퍼 vs 가슴지퍼: 가슴지퍼가 물 덜 들어옴
+
+💡 발리 같은 열대 지역은 래시가드만으로 충분해요!
+💡 이 앱의 수온 정보를 확인하고 웻슈트를 준비하세요.`,
   },
   {
-    title: '서프왁스 사용법', icon: '🕯️',
-    content: '왁스는 보드 덱(발 올리는 면)에 바르는 미끄럼방지제예요.\n\n사용 순서:\n1. 베이스코트 먼저 원형으로 바르기\n2. 그 위에 탑코트로 범프(작은 돌기) 만들기\n3. 서핑 전 가볍게 한 번 더 덧바르기\n\n수온별 왁스 선택:\n• 차가운 물 → 소프트 왁스\n• 따뜻한 물 → 하드 왁스',
+    title: '왁스 바르는 법', icon: '🕯️',
+    content: `왁스는 보드 위에서 미끄러지지 않게 해주는 필수품.
+
+왁스 종류 (수온별):
+• Cold (냉수): 14°C 이하
+• Cool (시원): 14~19°C
+• Warm (따뜻): 19~24°C
+• Tropical (열대): 24°C 이상
+• Base Coat: 모든 왁스의 기초 (먼저 바름)
+
+바르는 순서:
+1. 새 보드/왁스 벗긴 보드 → 베이스 코트 먼저
+2. 대각선으로 교차하며 바르기 (X자 패턴)
+3. 그 위에 수온에 맞는 탑 코트
+4. 작은 돌기(범프)가 생길 때까지
+
+왁스 관리:
+• 직사광선에 보드 놓지 않기 (왁스 녹음)
+• 왁스 콤으로 주기적으로 결 살려주기
+• 계절 바뀌면 기존 왁스 벗기고 새로 바르기
+
+💡 서핑 전에 왁스 콤으로 살짝 긁어주면 그립력 UP!`,
   },
   {
     title: '리쉬(발줄) 관리', icon: '🔗',
-    content: '리쉬 선택:\n• 길이 = 보드 길이와 비슷하게\n• 초보/롱보드: 9~10ft 리쉬\n• 숏보드: 6~7ft 리쉬\n\n관리:\n• 사용 후 담수로 세척\n• 꼬이지 않게 보관\n• 스위블(회전 부속) 상태 확인\n\n⚠️ 끊어진 리쉬는 즉시 교체! 생명과 직결됩니다.',
+    content: `리쉬는 말 그대로 생명줄이에요. 관리가 중요!
+
+리쉬 선택:
+• 길이: 보드 길이와 비슷하거나 약간 길게
+• 롱보드: 9~10ft 리쉬 (발목 또는 무릎)
+• 숏보드: 6~7ft 리쉬 (발목)
+• 굵기: 파도 클수록 두꺼운 리쉬
+
+착용법:
+• 뒷발 발목에 착용 (레귤러: 오른발, 구피: 왼발)
+• 벨크로를 단단히! 느슨하면 파도에 풀림
+• 리쉬 줄이 핀에 걸리지 않게 바깥쪽으로
+
+교체 시기:
+• 벨크로 접착력이 약해졌을 때
+• 줄에 금이 가거나 변색됐을 때
+• 스위블(회전부)이 뻑뻑할 때
+• 1~2년마다 교체 권장
+
+⚠️ 리쉬 없이 서핑하면 보드가 다른 사람을 칠 수 있어요!
+⚠️ 중고 리쉬는 갑자기 끊어질 수 있으니 비추!`,
   },
 ];
 
@@ -193,7 +690,11 @@ const GUIDE_CONTENT: Record<CategoryId, GuideItem[]> = {
   gear: GEAR_ITEMS,
 };
 
-// 아코디언 항목 컴포넌트 — 펼칠 때 onFirstOpen 한 번만 호출 (뱃지 트래킹용)
+/** 전체 가이드 항목 수 (모든 카테고리 합계) — GUIDE_ALL 뱃지 조건 산정에 사용 */
+const TOTAL_GUIDE_COUNT = Object.values(GUIDE_CONTENT).reduce((sum, arr) => sum + arr.length, 0);
+
+// ===== 아코디언 항목 =====
+
 const AccordionItem: React.FC<{
   item: GuideItem;
   categoryColor: string;
@@ -210,7 +711,6 @@ const AccordionItem: React.FC<{
         onPress={() => {
           const next = !open;
           setOpen(next);
-          /** 처음 펼친 시점에만 트래킹 호출 — 동일 항목 반복 펼침은 무시 */
           if (next && !reportedRef.current) {
             reportedRef.current = true;
             onFirstOpen(guideId);
@@ -238,7 +738,6 @@ const accordionStyles = StyleSheet.create({
   container: {
     backgroundColor: colors.surface, borderRadius: 12,
     borderWidth: 1, borderColor: colors.border, marginBottom: spacing.sm,
-    /** overflow:hidden 제거 — 동적 높이 계산 시 본문 일부가 잘리던 문제 해결 */
   },
   header: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
@@ -246,11 +745,7 @@ const accordionStyles = StyleSheet.create({
   },
   icon: { fontSize: 18 },
   title: { flex: 1, ...typography.body2, fontWeight: '600', color: colors.text },
-  /**
-   * body — marginLeft + borderLeft + paddingHorizontal 합쳐서 좌우 여백이 너무 커
-   * 본문이 좁게 wrap되고 일부 잘려 보이던 문제 수정.
-   * 좌측 컬러 바는 paddingLeft 안에 borderLeft로 흡수 (전체 너비 활용).
-   */
+  /** 본문 좌우 여백을 컴팩트하게 — 텍스트가 화면 너비 충분히 활용하도록 */
   body: {
     paddingTop: 0,
     paddingRight: spacing.md,
@@ -260,45 +755,33 @@ const accordionStyles = StyleSheet.create({
     marginLeft: spacing.md,
   },
   content: {
-    ...typography.body2,
-    color: colors.textSecondary,
-    lineHeight: 22,
-    /** 안드로이드에서 일부 텍스트가 잘리던 문제 — flexShrink:1로 부모 너비 활용 보장 */
+    ...typography.body2, color: colors.textSecondary, lineHeight: 22,
     flexShrink: 1,
   },
 });
 
-/** 전체 가이드 항목 수 (모든 카테고리 합계) — GUIDE_ALL 뱃지 조건 산정에 사용 */
-const TOTAL_GUIDE_COUNT = Object.values(GUIDE_CONTENT).reduce((sum, arr) => sum + arr.length, 0);
+// ===== 메인 화면 =====
 
 const GuideListScreen: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<CategoryId>('rules');
   const category = CATEGORIES.find(c => c.id === selectedCategory)!;
   const items = GUIDE_CONTENT[selectedCategory];
 
-  /** 사용자가 이미 펼쳐 본 가이드 ID Set (앱 재시작 시 SecureStore에서 복원) */
   const [readGuides, setReadGuides] = useState<Set<string>>(new Set());
   const isAuthenticated = useAuthStore(s => s.isAuthenticated);
 
-  /** 마운트 시 SecureStore에서 읽은 가이드 목록 복원 */
   useEffect(() => {
     storage.getReadGuides().then(ids => setReadGuides(new Set(ids))).catch(() => {});
   }, []);
 
-  /**
-   * 가이드 항목 첫 펼침 시 호출:
-   *  1. SecureStore에 추가 저장 (앱 재시작해도 유지)
-   *  2. 백엔드에 카운트 동기화 → newBadges 응답은 인터셉터가 토스트로 표시
-   */
   const handleFirstOpen = async (guideId: string) => {
-    if (!isAuthenticated) return; // 비로그인 상태는 트래킹 안 함
+    if (!isAuthenticated) return;
     setReadGuides(prev => {
       if (prev.has(guideId)) return prev;
       const next = new Set(prev);
       next.add(guideId);
       const ids = Array.from(next);
       storage.setReadGuides(ids).catch(() => {});
-      /** 백엔드에 진행도 동기화 — 응답 newBadges는 axios 인터셉터가 큐에 자동 enqueue */
       api.post('/badges/track-guide-read', {
         guideReadCount: ids.length,
         totalGuideCount: TOTAL_GUIDE_COUNT,
@@ -309,58 +792,62 @@ const GuideListScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* 헤더 */}
-      <View style={styles.header}>
-        <Text style={styles.title}>서핑 가이드</Text>
-        <Text style={styles.subtitle}>초보 서퍼를 위한 필수 지식</Text>
-      </View>
-
-      {/* 카테고리 탭 (가로 스크롤) */}
+      {/* 헤더 + 카테고리 + 본문 — 한 ScrollView 안에 위에서부터 정렬 (이전엔 컨텐츠가 화면 중앙처럼 보이는 공백 문제 있었음) */}
       <ScrollView
-        horizontal showsHorizontalScrollIndicator={false}
-        style={styles.tabsScroll} contentContainerStyle={styles.tabsContent}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
       >
-        {CATEGORIES.map(cat => {
-          const Icon = cat.icon;
-          const isActive = cat.id === selectedCategory;
-          return (
-            <TouchableOpacity
-              key={cat.id}
-              style={[styles.categoryTab, isActive && { backgroundColor: cat.color + '20', borderColor: cat.color }]}
-              onPress={() => setSelectedCategory(cat.id)}
-            >
-              <Icon size={16} color={isActive ? cat.color : colors.textTertiary} />
-              <Text style={[styles.categoryLabel, isActive && { color: cat.color, fontWeight: '700' }]}>
-                {cat.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+        {/* 헤더 — 컴팩트하게 */}
+        <View style={styles.header}>
+          <Text style={styles.title}>서핑 가이드</Text>
+          <Text style={styles.subtitle}>초보 서퍼를 위한 필수 지식</Text>
+        </View>
 
-      {/* 현재 카테고리 설명 */}
-      <View style={[styles.categoryBanner, { backgroundColor: category.color + '10' }]}>
-        <Text style={[styles.categoryBannerText, { color: category.color }]}>{category.desc}</Text>
-        <Text style={styles.itemCount}>{items.length}개 항목</Text>
-      </View>
+        {/* 카테고리 탭 (가로 스크롤) */}
+        <ScrollView
+          horizontal showsHorizontalScrollIndicator={false}
+          style={styles.tabsScroll} contentContainerStyle={styles.tabsContent}
+        >
+          {CATEGORIES.map(cat => {
+            const Icon = cat.icon;
+            const isActive = cat.id === selectedCategory;
+            return (
+              <TouchableOpacity
+                key={cat.id}
+                style={[styles.categoryTab, isActive && { backgroundColor: cat.color + '20', borderColor: cat.color }]}
+                onPress={() => setSelectedCategory(cat.id)}
+              >
+                <Icon size={16} color={isActive ? cat.color : colors.textTertiary} />
+                <Text style={[styles.categoryLabel, isActive && { color: cat.color, fontWeight: '700' }]}>
+                  {cat.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
 
-      {/* 아코디언 목록 */}
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
-        {items.map((item, idx) => {
-          /** guideId — 카테고리+인덱스 조합으로 unique 보장 */
-          const guideId = `${selectedCategory}-${idx}`;
-          return (
-            <AccordionItem
-              key={guideId}
-              item={item}
-              categoryColor={category.color}
-              guideId={guideId}
-              alreadyRead={readGuides.has(guideId)}
-              onFirstOpen={handleFirstOpen}
-            />
-          );
-        })}
-        <View style={{ height: spacing.xl }} />
+        {/* 카테고리 설명 배너 */}
+        <View style={[styles.categoryBanner, { backgroundColor: category.color + '10' }]}>
+          <Text style={[styles.categoryBannerText, { color: category.color }]}>{category.desc}</Text>
+          <Text style={styles.itemCount}>{items.length}개 항목</Text>
+        </View>
+
+        {/* 아코디언 목록 */}
+        <View style={styles.list}>
+          {items.map((item, idx) => {
+            const guideId = `${selectedCategory}-${idx}`;
+            return (
+              <AccordionItem
+                key={guideId}
+                item={item}
+                categoryColor={category.color}
+                guideId={guideId}
+                alreadyRead={readGuides.has(guideId)}
+                onFirstOpen={handleFirstOpen}
+              />
+            );
+          })}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -368,15 +855,18 @@ const GuideListScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  header: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.sm },
-  title: { ...typography.h2, color: colors.text, fontWeight: '700' },
-  subtitle: { ...typography.body2, color: colors.textSecondary, marginTop: 2 },
+  /** 화면 위에서부터 시작하도록 — 이전엔 헤더/카테고리/본문 사이 공백이 너무 커 중앙처럼 보임 */
+  scrollContent: { paddingBottom: spacing.xl },
 
-  /**
-   * 카테고리 탭 가로 스크롤 — height 고정으로 layout 안정화.
-   * maxHeight + flexGrow:0 만으로는 RN의 ScrollView horizontal이 자식 너비를 못 잡아
-   * 첫 탭만 보이고 나머지가 짤리던 문제. height 명시 + 각 탭에 minWidth 추가.
-   */
+  header: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.xs,
+  },
+  title: { ...typography.h2, color: colors.text, fontWeight: '700' },
+  subtitle: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
+
+  /** 카테고리 가로 탭 — height 명시 + 자식에 minWidth */
   tabsScroll: { height: 52 },
   tabsContent: {
     paddingHorizontal: spacing.lg,
@@ -388,15 +878,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md, paddingVertical: 7,
     borderRadius: 20, backgroundColor: colors.surface,
     borderWidth: 1, borderColor: colors.border,
-    /** flexShrink:0 + minWidth 80 — 가로 스크롤 시 자식 너비 측정 보장 */
-    flexShrink: 0,
-    minWidth: 80,
+    flexShrink: 0, minWidth: 80,
   },
   categoryLabel: { ...typography.caption, color: colors.textSecondary, fontWeight: '500' },
 
   categoryBanner: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    marginHorizontal: spacing.lg, marginVertical: spacing.sm,
+    marginHorizontal: spacing.lg, marginTop: 4, marginBottom: spacing.sm,
     paddingHorizontal: spacing.md, paddingVertical: 8, borderRadius: 10,
   },
   categoryBannerText: { ...typography.caption, fontWeight: '600' },
