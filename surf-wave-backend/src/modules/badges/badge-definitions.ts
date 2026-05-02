@@ -57,8 +57,8 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
   },
   {
     key: 'DAY_ONE_DIARY',
-    nameKo: '오늘만 사는 서퍼',
-    descriptionKo: '가입 당일 첫 다이어리를 작성했어요',
+    nameKo: '가입과 동시에',
+    descriptionKo: '가입한 날 바로 첫 다이어리를 작성한 열정 서퍼',
     icon: '🎯',
     category: 'PROFILE',
     isHidden: true,
@@ -269,7 +269,7 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     descriptionKo: '오전 6시 이전에 서핑한 기록을 남겼어요',
     icon: '🌙',
     category: 'TIME',
-    isHidden: false,
+    isHidden: true,
     sortOrder: 50,
   },
   {
@@ -278,7 +278,7 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     descriptionKo: '오후 6시 이후에 서핑한 기록을 남겼어요',
     icon: '🌅',
     category: 'TIME',
-    isHidden: false,
+    isHidden: true,
     sortOrder: 51,
   },
   {
@@ -343,7 +343,7 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     descriptionKo: '만족도 1점 다이어리를 처음 작성했어요',
     icon: '💀',
     category: 'SATISFACTION',
-    isHidden: false,
+    isHidden: true,
     sortOrder: 62,
   },
   {
@@ -352,7 +352,7 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     descriptionKo: '만족도 1점과 5점 다이어리를 모두 보유하고 있어요',
     icon: '🎢',
     category: 'SATISFACTION',
-    isHidden: false,
+    isHidden: true,
     sortOrder: 63,
   },
   {
@@ -448,7 +448,7 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     descriptionKo: '같은 날 같은 스팟에 다른 유저도 다이어리를 작성했어요',
     icon: '👫',
     category: 'STORY',
-    isHidden: false,
+    isHidden: true,
     sortOrder: 92,
   },
   {
@@ -489,8 +489,8 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
   },
   {
     key: 'CURSED_SURFER',
-    nameKo: '서퍼의 저주',
-    descriptionKo: '만족도 1점을 기록하고 다음날 같은 스팟을 또 찾았어요',
+    nameKo: '포기 모르는 서퍼',
+    descriptionKo: '아쉬운 날에도 다음날 같은 스팟에 다시 도전한 끈기 서퍼',
     icon: '👻',
     category: 'STORY',
     isHidden: true,
