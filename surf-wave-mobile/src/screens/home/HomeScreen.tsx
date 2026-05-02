@@ -147,10 +147,11 @@ const getLevelFitColor = (fit: string) => {
 };
 
 // 레벨 적합도 한국어 라벨
+/** 레벨 적합도 라벨 — 웹앱 utils.ts와 동일 (PASS=안전, WARNING=주의, BLOCKED=위험) */
 const getLevelFitLabel = (fit: string) => {
-  if (fit === 'BLOCKED') return '⛔ 위험';
-  if (fit === 'WARNING') return '⚠️ 주의';
-  return '✅ 적합';
+  if (fit === 'BLOCKED') return '위험';
+  if (fit === 'WARNING') return '주의';
+  return '안전';
 };
 
 /** 난이도 한국어 약칭 (웹앱 SpotCard와 동일) */
@@ -728,24 +729,27 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
                     {/* ── 파고 큰 숫자 + 주기/풍속/조석 인라인 ── */}
                     <View style={styles.statsRow}>
-                      <Text style={styles.waveHeightNum}>
-                        {parseFloat(item.forecast.waveHeight).toFixed(1)}
-                      </Text>
-                      <Text style={styles.waveHeightUnit}>m</Text>
+                      {/* 파고 — 큰 숫자 + 단위 baseline 정렬 (이 영역만 따로) */}
+                      <View style={styles.waveHeightWrap}>
+                        <Text style={styles.waveHeightNum}>
+                          {parseFloat(item.forecast.waveHeight).toFixed(1)}
+                        </Text>
+                        <Text style={styles.waveHeightUnit}>m</Text>
+                      </View>
                       <View style={styles.statsDivider} />
                       <View style={styles.inlineStat}>
-                        <Clock size={12} color={colors.textTertiary} />
+                        <Clock size={13} color={colors.textTertiary} />
                         <Text style={styles.inlineStatText}>{parseFloat(item.forecast.wavePeriod).toFixed(0)}s</Text>
                       </View>
                       <View style={styles.inlineStat}>
-                        <Wind size={12} color={colors.textTertiary} />
+                        <Wind size={13} color={colors.textTertiary} />
                         <Text style={styles.inlineStatText}>{parseFloat(item.forecast.windSpeed).toFixed(0)}km/h</Text>
                       </View>
                       {tideInfo && (
                         <View style={styles.inlineStat}>
                           {tideInfo.rising
-                            ? <ArrowUp size={12} color={colors.textTertiary} />
-                            : <ArrowDown size={12} color={colors.textTertiary} />
+                            ? <ArrowUp size={13} color={colors.textTertiary} />
+                            : <ArrowDown size={13} color={colors.textTertiary} />
                           }
                           <Text style={styles.inlineStatText}>{tideInfo.label}</Text>
                         </View>
@@ -1046,13 +1050,23 @@ const styles = StyleSheet.create({
   },
   fitBadgeText: { fontSize: 10, fontWeight: '700' },
 
-  /** 파고 큰 숫자 + 주기/풍속/수온 인라인 한 줄 */
+  /**
+   * 파고 큰 숫자 + 주기/풍속/조석 인라인 한 줄.
+   * RN의 alignItems:'baseline'은 View 안의 아이콘+텍스트 조합에서 정렬이 어긋남
+   * → 'center'로 변경하고 inlineStat 줄을 따로 둠 (큰 숫자와 작은 stats 사이 줄바꿈처럼 보이는 문제 해결).
+   */
   statsRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'center',
     gap: 8,
     marginBottom: spacing.sm,
     flexWrap: 'wrap',
+  },
+  /** 파고 영역 — 큰 숫자와 단위만 같이 baseline 정렬 */
+  waveHeightWrap: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 2,
   },
   waveHeightNum: {
     fontSize: 24, fontWeight: '900',
@@ -1065,13 +1079,12 @@ const styles = StyleSheet.create({
   statsDivider: {
     width: 1, height: 16, backgroundColor: colors.border,
     marginHorizontal: 2,
-    alignSelf: 'center',
   },
   inlineStat: {
     flexDirection: 'row', alignItems: 'center', gap: 3,
   },
   inlineStatText: {
-    fontSize: 11, fontWeight: '600',
+    fontSize: 12, fontWeight: '600',
     color: colors.text,
   },
 
