@@ -34,6 +34,10 @@ interface SpotForecast {
     waveHeight: string; wavePeriod: string; windSpeed: string;
     windDirection: string; waterTemperature: string; airTemperature: string;
     swellHeight?: string; swellPeriod?: string; swellDirection?: string;
+    /** 날씨 (맑음/흐림 등) — 현재 요약 카드에서 표시 */
+    weatherCondition?: string | null;
+    /** 조석 상태 (RISING/FALLING/HIGH/LOW) */
+    tideStatus?: string | null;
   };
   surfRating: number;
   recommendationKo: string;
@@ -619,19 +623,40 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
           {/* ═══════════════ 파도 탭 ═══════════════ */}
           {activeTab === 'wave' && (
             <>
-              {/* 현재 컨디션 칩 */}
-              <View style={s.condRow}>
-                <View style={s.condChip}>
-                  <Text style={s.condLbl}>파도</Text>
-                  <Text style={s.condVal}>{simpleCondition.waveStatus}</Text>
-                </View>
-                <View style={s.condChip}>
-                  <Text style={s.condLbl}>바람</Text>
-                  <Text style={s.condVal}>{simpleCondition.windStatus}</Text>
-                </View>
-                <View style={[s.condChip, { backgroundColor: colors.primary + '12', borderColor: colors.primary + '30' }]}>
-                  <Text style={s.condLbl}>종합</Text>
-                  <Text style={[s.condVal, { color: colors.primary }]}>{simpleCondition.overall}</Text>
+              {/* ── 현재 요약 — 점수 바로 아래 핵심 정보 (웹앱 패턴) ── */}
+              <View style={s.card}>
+                <Text style={s.cardTitle}>📋 현재 요약</Text>
+                <View style={{ gap: 8 }}>
+                  <View style={s.summaryRow}>
+                    <Waves size={15} color="#2ECC71" />
+                    <Text style={s.summaryLabel}>스웰</Text>
+                    <Text style={s.summaryValue}>
+                      {forecast.swellHeight
+                        ? `${parseFloat(forecast.swellHeight).toFixed(1)}m @${parseFloat(forecast.swellPeriod || '0').toFixed(0)}s → ${parseFloat(forecast.swellDirection || '0').toFixed(0)}°`
+                        : '-'}
+                    </Text>
+                  </View>
+                  <View style={s.summaryRow}>
+                    <Wind size={15} color="#22c55e" />
+                    <Text style={s.summaryLabel}>바람</Text>
+                    <Text style={s.summaryValue}>
+                      {parseFloat(forecast.windSpeed).toFixed(0)}km/h · {degToCompass(parseFloat(forecast.windDirection))} ({parseFloat(forecast.windDirection).toFixed(0)}°)
+                    </Text>
+                  </View>
+                  <View style={s.summaryRow}>
+                    <Text style={{ fontSize: 14 }}>🌡️</Text>
+                    <Text style={s.summaryLabel}>온도</Text>
+                    <Text style={s.summaryValue}>
+                      기온 {parseFloat(forecast.airTemperature).toFixed(0)}°C · 수온 {parseFloat(forecast.waterTemperature).toFixed(0)}°C
+                    </Text>
+                  </View>
+                  {forecast.weatherCondition && (
+                    <View style={s.summaryRow}>
+                      <Text style={{ fontSize: 14 }}>{getWeatherEmoji(forecast.weatherCondition)}</Text>
+                      <Text style={s.summaryLabel}>날씨</Text>
+                      <Text style={s.summaryValue}>{forecast.weatherCondition}</Text>
+                    </View>
+                  )}
                 </View>
               </View>
 
@@ -743,63 +768,52 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                 );
               })()}
 
-              {/* 예보 데이터 6개 그리드 */}
+              {/* ── 예보 상세 — 한 줄씩 라벨+값 (웹앱 패턴, 스캔 빠름) ── */}
               <View style={s.card}>
                 <Text style={s.cardTitle}>🌊 예보 상세</Text>
-                <View style={s.dataGrid}>
-                  {[
-                    { label: '파고', value: `${parseFloat(forecast.waveHeight).toFixed(1)}m` },
-                    { label: '파도 주기', value: `${parseFloat(forecast.wavePeriod).toFixed(0)}s` },
-                    {
-                      label: '풍속',
-                      value: `${parseFloat(forecast.windSpeed).toFixed(0)}km/h`,
-                      sub: getWindStrength(parseFloat(forecast.windSpeed)),
-                    },
-                    {
-                      /** 풍향: 도수만 표시하던 "188.00"을 한국어 방위 + 도수로 변경 */
-                      label: '풍향',
-                      value: degToCompass(parseFloat(forecast.windDirection)),
-                      sub: `${parseFloat(forecast.windDirection).toFixed(0)}°`,
-                    },
-                    { label: '수온', value: `${parseFloat(forecast.waterTemperature).toFixed(0)}°C` },
-                    { label: '기온', value: `${parseFloat(forecast.airTemperature).toFixed(0)}°C` },
-                  ].map(({ label, value, sub }) => (
-                    <View key={label} style={s.dataItem}>
-                      <Text style={s.dataVal}>{value}</Text>
-                      {sub && <Text style={s.dataSub}>{sub}</Text>}
-                      <Text style={s.dataLbl}>{label}</Text>
+                <View style={{ gap: 10 }}>
+                  <View style={s.detailRow}>
+                    <Text style={s.detailLabel}>파고</Text>
+                    <Text style={s.detailValue}>{parseFloat(forecast.waveHeight).toFixed(1)}m</Text>
+                  </View>
+                  <View style={s.detailRow}>
+                    <Text style={s.detailLabel}>파도 주기</Text>
+                    <Text style={s.detailValue}>{parseFloat(forecast.wavePeriod).toFixed(0)}s</Text>
+                  </View>
+                  <View style={s.detailRow}>
+                    <Text style={s.detailLabel}>풍속</Text>
+                    <Text style={s.detailValue}>
+                      {parseFloat(forecast.windSpeed).toFixed(0)}km/h
+                      <Text style={s.detailSubInline}>  · {getWindStrength(parseFloat(forecast.windSpeed))}</Text>
+                    </Text>
+                  </View>
+                  <View style={s.detailRow}>
+                    <Text style={s.detailLabel}>풍향</Text>
+                    <Text style={s.detailValue}>
+                      {degToCompass(parseFloat(forecast.windDirection))}
+                      <Text style={s.detailSubInline}>  ({parseFloat(forecast.windDirection).toFixed(0)}°)</Text>
+                    </Text>
+                  </View>
+                  <View style={s.detailRow}>
+                    <Text style={s.detailLabel}>수온</Text>
+                    <Text style={s.detailValue}>{parseFloat(forecast.waterTemperature).toFixed(1)}°C</Text>
+                  </View>
+                  <View style={s.detailRow}>
+                    <Text style={s.detailLabel}>기온</Text>
+                    <Text style={s.detailValue}>{parseFloat(forecast.airTemperature).toFixed(1)}°C</Text>
+                  </View>
+                  {/* 스웰 정보 — 같은 한 줄 형식으로 통합 */}
+                  {forecast.swellHeight && (
+                    <View style={s.detailRow}>
+                      <Text style={s.detailLabel}>스웰</Text>
+                      <Text style={s.detailValue}>
+                        {parseFloat(forecast.swellHeight).toFixed(1)}m @{parseFloat(forecast.swellPeriod || '0').toFixed(0)}s
+                        <Text style={s.detailSubInline}> → {degToCompass(parseFloat(forecast.swellDirection || '0'))} {parseFloat(forecast.swellDirection || '0').toFixed(0)}°</Text>
+                      </Text>
                     </View>
-                  ))}
+                  )}
                 </View>
               </View>
-
-              {/* 스웰 정보 — forecast.swellHeight/swellPeriod/swellDirection 있으면 표시 */}
-              {(forecast.swellHeight || forecast.swellPeriod || forecast.swellDirection) && (
-                <View style={s.card}>
-                  <Text style={s.cardTitle}>🌊 스웰 (Swell)</Text>
-                  <View style={s.dataGrid}>
-                    {forecast.swellHeight && (
-                      <View style={s.dataItem}>
-                        <Text style={s.dataVal}>{parseFloat(forecast.swellHeight).toFixed(1)}m</Text>
-                        <Text style={s.dataLbl}>스웰 높이</Text>
-                      </View>
-                    )}
-                    {forecast.swellPeriod && (
-                      <View style={s.dataItem}>
-                        <Text style={s.dataVal}>{parseFloat(forecast.swellPeriod).toFixed(0)}s</Text>
-                        <Text style={s.dataLbl}>스웰 주기</Text>
-                      </View>
-                    )}
-                    {forecast.swellDirection && (
-                      <View style={s.dataItem}>
-                        <Text style={s.dataVal}>{degToCompass(parseFloat(forecast.swellDirection))}</Text>
-                        <Text style={s.dataSub}>{parseFloat(forecast.swellDirection).toFixed(0)}°</Text>
-                        <Text style={s.dataLbl}>스웰 방향</Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
-              )}
 
               {/* KHOA 정부 서핑지수 카드 (한국 스팟만) — KHOA 실측 데이터 비교 포함 */}
               {khoaEnrichment?.khoaIndex && (
@@ -809,40 +823,7 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                 </View>
               )}
 
-              {/* ── 현재 요약 — 스웰/풍/조석/온도 한눈에 ── */}
-              <View style={s.card}>
-                <Text style={s.cardTitle}>📋 현재 요약</Text>
-                <View style={{ gap: 8 }}>
-                  {/* 스웰 */}
-                  <View style={s.summaryRow}>
-                    <Waves size={15} color="#2ECC71" />
-                    <Text style={s.summaryLabel}>스웰</Text>
-                    <Text style={s.summaryValue}>
-                      {forecast.swellHeight
-                        ? `${parseFloat(forecast.swellHeight).toFixed(1)}m @${parseFloat(forecast.swellPeriod || '0').toFixed(0)}s → ${parseFloat(forecast.swellDirection || '0').toFixed(0)}°`
-                        : '-'}
-                    </Text>
-                  </View>
-                  {/* 바람 */}
-                  <View style={s.summaryRow}>
-                    <Wind size={15} color="#22c55e" />
-                    <Text style={s.summaryLabel}>바람</Text>
-                    <Text style={s.summaryValue}>
-                      {parseFloat(forecast.windSpeed).toFixed(0)}km/h · {degToCompass(parseFloat(forecast.windDirection))} ({parseFloat(forecast.windDirection).toFixed(0)}°)
-                    </Text>
-                  </View>
-                  {/* 기온/수온 */}
-                  {(forecast.airTemperature || forecast.waterTemperature) && (
-                    <View style={s.summaryRow}>
-                      <Text style={{ fontSize: 14 }}>🌡️</Text>
-                      <Text style={s.summaryLabel}>온도</Text>
-                      <Text style={s.summaryValue}>
-                        기온 {parseFloat(forecast.airTemperature).toFixed(0)}°C · 수온 {parseFloat(forecast.waterTemperature).toFixed(0)}°C
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </View>
+              {/* 현재 요약은 상단(점수 바로 아래)으로 이동됨 — 중복 제거 */}
 
               {/* hints 태그 */}
               {hints && hints.length > 0 && (
@@ -1107,6 +1088,12 @@ const s = StyleSheet.create({
   summaryRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   summaryLabel: { fontSize: 12, color: colors.textSecondary, fontWeight: '600' },
   summaryValue: { flex: 1, textAlign: 'right', fontSize: 12, color: colors.text, fontWeight: '500' },
+
+  /** 예보 상세 — 한 줄 라벨+값 (웹앱 패턴) */
+  detailRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  detailLabel: { fontSize: 13, color: colors.textSecondary, fontWeight: '500' },
+  detailValue: { fontSize: 13, color: colors.text, fontWeight: '700', textAlign: 'right' },
+  detailSubInline: { fontSize: 11, color: colors.textTertiary, fontWeight: '500' },
 
   /** 날씨 타임라인 — 8개 박스(3시간 간격) 가로 배열 */
   weatherTimelineRow: { flexDirection: 'row', gap: 4 },
