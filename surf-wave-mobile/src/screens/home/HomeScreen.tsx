@@ -9,7 +9,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Waves, Wind, Clock, Thermometer, Heart, X, Search, Star, RefreshCw, MessageCircle, MapPin } from 'lucide-react-native';
+import {
+  Waves, Wind, Clock, Thermometer, Heart, X, Search, Star, RefreshCw,
+  MessageCircle, MapPin, ArrowUp, ArrowDown, Sun, Cloud, CloudRain, Droplets,
+} from 'lucide-react-native';
 import Avatar from '../../components/common/Avatar';
 import { api } from '../../config/api';
 import { useAuthStore } from '../../stores/authStore';
@@ -26,6 +29,10 @@ interface SpotForecast {
   forecast: {
     waveHeight: string; wavePeriod: string; windSpeed: string;
     windDirection: string; waterTemperature: string; airTemperature: string;
+    /** 날씨 상태 (맑음/흐림/비 등) — 카드 날씨 행에서 표시 */
+    weatherCondition?: string | null;
+    /** 조석 상태 (RISING/FALLING/HIGH/LOW) — 카드에 밀물/썰물 표시 */
+    tideStatus?: string | null;
   };
   surfRating: number;
   recommendationKo: string;
@@ -38,6 +45,12 @@ interface SpotForecast {
   hints?: { message: string; tags: string[] };
   // KHOA 정부 서핑지수
   khoaEnrichment?: KhoaEnrichment;
+  /** 기상특보 — 풍랑/태풍/강풍 발령 시 카드 상단 배너 표시 */
+  weatherAlert?: {
+    alertName?: string | null;
+    isDangerous?: boolean;
+    level?: string | null;
+  } | null;
 }
 
 interface DashboardResponse {
@@ -352,11 +365,17 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
-  const [selectedLevel, setSelectedLevel] = useState(user?.surfLevel || 'BEGINNER');
+  /**
+   * 사용자 surfLevel 직접 사용 (이전엔 selectedLevel state로 임의 변경 가능했지만
+   * 웹앱은 메인에 레벨 변경 UI 없음 — 마이페이지에서만 변경하는 흐름과 통일).
+   */
+  const selectedLevel = user?.surfLevel || 'BEGINNER';
   const [viewMode, setViewMode] = useState<'spots' | 'community'>('spots');
   const [majorTab, setMajorTab] = useState<'전체' | '국내' | '발리' | '즐겨찾기'>('전체');
   const [subFilter, setSubFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  /** 검색창 펼침 여부 — 기본은 돋보기 아이콘만 보이고 클릭 시 입력창 노출 */
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const { data, isLoading, refetch, isRefetching } = useQuery<DashboardResponse>({
     queryKey: ['dashboard', selectedLevel],
@@ -427,37 +446,51 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* ─── 헤더 ─── */}
+      {/* ─── 헤더 — 돋보기/새로고침 우측 ─── */}
       <View style={styles.header}>
         <View>
           <Text style={styles.appName}>Whale Log</Text>
           <Text style={styles.subtitle}>🌊 서핑 예보</Text>
         </View>
-        <TouchableOpacity
-          style={styles.refreshBtn}
-          onPress={() => refetch()}
-          disabled={isRefetching}
-        >
-          <RefreshCw size={18} color={isRefetching ? colors.textTertiary : colors.primary} />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: spacing.xs }}>
+          <TouchableOpacity
+            style={styles.refreshBtn}
+            onPress={() => {
+              setSearchOpen(v => !v);
+              if (searchOpen) setSearchQuery(''); // 닫을 때 입력 초기화
+            }}
+          >
+            <Search size={18} color={searchOpen ? colors.primary : colors.text} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.refreshBtn}
+            onPress={() => refetch()}
+            disabled={isRefetching}
+          >
+            <RefreshCw size={18} color={isRefetching ? colors.textTertiary : colors.primary} />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* ─── 검색창 ─── */}
-      <View style={styles.searchBox}>
-        <Search size={15} color={colors.textTertiary} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="스팟 또는 지역 검색"
-          placeholderTextColor={colors.textTertiary}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <X size={15} color={colors.textTertiary} />
-          </TouchableOpacity>
-        )}
-      </View>
+      {/* ─── 검색창 — 돋보기 클릭 시에만 펼쳐짐 ─── */}
+      {searchOpen && (
+        <View style={styles.searchBox}>
+          <Search size={15} color={colors.textTertiary} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="스팟 또는 지역 검색"
+            placeholderTextColor={colors.textTertiary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoFocus
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <X size={15} color={colors.textTertiary} />
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -465,22 +498,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />
         }
       >
-        {/* ─── 레벨 탭 ─── */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.levelTabsWrap}>
-          <View style={styles.levelTabs}>
-            {SURF_LEVELS.map(lv => (
-              <TouchableOpacity
-                key={lv.value}
-                style={[styles.levelTab, selectedLevel === lv.value && styles.levelTabActive]}
-                onPress={() => setSelectedLevel(lv.value)}
-              >
-                <Text style={[styles.levelTabText, selectedLevel === lv.value && styles.levelTabTextActive]}>
-                  {lv.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
+        {/* 레벨 탭 제거 — 사용자 surfLevel 직접 사용. 웹앱과 동일 (마이페이지에서만 변경) */}
 
         {/* ─── 뷰 모드 토글: 스팟 🌊 / 소통 💬 — 로딩 완료 후 항상 표시 ─── */}
         {!isLoading && (
@@ -626,10 +644,27 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
               filteredSpots.map(item => {
                 const ratingColor = getRatingColor(item.surfRating);
                 const isFav = favoritedIds.has(item.spot.id);
+                const isBlocked = item.levelFit?.[selectedLevel] === 'BLOCKED';
+                /** 조석 정보 — 밀물/썰물 + 화살표 (웹앱과 동일) */
+                const tideStatus = item.forecast.tideStatus;
+                const tideInfo = tideStatus === 'RISING' || tideStatus === 'HIGH'
+                  ? { label: tideStatus === 'HIGH' ? '만조' : '밀물', rising: true }
+                  : tideStatus === 'FALLING' || tideStatus === 'LOW'
+                    ? { label: tideStatus === 'LOW' ? '간조' : '썰물', rising: false }
+                    : null;
+                /** 날씨 아이콘 결정 — 맑음/비/구름 */
+                const weather = item.forecast.weatherCondition || '';
+                const WeatherIcon = weather.includes('맑음') ? Sun
+                  : weather.includes('비') || weather.includes('소나기') ? CloudRain
+                  : Cloud;
+                const weatherColor = weather.includes('맑음') ? '#FBBF24'
+                  : weather.includes('비') ? '#60A5FA'
+                  : colors.textTertiary;
                 return (
                   <TouchableOpacity
                     key={item.spot.id}
-                    style={styles.spotCard}
+                    /** BLOCKED 카드는 dim + 채도 낮춤 (웹앱 opacity-50 grayscale 모방) */
+                    style={[styles.spotCard, isBlocked && styles.spotCardBlocked]}
                     onPress={() => navigation.navigate('SpotDetail', { spotId: item.spot.id, spotName: item.spot.name })}
                     activeOpacity={0.85}
                   >
@@ -663,8 +698,25 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                       </View>
                     </View>
 
+                    {/* ── 기상특보 배너 (풍랑/태풍/강풍 발령 시) ── */}
+                    {item.weatherAlert?.alertName && (
+                      <View style={[
+                        styles.alertBanner,
+                        item.weatherAlert.isDangerous ? styles.alertBannerDanger : styles.alertBannerWarn,
+                      ]}>
+                        <Text style={[
+                          styles.alertText,
+                          { color: item.weatherAlert.isDangerous ? colors.error : '#E67E22' },
+                        ]}>
+                          ⚠️ {item.weatherAlert.alertName} 발령 중
+                          {item.weatherAlert.level === '경보' ? ' · 입수 금지' :
+                            item.weatherAlert.isDangerous ? ' · 입수 위험' : ''}
+                        </Text>
+                      </View>
+                    )}
+
                     {/* ── 적합도 배지 (PASS/WARNING) — BLOCKED는 하단 안전 경고에서 처리 ── */}
-                    {item.levelFit?.[selectedLevel] && item.levelFit[selectedLevel] !== 'BLOCKED' && (
+                    {item.levelFit?.[selectedLevel] && !isBlocked && (
                       <View style={styles.fitBadgeRow}>
                         <View style={[styles.fitBadge, { backgroundColor: getLevelFitColor(item.levelFit[selectedLevel]) + '20' }]}>
                           <Text style={[styles.fitBadgeText, { color: getLevelFitColor(item.levelFit[selectedLevel]) }]}>
@@ -674,7 +726,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                       </View>
                     )}
 
-                    {/* ── 파고 큰 숫자 + 주기/풍속 인라인 ── */}
+                    {/* ── 파고 큰 숫자 + 주기/풍속/조석 인라인 ── */}
                     <View style={styles.statsRow}>
                       <Text style={styles.waveHeightNum}>
                         {parseFloat(item.forecast.waveHeight).toFixed(1)}
@@ -689,13 +741,43 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                         <Wind size={12} color={colors.textTertiary} />
                         <Text style={styles.inlineStatText}>{parseFloat(item.forecast.windSpeed).toFixed(0)}km/h</Text>
                       </View>
-                      {item.forecast.waterTemperature && (
+                      {tideInfo && (
                         <View style={styles.inlineStat}>
-                          <Thermometer size={12} color={colors.textTertiary} />
-                          <Text style={styles.inlineStatText}>{parseFloat(item.forecast.waterTemperature).toFixed(0)}°C</Text>
+                          {tideInfo.rising
+                            ? <ArrowUp size={12} color={colors.textTertiary} />
+                            : <ArrowDown size={12} color={colors.textTertiary} />
+                          }
+                          <Text style={styles.inlineStatText}>{tideInfo.label}</Text>
                         </View>
                       )}
                     </View>
+
+                    {/* ── 날씨 + 기온 + 수온 별도 행 ── */}
+                    {(item.forecast.weatherCondition || item.forecast.airTemperature || item.forecast.waterTemperature) && (
+                      <View style={styles.weatherRow}>
+                        {(item.forecast.weatherCondition || item.forecast.airTemperature) && (
+                          <View style={styles.inlineStat}>
+                            <WeatherIcon size={13} color={weatherColor} />
+                            {item.forecast.weatherCondition && (
+                              <Text style={styles.weatherText}>{item.forecast.weatherCondition}</Text>
+                            )}
+                            {item.forecast.airTemperature && (
+                              <Text style={styles.weatherTemp}>{parseFloat(item.forecast.airTemperature).toFixed(0)}°C</Text>
+                            )}
+                          </View>
+                        )}
+                        {item.forecast.waterTemperature && (item.forecast.weatherCondition || item.forecast.airTemperature) && (
+                          <View style={styles.weatherDivider} />
+                        )}
+                        {item.forecast.waterTemperature && (
+                          <View style={styles.inlineStat}>
+                            <Droplets size={13} color="#60A5FA" />
+                            <Text style={styles.weatherLabel}>수온</Text>
+                            <Text style={styles.weatherTemp}>{parseFloat(item.forecast.waterTemperature).toFixed(0)}°C</Text>
+                          </View>
+                        )}
+                      </View>
+                    )}
 
                     {/* ── BLOCKED 안전 경고 ── */}
                     {item.levelFit?.[selectedLevel] === 'BLOCKED' && item.safetyReasons && item.safetyReasons.length > 0 && (
@@ -877,6 +959,46 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 3,
     elevation: 1,
+  },
+  /** BLOCKED 카드 — 웹앱 opacity-50 grayscale 모방 (RN은 grayscale 직접 지원 X, opacity로 dim) */
+  spotCardBlocked: { opacity: 0.5 },
+
+  /** 기상특보 배너 — 풍랑/태풍은 빨강, 강풍은 주황 */
+  alertBanner: {
+    borderRadius: 8,
+    paddingHorizontal: 10, paddingVertical: 6,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+  },
+  alertBannerDanger: {
+    backgroundColor: colors.error + '15',
+    borderColor: colors.error + '40',
+  },
+  alertBannerWarn: {
+    backgroundColor: '#E67E2215',
+    borderColor: '#E67E2240',
+  },
+  alertText: { fontSize: 11, fontWeight: '700' },
+
+  /** 날씨/기온/수온 별도 행 (statsRow 아래) */
+  weatherRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: spacing.sm,
+    flexWrap: 'wrap',
+  },
+  weatherDivider: {
+    width: 1, height: 12, backgroundColor: colors.border,
+  },
+  weatherText: {
+    fontSize: 11, fontWeight: '500', color: colors.text,
+  },
+  weatherLabel: {
+    fontSize: 11, color: colors.textTertiary,
+  },
+  weatherTemp: {
+    fontSize: 11, fontWeight: '700', color: colors.text,
   },
   /** 상단 — 좌측 정보 영역 + 우측 점수 원형 */
   cardTopRow: {
