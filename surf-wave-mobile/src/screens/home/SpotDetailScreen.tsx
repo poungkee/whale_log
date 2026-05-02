@@ -172,6 +172,136 @@ const CHART_W = SCR_W - spacing.lg * 2 - spacing.md * 2; // 카드 안쪽 여백
 const CHART_H = 110;
 const P = { top: 14, right: 6, bottom: 24, left: 30 };
 
+/** 차트 공통 — X축 시간 라벨 인덱스 (4시간 간격) */
+function getLabelIdxs(n: number): number[] {
+  const acc: number[] = [];
+  for (let i = 0; i < n; i++) {
+    if (i % 4 === 0 || i === n - 1) acc.push(i);
+  }
+  return acc;
+}
+
+/** 차트 공통 — 가로 그리드 Y 좌표 3줄 (0%/50%/100%) */
+function getGridYs(top: number, height: number): number[] {
+  return [top, top + height * 0.5, top + height];
+}
+
+/**
+ * 기온/수온 24시간 차트
+ * - 기온: 주황 라인
+ * - 수온: 파랑 라인
+ * - 같은 Y축 사용 (둘 다 °C)
+ */
+const TempChart: React.FC<{ data: HourlyForecast[] }> = ({ data }) => {
+  const airs = data.map(d => Number(d.airTemperature));
+  const waters = data.map(d => Number(d.waterTemperature));
+  const valid = [...airs, ...waters].filter(v => !isNaN(v) && v !== 0);
+  if (valid.length < 2) return null;
+
+  const minT = Math.floor(Math.min(...valid) - 1);
+  const maxT = Math.ceil(Math.max(...valid) + 1);
+  const range = maxT - minT;
+  const n = data.length;
+  const iW = CHART_W - P.left - P.right;
+  const iH = CHART_H - P.top - P.bottom;
+
+  const xP = (i: number) => P.left + (i / (n - 1)) * iW;
+  const yT = (v: number) => P.top + (1 - (v - minT) / range) * iH;
+
+  const buildPath = (vals: number[]) => {
+    let d = '';
+    let started = false;
+    vals.forEach((v, i) => {
+      if (isNaN(v) || v === 0) return;
+      d += `${started ? 'L' : 'M'}${xP(i).toFixed(1)},${yT(v).toFixed(1)} `;
+      started = true;
+    });
+    return d.trim();
+  };
+
+  const airPath = buildPath(airs);
+  const waterPath = buildPath(waters);
+  const labelIdxs = getLabelIdxs(n);
+  const gridYs = getGridYs(P.top, iH);
+
+  return (
+    <Svg width={CHART_W} height={CHART_H}>
+      {gridYs.map((y, i) => (
+        <Path key={`g${i}`} d={`M${P.left},${y} L${P.left + iW},${y}`}
+          stroke={colors.border} strokeWidth="0.5" strokeDasharray="2,3" />
+      ))}
+      {airPath && <Path d={airPath} stroke="#E67E22" strokeWidth="2" fill="none" />}
+      {waterPath && <Path d={waterPath} stroke="#3498DB" strokeWidth="2" fill="none" />}
+      <SvgText x={P.left - 4} y={P.top + 4} fontSize="9" fill={colors.textTertiary} textAnchor="end">
+        {maxT}°
+      </SvgText>
+      <SvgText x={P.left - 4} y={P.top + iH + 3} fontSize="9" fill={colors.textTertiary} textAnchor="end">
+        {minT}°
+      </SvgText>
+      {labelIdxs.map(i => (
+        <SvgText key={i} x={xP(i)} y={CHART_H - 4} fontSize="10" fill={colors.textSecondary} textAnchor="middle">
+          {new Date(data[i].forecastTime).getHours()}시
+        </SvgText>
+      ))}
+    </Svg>
+  );
+};
+
+/**
+ * 조석 높이 24시간 차트 — 단일 라인 + 영역
+ */
+const TideChart: React.FC<{ data: HourlyForecast[] }> = ({ data }) => {
+  const tides = data.map(d => Number(d.tideHeight));
+  const valid = tides.filter(v => !isNaN(v));
+  if (valid.length < 2) return null;
+
+  const minT = Math.min(...valid);
+  const maxT = Math.max(...valid);
+  const range = Math.max(maxT - minT, 0.1);
+  const n = data.length;
+  const iW = CHART_W - P.left - P.right;
+  const iH = CHART_H - P.top - P.bottom;
+
+  const xP = (i: number) => P.left + (i / (n - 1)) * iW;
+  const yT = (v: number) => P.top + (1 - (v - minT) / range) * iH;
+
+  const tidePath = tides.map((v, i) =>
+    isNaN(v) ? '' : `${i === 0 || isNaN(tides[i - 1]) ? 'M' : 'L'}${xP(i).toFixed(1)},${yT(v).toFixed(1)}`
+  ).join(' ');
+  const tideArea = tidePath + ` L${xP(n - 1).toFixed(1)},${(P.top + iH).toFixed(1)} L${P.left.toFixed(1)},${(P.top + iH).toFixed(1)} Z`;
+
+  const labelIdxs = getLabelIdxs(n);
+  const gridYs = getGridYs(P.top, iH);
+
+  return (
+    <Svg width={CHART_W} height={CHART_H}>
+      <Defs>
+        <LinearGradient id="tg" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0%" stopColor="#0EA5E9" stopOpacity="0.3" />
+          <Stop offset="100%" stopColor="#0EA5E9" stopOpacity="0" />
+        </LinearGradient>
+      </Defs>
+      {gridYs.map((y, i) => (
+        <Path key={`g${i}`} d={`M${P.left},${y} L${P.left + iW},${y}`}
+          stroke={colors.border} strokeWidth="0.5" strokeDasharray="2,3" />
+      ))}
+      <Path d={tideArea} fill="url(#tg)" />
+      <Path d={tidePath} stroke="#0EA5E9" strokeWidth="2" fill="none" />
+      <SvgText x={P.left - 4} y={P.top + 4} fontSize="9" fill="#0EA5E9" fontWeight="700" textAnchor="end">
+        {maxT.toFixed(1)}m
+      </SvgText>
+      <SvgText x={P.left - 4} y={P.top + iH + 3} fontSize="9" fill={colors.textTertiary} textAnchor="end">
+        {minT.toFixed(1)}m
+      </SvgText>
+      {labelIdxs.map(i => (
+        <SvgText key={i} x={xP(i)} y={CHART_H - 4} fontSize="10" fill={colors.textSecondary} textAnchor="middle">
+          {new Date(data[i].forecastTime).getHours()}시
+        </SvgText>
+      ))}
+    </Svg>
+  );
+};
+
 /**
  * 24시간 시간별 예보 차트
  * - 파고: 영역 그래프 (primary 색상)
@@ -550,6 +680,69 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                 }
               </View>
 
+              {/* ── 기온/수온 차트 (24h) — 두 라인 (주황=기온, 파랑=수온) ── */}
+              {hourlyData.length > 1 && (
+                <View style={s.card}>
+                  <Text style={s.cardTitle}>🌡️ 기온 / 수온 (24시간)</Text>
+                  <View style={s.legend}>
+                    <View style={s.legendItem}>
+                      <View style={[s.legendDot, { backgroundColor: '#E67E22' }]} />
+                      <Text style={s.legendTxt}>기온</Text>
+                    </View>
+                    <View style={s.legendItem}>
+                      <View style={[s.legendDot, { backgroundColor: '#3498DB' }]} />
+                      <Text style={s.legendTxt}>수온</Text>
+                    </View>
+                  </View>
+                  <TempChart data={hourlyData} />
+                </View>
+              )}
+
+              {/* ── 조석 차트 (24h) — tideHeight 있을 때만 ── */}
+              {hourlyData.some(h => h.tideHeight != null && !isNaN(Number(h.tideHeight))) && (
+                <View style={s.card}>
+                  <Text style={s.cardTitle}>🌊 조석 높이 (24시간)</Text>
+                  <TideChart data={hourlyData} />
+                </View>
+              )}
+
+              {/* ── 날씨 타임라인 (24h, 3시간 간격) — 웹앱과 동일 ── */}
+              {hourlyData.length > 0 && (() => {
+                const timeline = hourlyData
+                  .filter((_, i) => i % 3 === 0)
+                  .slice(0, 8)
+                  .map(h => ({
+                    hour: new Date(h.forecastTime).getHours(),
+                    label: `${new Date(h.forecastTime).getHours()}시`,
+                    emoji: getWeatherEmoji(h.weatherCondition),
+                    condition: h.weatherCondition || '',
+                  }));
+                if (!timeline.some(t => t.emoji)) return null;
+                return (
+                  <View style={s.card}>
+                    <Text style={s.cardTitle}>☁️ 날씨 변화 (24시간)</Text>
+                    <View style={s.weatherTimelineRow}>
+                      {timeline.map((w, i) => {
+                        /** 06~18시는 주간(따뜻한 배경), 그 외 야간(차분한 배경) */
+                        const isDaytime = w.hour >= 6 && w.hour < 18;
+                        return (
+                          <View
+                            key={i}
+                            style={[
+                              s.weatherTimelineItem,
+                              { backgroundColor: isDaytime ? '#F59E0B15' : '#64748B15' },
+                            ]}
+                          >
+                            <Text style={s.weatherTimelineEmoji}>{w.emoji || '—'}</Text>
+                            <Text style={s.weatherTimelineLabel}>{w.label}</Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  </View>
+                );
+              })()}
+
               {/* 예보 데이터 6개 그리드 */}
               <View style={s.card}>
                 <Text style={s.cardTitle}>🌊 예보 상세</Text>
@@ -608,13 +801,48 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                 </View>
               )}
 
-              {/* KHOA 정부 서핑지수 카드 (한국 스팟만) */}
+              {/* KHOA 정부 서핑지수 카드 (한국 스팟만) — KHOA 실측 데이터 비교 포함 */}
               {khoaEnrichment?.khoaIndex && (
                 <View style={s.card}>
                   <Text style={s.cardTitle}>🏛 정부 서핑지수</Text>
                   <KhoaBadge enrichment={khoaEnrichment} currentLevel={undefined} />
                 </View>
               )}
+
+              {/* ── 현재 요약 — 스웰/풍/조석/온도 한눈에 ── */}
+              <View style={s.card}>
+                <Text style={s.cardTitle}>📋 현재 요약</Text>
+                <View style={{ gap: 8 }}>
+                  {/* 스웰 */}
+                  <View style={s.summaryRow}>
+                    <Waves size={15} color="#2ECC71" />
+                    <Text style={s.summaryLabel}>스웰</Text>
+                    <Text style={s.summaryValue}>
+                      {forecast.swellHeight
+                        ? `${parseFloat(forecast.swellHeight).toFixed(1)}m @${parseFloat(forecast.swellPeriod || '0').toFixed(0)}s → ${parseFloat(forecast.swellDirection || '0').toFixed(0)}°`
+                        : '-'}
+                    </Text>
+                  </View>
+                  {/* 바람 */}
+                  <View style={s.summaryRow}>
+                    <Wind size={15} color="#22c55e" />
+                    <Text style={s.summaryLabel}>바람</Text>
+                    <Text style={s.summaryValue}>
+                      {parseFloat(forecast.windSpeed).toFixed(0)}km/h · {degToCompass(parseFloat(forecast.windDirection))} ({parseFloat(forecast.windDirection).toFixed(0)}°)
+                    </Text>
+                  </View>
+                  {/* 기온/수온 */}
+                  {(forecast.airTemperature || forecast.waterTemperature) && (
+                    <View style={s.summaryRow}>
+                      <Text style={{ fontSize: 14 }}>🌡️</Text>
+                      <Text style={s.summaryLabel}>온도</Text>
+                      <Text style={s.summaryValue}>
+                        기온 {parseFloat(forecast.airTemperature).toFixed(0)}°C · 수온 {parseFloat(forecast.waterTemperature).toFixed(0)}°C
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
 
               {/* hints 태그 */}
               {hints && hints.length > 0 && (
@@ -874,6 +1102,20 @@ const s = StyleSheet.create({
   /** 점선 범례 — 차트의 풍속 점선과 일치 */
   legendDash: { width: 14, height: 0, borderTopWidth: 1.5, borderStyle: 'dashed' },
   legendTxt: { fontSize: 11, color: colors.textSecondary },
+
+  /** 현재 요약 행 — 아이콘 + 라벨 + 값 한 줄 */
+  summaryRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  summaryLabel: { fontSize: 12, color: colors.textSecondary, fontWeight: '600' },
+  summaryValue: { flex: 1, textAlign: 'right', fontSize: 12, color: colors.text, fontWeight: '500' },
+
+  /** 날씨 타임라인 — 8개 박스(3시간 간격) 가로 배열 */
+  weatherTimelineRow: { flexDirection: 'row', gap: 4 },
+  weatherTimelineItem: {
+    flex: 1, alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 8, borderRadius: 8,
+  },
+  weatherTimelineEmoji: { fontSize: 18, marginBottom: 2 },
+  weatherTimelineLabel: { fontSize: 10, color: colors.textTertiary, fontWeight: '500' },
   emptyTxt: { ...typography.caption, color: colors.textTertiary, textAlign: 'center', paddingVertical: 16 },
 
   // 예보 그리드
