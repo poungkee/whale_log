@@ -726,7 +726,9 @@ const AccordionItem: React.FC<{
         }
       </TouchableOpacity>
       {open && (
-        <View style={[accordionStyles.body, { borderLeftColor: categoryColor }]}>
+        <View style={accordionStyles.body}>
+          {/** 본문 시작 부분에 짧은 컬러 액센트만 — 끝까지 이어지는 borderLeft는 "잘린 느낌"이라 제거 */}
+          <View style={[accordionStyles.colorAccent, { backgroundColor: categoryColor }]} />
           <Text style={accordionStyles.content}>{item.content}</Text>
         </View>
       )}
@@ -745,18 +747,26 @@ const accordionStyles = StyleSheet.create({
   },
   icon: { fontSize: 18 },
   title: { flex: 1, ...typography.body2, fontWeight: '600', color: colors.text },
-  /** 본문 좌우 여백을 컴팩트하게 — 텍스트가 화면 너비 충분히 활용하도록 */
+  /**
+   * 본문 — 화면 너비 최대한 활용 (이전엔 marginLeft+borderLeft+paddingLeft로 좌측 35px 낭비됨)
+   * 컬러 줄은 짧은 액센트만 위쪽에 두고, 본문은 padding 균일하게.
+   */
   body: {
-    paddingTop: 0,
-    paddingRight: spacing.md,
+    paddingHorizontal: spacing.md,
     paddingBottom: spacing.md,
-    paddingLeft: spacing.md + 3,
-    borderLeftWidth: 3,
-    marginLeft: spacing.md,
+    paddingTop: 4,
+    /** 헤더와 본문 분리선 */
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
+  /** 본문 시작에 카테고리 컬러 짧은 액센트 (40px 가로 막대) */
+  colorAccent: {
+    width: 40, height: 3, borderRadius: 2,
+    marginTop: spacing.sm, marginBottom: spacing.sm,
+  },
+  /** 줄간격 22 → 24로 — 빽빽함 완화, bullet 리스트 가독성 향상 */
   content: {
-    ...typography.body2, color: colors.textSecondary, lineHeight: 22,
-    flexShrink: 1,
+    ...typography.body2, color: colors.textSecondary, lineHeight: 24,
   },
 });
 
