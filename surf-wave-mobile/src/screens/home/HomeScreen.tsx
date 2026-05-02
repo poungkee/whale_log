@@ -140,6 +140,16 @@ const getLevelFitLabel = (fit: string) => {
   return '✅ 적합';
 };
 
+/** 난이도 한국어 약칭 (웹앱 SpotCard와 동일) */
+const getDifficultyShort = (difficulty?: string): string => {
+  const d = (difficulty || '').toUpperCase();
+  if (d === 'BEGINNER') return '초급';
+  if (d === 'INTERMEDIATE') return '중급';
+  if (d === 'ADVANCED') return '상급';
+  if (d === 'EXPERT') return '전문가';
+  return difficulty || '';
+};
+
 // hints 태그 색상
 const getHintTagColor = (tag: string): string => {
   const dangerTags = ['SAFETY_WARNING', 'WAVE_TOO_BIG', 'STRONG_WIND', 'ONSHORE_WIND'];
@@ -613,133 +623,114 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                 </TouchableOpacity>
               </View>
             ) : (
-              filteredSpots.map(item => (
-                <TouchableOpacity
-                  key={item.spot.id}
-                  style={styles.spotCard}
-                  onPress={() => navigation.navigate('SpotDetail', { spotId: item.spot.id, spotName: item.spot.name })}
-                  activeOpacity={0.8}
-                >
-                  {/* 스팟 이미지 헤더 */}
-                  <ImageBackground
-                    source={getSpotImage(item.spot.region, item.spot.name)}
-                    style={styles.cardImage}
-                    imageStyle={styles.cardImageStyle}
+              filteredSpots.map(item => {
+                const ratingColor = getRatingColor(item.surfRating);
+                const isFav = favoritedIds.has(item.spot.id);
+                return (
+                  <TouchableOpacity
+                    key={item.spot.id}
+                    style={styles.spotCard}
+                    onPress={() => navigation.navigate('SpotDetail', { spotId: item.spot.id, spotName: item.spot.name })}
+                    activeOpacity={0.85}
                   >
-                    <View style={styles.cardImageOverlay} />
-                    <View style={styles.cardImageContent}>
-                      <View style={styles.cardLeft}>
-                        <Text style={styles.spotNameOnImg}>{item.spot.name}</Text>
-                        <Text style={styles.spotRegionOnImg}>{item.spot.region}</Text>
-                      </View>
-                      <View style={styles.cardRight}>
-                        {/* 즐겨찾기 버튼 */}
+                    {/* ── 상단: 좌측(하트+스팟명+지역·난이도) + 우측(점수 원형) ── */}
+                    <View style={styles.cardTopRow}>
+                      <View style={styles.cardTopLeft}>
                         <TouchableOpacity
-                          style={styles.cardFavBtn}
-                          onPress={() => favMutation.mutate({ spotId: item.spot.id, isFav: favoritedIds.has(item.spot.id) })}
-                          activeOpacity={0.8}
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            favMutation.mutate({ spotId: item.spot.id, isFav });
+                          }}
+                          hitSlop={8}
                         >
                           <Heart
-                            size={15}
-                            color={favoritedIds.has(item.spot.id) ? colors.accent : '#fff'}
-                            fill={favoritedIds.has(item.spot.id) ? colors.accent : 'transparent'}
+                            size={16}
+                            color={isFav ? colors.error : colors.textTertiary}
+                            fill={isFav ? colors.error : 'transparent'}
                           />
                         </TouchableOpacity>
-                        <View style={[styles.ratingBadge, { backgroundColor: getRatingColor(item.surfRating) }]}>
-                          <Text style={styles.ratingNumber}>{item.surfRating}</Text>
-                          <Text style={styles.ratingLabel}>{getRatingLabel(item.surfRating)}</Text>
-                        </View>
-                      </View>
-                    </View>
-                  </ImageBackground>
-
-                  {/* 컨디션 칩 */}
-                  <View style={styles.conditionRow}>
-                    <View style={styles.conditionBadge}>
-                      <Text style={styles.conditionText}>파도 {item.simpleCondition.waveStatus}</Text>
-                    </View>
-                    <View style={styles.conditionBadge}>
-                      <Text style={styles.conditionText}>바람 {item.simpleCondition.windStatus}</Text>
-                    </View>
-                    <View style={[styles.conditionBadge, styles.overallBadge]}>
-                      <Text style={[styles.conditionText, { color: colors.primary, fontWeight: '600' }]}>
-                        {item.simpleCondition.overall}
-                      </Text>
-                    </View>
-                    {/* 레벨 적합도 배지 */}
-                    {item.levelFit?.[selectedLevel] && (
-                      <View style={[styles.levelFitBadge, { backgroundColor: getLevelFitColor(item.levelFit[selectedLevel]) + '20', borderColor: getLevelFitColor(item.levelFit[selectedLevel]) + '60' }]}>
-                        <Text style={[styles.levelFitText, { color: getLevelFitColor(item.levelFit[selectedLevel]) }]}>
-                          {getLevelFitLabel(item.levelFit[selectedLevel])}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-
-                  {/* 안전 경고 (BLOCKED 시) */}
-                  {item.levelFit?.[selectedLevel] === 'BLOCKED' && item.safetyReasons && item.safetyReasons.length > 0 && (
-                    <View style={styles.safetyRow}>
-                      <Text style={styles.safetyText}>⛔ {item.safetyReasons[0]}</Text>
-                    </View>
-                  )}
-
-                  {/* hints 태그 */}
-                  {item.hints?.tags && item.hints.tags.length > 0 && (
-                    <View style={styles.hintsRow}>
-                      {item.hints.tags.slice(0, 4).map(tag => (
-                        <View key={tag} style={[styles.hintTag, { borderColor: getHintTagColor(tag) + '50', backgroundColor: getHintTagColor(tag) + '15' }]}>
-                          <Text style={[styles.hintTagText, { color: getHintTagColor(tag) }]}>
-                            {getHintTagLabel(tag)}
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.spotName} numberOfLines={1}>{item.spot.name}</Text>
+                          <Text style={styles.spotMeta}>
+                            {item.spot.region} · {getDifficultyShort(item.spot.difficulty)}
                           </Text>
                         </View>
-                      ))}
+                      </View>
+                      {/* 점수 원형 — 등급 색상 배경 */}
+                      <View style={[styles.scoreCircle, { backgroundColor: ratingColor + '20' }]}>
+                        <Text style={[styles.scoreNum, { color: ratingColor }]}>{item.surfRating.toFixed(1)}</Text>
+                        <Text style={[styles.scoreGrade, { color: ratingColor }]}>{getRatingLabel(item.surfRating)}</Text>
+                      </View>
                     </View>
-                  )}
 
-                  {/* 데이터 행 */}
-                  <View style={styles.dataRow}>
-                    <View style={styles.dataItem}>
-                      <Waves size={14} color={colors.primary} />
-                      <Text style={styles.dataValue}>{parseFloat(item.forecast.waveHeight).toFixed(1)}m</Text>
-                      <Text style={styles.dataLabel}>파고</Text>
-                    </View>
-                    <View style={styles.dataDivider} />
-                    <View style={styles.dataItem}>
-                      <Clock size={14} color={colors.textSecondary} />
-                      <Text style={styles.dataValue}>{parseFloat(item.forecast.wavePeriod).toFixed(0)}s</Text>
-                      <Text style={styles.dataLabel}>주기</Text>
-                    </View>
-                    <View style={styles.dataDivider} />
-                    <View style={styles.dataItem}>
-                      <Wind size={14} color={colors.textSecondary} />
-                      <Text style={styles.dataValue}>{parseFloat(item.forecast.windSpeed).toFixed(0)}</Text>
-                      <Text style={styles.dataLabel}>km/h</Text>
-                    </View>
-                    <View style={styles.dataDivider} />
-                    <View style={styles.dataItem}>
-                      <Thermometer size={14} color={colors.textSecondary} />
-                      <Text style={styles.dataValue}>{parseFloat(item.forecast.waterTemperature).toFixed(0)}°</Text>
-                      <Text style={styles.dataLabel}>수온</Text>
-                    </View>
-                  </View>
+                    {/* ── 적합도 배지 (PASS/WARNING) — BLOCKED는 하단 안전 경고에서 처리 ── */}
+                    {item.levelFit?.[selectedLevel] && item.levelFit[selectedLevel] !== 'BLOCKED' && (
+                      <View style={styles.fitBadgeRow}>
+                        <View style={[styles.fitBadge, { backgroundColor: getLevelFitColor(item.levelFit[selectedLevel]) + '20' }]}>
+                          <Text style={[styles.fitBadgeText, { color: getLevelFitColor(item.levelFit[selectedLevel]) }]}>
+                            {getLevelFitLabel(item.levelFit[selectedLevel])}
+                          </Text>
+                        </View>
+                      </View>
+                    )}
 
-                  {/* KHOA 정부 서핑지수 (한국 스팟만) */}
-                  {item.khoaEnrichment?.khoaIndex && (
-                    <View style={styles.khoaRow}>
-                      <KhoaBadge
-                        enrichment={item.khoaEnrichment}
-                        currentLevel={selectedLevel}
-                        compact
-                      />
+                    {/* ── 파고 큰 숫자 + 주기/풍속 인라인 ── */}
+                    <View style={styles.statsRow}>
+                      <Text style={styles.waveHeightNum}>
+                        {parseFloat(item.forecast.waveHeight).toFixed(1)}
+                      </Text>
+                      <Text style={styles.waveHeightUnit}>m</Text>
+                      <View style={styles.statsDivider} />
+                      <View style={styles.inlineStat}>
+                        <Clock size={12} color={colors.textTertiary} />
+                        <Text style={styles.inlineStatText}>{parseFloat(item.forecast.wavePeriod).toFixed(0)}s</Text>
+                      </View>
+                      <View style={styles.inlineStat}>
+                        <Wind size={12} color={colors.textTertiary} />
+                        <Text style={styles.inlineStatText}>{parseFloat(item.forecast.windSpeed).toFixed(0)}km/h</Text>
+                      </View>
+                      {item.forecast.waterTemperature && (
+                        <View style={styles.inlineStat}>
+                          <Thermometer size={12} color={colors.textTertiary} />
+                          <Text style={styles.inlineStatText}>{parseFloat(item.forecast.waterTemperature).toFixed(0)}°C</Text>
+                        </View>
+                      )}
                     </View>
-                  )}
 
-                  {/* 한줄 추천 (hints 메시지 우선) */}
-                  <Text style={styles.recommendation} numberOfLines={2}>
-                    💬 {item.hints?.message || item.recommendationKo}
-                  </Text>
-                </TouchableOpacity>
-              ))
+                    {/* ── BLOCKED 안전 경고 ── */}
+                    {item.levelFit?.[selectedLevel] === 'BLOCKED' && item.safetyReasons && item.safetyReasons.length > 0 && (
+                      <View style={styles.safetyRow}>
+                        <Text style={styles.safetyText}>⛔ {item.safetyReasons[0]}</Text>
+                      </View>
+                    )}
+
+                    {/* ── hints 태그 (오프쇼어/짧은주기 등) ── */}
+                    {item.hints?.tags && item.hints.tags.length > 0 && (
+                      <View style={styles.tagRow}>
+                        {item.hints.tags.slice(0, 3).map(tag => (
+                          <View key={tag} style={[styles.tag, { backgroundColor: getHintTagColor(tag) + '18' }]}>
+                            <Text style={[styles.tagText, { color: getHintTagColor(tag) }]}>
+                              {getHintTagLabel(tag)}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+
+                    {/* ── KHOA 정부 서핑지수 (한국 스팟) ── */}
+                    {item.khoaEnrichment?.khoaIndex && (
+                      <View style={styles.khoaRow}>
+                        <KhoaBadge enrichment={item.khoaEnrichment} currentLevel={selectedLevel} compact />
+                      </View>
+                    )}
+
+                    {/* ── 추천 메시지 ── */}
+                    <Text style={styles.recommendation} numberOfLines={2}>
+                      {item.hints?.message || item.recommendationKo}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })
             )}
           </View>
         )}
@@ -873,94 +864,122 @@ const styles = StyleSheet.create({
   communityTitle: { ...typography.body1, fontWeight: '700', color: colors.text },
   communityDesc: { ...typography.body2, color: colors.textSecondary },
 
-  // 스팟 카드
+  // ── 스팟 카드 (웹앱 SpotCard.tsx 디자인과 1:1) ──
   spotCard: {
-    backgroundColor: colors.surface, borderRadius: 16,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
     borderWidth: 1, borderColor: colors.border,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    /** 그림자 약하게 — 웹앱 shadow-sm과 유사 */
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  /** 상단 — 좌측 정보 영역 + 우측 점수 원형 */
+  cardTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: spacing.sm,
   },
-  cardImage: { height: 100, overflow: 'hidden' },
-  cardImageStyle: { borderTopLeftRadius: 14, borderTopRightRadius: 14 },
-  cardImageOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.38)',
-    borderTopLeftRadius: 14, borderTopRightRadius: 14,
+  cardTopLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    marginRight: spacing.sm,
   },
-  cardImageContent: {
-    flex: 1, flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'flex-end', padding: spacing.sm,
+  spotName: {
+    ...typography.body1,
+    fontWeight: '800',
+    color: colors.text,
   },
-  cardLeft: { flex: 1, marginRight: spacing.sm },
-  cardRight: { alignItems: 'flex-end', gap: 4 },
-  cardFavBtn: {
-    width: 26, height: 26, borderRadius: 13,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center', alignItems: 'center',
+  spotMeta: {
+    fontSize: 11,
+    color: colors.textTertiary,
+    marginTop: 2,
   },
-  spotNameOnImg: { ...typography.body1, fontWeight: '700', color: '#fff' },
-  spotRegionOnImg: { ...typography.caption, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
-  ratingBadge: {
-    width: 46, height: 46, borderRadius: 23,
-    justifyContent: 'center', alignItems: 'center',
+  /** 점수 원형 — 48x48, 등급 색상 배경 */
+  scoreCircle: {
+    width: 48, height: 48, borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  ratingNumber: { fontSize: 16, fontWeight: '800', color: '#fff' },
-  ratingLabel: { fontSize: 9, color: '#fff', fontWeight: '600' },
-
-  conditionRow: { flexDirection: 'row', gap: spacing.xs, padding: spacing.sm, paddingBottom: 0 },
-  conditionBadge: {
-    paddingHorizontal: spacing.sm, paddingVertical: 3,
-    backgroundColor: colors.gray100, borderRadius: 8,
+  scoreNum: {
+    fontSize: 16, fontWeight: '900', lineHeight: 18,
   },
-  overallBadge: { backgroundColor: colors.primary + '15' },
-  conditionText: { ...typography.caption, color: colors.textSecondary },
-
-  dataRow: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: colors.background, borderRadius: 12,
-    margin: spacing.sm, padding: spacing.sm,
-  },
-  dataItem: { flex: 1, alignItems: 'center', gap: 2 },
-  dataDivider: { width: 1, height: 30, backgroundColor: colors.border },
-  dataValue: { ...typography.body2, fontWeight: '700', color: colors.text },
-  dataLabel: { fontSize: 10, color: colors.textSecondary },
-
-  recommendation: {
-    ...typography.caption, color: colors.textSecondary,
-    fontStyle: 'italic', paddingHorizontal: spacing.md, paddingBottom: spacing.sm,
+  scoreGrade: {
+    fontSize: 9, fontWeight: '700', marginTop: 1,
   },
 
-  // 레벨 적합도 배지
-  levelFitBadge: {
-    paddingHorizontal: spacing.sm, paddingVertical: 3,
-    borderRadius: 8, borderWidth: 1,
+  /** 적합도 배지 (PASS/WARNING) */
+  fitBadgeRow: { flexDirection: 'row', marginBottom: spacing.sm },
+  fitBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
-  levelFitText: { fontSize: 10, fontWeight: '700' },
+  fitBadgeText: { fontSize: 10, fontWeight: '700' },
 
-  // 안전 경고
+  /** 파고 큰 숫자 + 주기/풍속/수온 인라인 한 줄 */
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
+    marginBottom: spacing.sm,
+    flexWrap: 'wrap',
+  },
+  waveHeightNum: {
+    fontSize: 24, fontWeight: '900',
+    color: colors.text, lineHeight: 26,
+  },
+  waveHeightUnit: {
+    fontSize: 12, fontWeight: '500',
+    color: colors.textTertiary,
+  },
+  statsDivider: {
+    width: 1, height: 16, backgroundColor: colors.border,
+    marginHorizontal: 2,
+    alignSelf: 'center',
+  },
+  inlineStat: {
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+  },
+  inlineStatText: {
+    fontSize: 11, fontWeight: '600',
+    color: colors.text,
+  },
+
+  /** 안전 경고 — BLOCKED 시에만 */
   safetyRow: {
-    marginHorizontal: spacing.sm,
     backgroundColor: colors.error + '10',
-    borderRadius: 8, borderWidth: 1, borderColor: colors.error + '30',
-    paddingHorizontal: spacing.sm, paddingVertical: 5,
+    borderRadius: 8,
+    paddingHorizontal: 10, paddingVertical: 6,
+    marginBottom: spacing.sm,
   },
   safetyText: { fontSize: 11, color: colors.error, fontWeight: '600' },
 
-  // hints 태그
-  hintsRow: {
+  /** hints 태그 (오프쇼어/짧은주기 등) */
+  tagRow: {
     flexDirection: 'row', flexWrap: 'wrap', gap: 4,
-    paddingHorizontal: spacing.sm, paddingBottom: 4,
+    marginBottom: spacing.sm,
   },
-  hintTag: {
-    paddingHorizontal: 7, paddingVertical: 2,
-    borderRadius: 6, borderWidth: 1,
+  tag: {
+    paddingHorizontal: 6, paddingVertical: 2,
+    borderRadius: 4,
   },
-  hintTagText: { fontSize: 10, fontWeight: '600' },
+  tagText: { fontSize: 10, fontWeight: '600' },
 
-  // KHOA 정부 서핑지수
-  khoaRow: {
-    paddingHorizontal: spacing.md, paddingBottom: 4,
+  /** KHOA 뱃지 행 */
+  khoaRow: { marginBottom: 6 },
+
+  /** 추천 메시지 */
+  recommendation: {
+    fontSize: 12, color: colors.textSecondary,
+    lineHeight: 18,
   },
 });
 
