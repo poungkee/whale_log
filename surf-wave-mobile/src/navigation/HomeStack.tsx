@@ -17,7 +17,11 @@ const HomeStack: React.FC = () => {
       <Stack.Screen
         name="SpotDetail"
         component={SpotDetailScreen}
-        options={{ title: 'Spot Details' }}
+        /**
+         * 자체 헤더가 SpotDetailScreen 안에 있어서(< 화살표 + 스팟 이름 + 하트) RN 기본 헤더 숨김.
+         * 이전엔 "< Home Spot Details" 영문 헤더가 위에 추가로 떠서 중복됐음.
+         */
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );
