@@ -729,12 +729,55 @@ const AccordionItem: React.FC<{
         <View style={accordionStyles.body}>
           {/** 본문 시작 부분에 짧은 컬러 액센트만 — 끝까지 이어지는 borderLeft는 "잘린 느낌"이라 제거 */}
           <View style={[accordionStyles.colorAccent, { backgroundColor: categoryColor }]} />
-          <Text style={accordionStyles.content}>{item.content}</Text>
+          {renderContent(item.content)}
         </View>
       )}
     </View>
   );
 };
+
+/**
+ * 본문 렌더러 — bullet/번호 항목은 hanging indent로 분리.
+ * "• 항목" 또는 "1. 항목" 형태일 때 마커와 본문을 분리해서
+ * wrap된 두번째 줄이 마커가 아닌 본문 시작점에 정렬되게 함.
+ * (이전: 한 Text로 렌더 → 두번째 줄이 화면 왼쪽 끝부터 시작해서 가독성 떨어짐)
+ */
+function renderContent(content: string): React.ReactNode {
+  const lines = content.split('\n');
+  return lines.map((line, i) => {
+    /** 빈 줄 — 단락 구분 spacer */
+    if (line.trim() === '') {
+      return <View key={i} style={{ height: 8 }} />;
+    }
+
+    /** 들여쓰기 감지 (앞 공백 2칸 단위) — 중첩 bullet 표현 */
+    const indentMatch = line.match(/^(\s*)/);
+    const indent = indentMatch ? indentMatch[0].length : 0;
+    const trimmed = line.trimStart();
+
+    /** bullet (• - *) 또는 숫자(1. 2. ...) 마커 감지 */
+    const bulletMatch = trimmed.match(/^([•\-*])\s+/);
+    const numberMatch = trimmed.match(/^(\d+\.)\s+/);
+    const marker = bulletMatch?.[1] ?? numberMatch?.[1];
+
+    if (marker) {
+      const rest = trimmed.substring(marker.length).trimStart();
+      return (
+        <View key={i} style={[accordionStyles.bulletRow, indent > 0 && { paddingLeft: indent * 4 }]}>
+          <Text style={accordionStyles.bulletMarker}>{marker}</Text>
+          <Text style={accordionStyles.bulletText}>{rest}</Text>
+        </View>
+      );
+    }
+
+    /** 일반 텍스트 줄 (제목/설명/이모지 등) */
+    return (
+      <Text key={i} style={[accordionStyles.contentLine, indent > 0 && { paddingLeft: indent * 4 }]}>
+        {trimmed}
+      </Text>
+    );
+  });
+}
 
 const accordionStyles = StyleSheet.create({
   container: {
@@ -764,9 +807,32 @@ const accordionStyles = StyleSheet.create({
     width: 40, height: 3, borderRadius: 2,
     marginTop: spacing.sm, marginBottom: spacing.sm,
   },
-  /** 줄간격 22 → 24로 — 빽빽함 완화, bullet 리스트 가독성 향상 */
-  content: {
-    ...typography.body2, color: colors.textSecondary, lineHeight: 24,
+  /**
+   * Hanging indent를 위한 bullet 행 — 마커 너비 고정 + 본문 flex:1
+   * 본문이 wrap될 때 두번째 줄이 마커가 아닌 본문 시작점에 정렬됨.
+   */
+  bulletRow: {
+    flexDirection: 'row',
+    marginBottom: 3,
+  },
+  bulletMarker: {
+    ...typography.body2,
+    color: colors.textSecondary,
+    lineHeight: 22,
+    width: 16,
+  },
+  bulletText: {
+    ...typography.body2,
+    color: colors.textSecondary,
+    lineHeight: 22,
+    flex: 1,
+  },
+  /** 일반 텍스트 줄 (bullet/번호 아닌 줄) */
+  contentLine: {
+    ...typography.body2,
+    color: colors.textSecondary,
+    lineHeight: 22,
+    marginBottom: 3,
   },
 });
 
