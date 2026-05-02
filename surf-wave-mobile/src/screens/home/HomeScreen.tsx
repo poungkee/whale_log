@@ -47,12 +47,13 @@ interface DashboardResponse {
 }
 
 // 국내 세부 지역 그룹 (웹앱 Header.tsx와 동일)
+// 한국 해역 4분류 — 부산은 메인 서핑 스팟이 동해 영향이라 동해로 분류
+// 누락됐던 region(거제/완도/울산/동해시) 추가, "기타" 그룹 제거
 const DOMESTIC_GROUPS = [
-  { key: '동해', label: '동해', regions: ['양양', '고성', '속초', '강릉'] },
-  { key: '남해', label: '남해', regions: ['부산'] },
-  { key: '제주', label: '제주', regions: ['제주'] },
+  { key: '동해', label: '동해', regions: ['양양', '고성', '속초', '강릉', '동해', '포항', '울산', '부산'] },
+  { key: '남해', label: '남해', regions: ['거제', '완도', '고흥'] },
   { key: '서해', label: '서해', regions: ['태안'] },
-  { key: '기타', label: '기타', regions: ['포항', '고흥'] },
+  { key: '제주', label: '제주', regions: ['제주'] },
 ];
 
 const BALI_GROUPS = [

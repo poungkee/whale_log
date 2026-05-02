@@ -21,11 +21,15 @@ import type { RegionFilter, RegionGroup } from '../types';
  * key: 필터 식별자, label: 화면 표시명, regions: DB region 값 목록
  */
 export const DOMESTIC_GROUPS: RegionGroup[] = [
-  { key: '동해', label: '동해', regions: ['양양', '고성', '속초', '강릉'] },
-  { key: '남해', label: '남해', regions: ['부산'] },
-  { key: '제주', label: '제주', regions: ['제주'] },
+  /**
+   * 한국 해역 4분류 — 지리 정확성 우선.
+   * 부산은 메인 서핑 스팟(송정/임랑/해운대)이 동해 영향이라 동해로 분류.
+   * 누락됐던 region(거제/완도/울산/동해시) 모두 추가, "기타" 그룹 제거.
+   */
+  { key: '동해', label: '동해', regions: ['양양', '고성', '속초', '강릉', '동해', '포항', '울산', '부산'] },
+  { key: '남해', label: '남해', regions: ['거제', '완도', '고흥'] },
   { key: '서해', label: '서해', regions: ['태안'] },
-  { key: '기타', label: '기타', regions: ['포항', '고흥'] },
+  { key: '제주', label: '제주', regions: ['제주'] },
 ];
 
 /**
