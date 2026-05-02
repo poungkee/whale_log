@@ -237,7 +237,8 @@ const AccordionItem: React.FC<{
 const accordionStyles = StyleSheet.create({
   container: {
     backgroundColor: colors.surface, borderRadius: 12,
-    borderWidth: 1, borderColor: colors.border, marginBottom: spacing.sm, overflow: 'hidden',
+    borderWidth: 1, borderColor: colors.border, marginBottom: spacing.sm,
+    /** overflow:hidden 제거 — 동적 높이 계산 시 본문 일부가 잘리던 문제 해결 */
   },
   header: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
@@ -245,11 +246,26 @@ const accordionStyles = StyleSheet.create({
   },
   icon: { fontSize: 18 },
   title: { flex: 1, ...typography.body2, fontWeight: '600', color: colors.text },
+  /**
+   * body — marginLeft + borderLeft + paddingHorizontal 합쳐서 좌우 여백이 너무 커
+   * 본문이 좁게 wrap되고 일부 잘려 보이던 문제 수정.
+   * 좌측 컬러 바는 paddingLeft 안에 borderLeft로 흡수 (전체 너비 활용).
+   */
   body: {
-    paddingHorizontal: spacing.md, paddingBottom: spacing.md,
-    marginLeft: spacing.md, borderLeftWidth: 3,
+    paddingTop: 0,
+    paddingRight: spacing.md,
+    paddingBottom: spacing.md,
+    paddingLeft: spacing.md + 3,
+    borderLeftWidth: 3,
+    marginLeft: spacing.md,
   },
-  content: { ...typography.body2, color: colors.textSecondary, lineHeight: 22 },
+  content: {
+    ...typography.body2,
+    color: colors.textSecondary,
+    lineHeight: 22,
+    /** 안드로이드에서 일부 텍스트가 잘리던 문제 — flexShrink:1로 부모 너비 활용 보장 */
+    flexShrink: 1,
+  },
 });
 
 /** 전체 가이드 항목 수 (모든 카테고리 합계) — GUIDE_ALL 뱃지 조건 산정에 사용 */
@@ -356,15 +372,25 @@ const styles = StyleSheet.create({
   title: { ...typography.h2, color: colors.text, fontWeight: '700' },
   subtitle: { ...typography.body2, color: colors.textSecondary, marginTop: 2 },
 
-  tabsScroll: { maxHeight: 56, flexGrow: 0 },
-  tabsContent: { paddingHorizontal: spacing.lg, gap: spacing.sm, paddingVertical: spacing.sm },
+  /**
+   * 카테고리 탭 가로 스크롤 — height 고정으로 layout 안정화.
+   * maxHeight + flexGrow:0 만으로는 RN의 ScrollView horizontal이 자식 너비를 못 잡아
+   * 첫 탭만 보이고 나머지가 짤리던 문제. height 명시 + 각 탭에 minWidth 추가.
+   */
+  tabsScroll: { height: 52 },
+  tabsContent: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
+    alignItems: 'center',
+  },
   categoryTab: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: spacing.md, paddingVertical: 7,
     borderRadius: 20, backgroundColor: colors.surface,
     borderWidth: 1, borderColor: colors.border,
-    /** flexShrink: 0 — ScrollView horizontal 안에서 탭이 압축되지 않고 본인 폭 유지하도록 */
+    /** flexShrink:0 + minWidth 80 — 가로 스크롤 시 자식 너비 측정 보장 */
     flexShrink: 0,
+    minWidth: 80,
   },
   categoryLabel: { ...typography.caption, color: colors.textSecondary, fontWeight: '500' },
 
