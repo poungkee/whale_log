@@ -166,8 +166,46 @@ export class BadgesService {
       await award('PROFILE_COMPLETE');
     }
 
-    /** 프로 서퍼 — ADVANCED 이상 */
-    if (['ADVANCED', 'EXPERT'].includes(surf_level)) {
+    /** 프로 서퍼 — EXPERT 레벨 + 활동 검증 (자기 선언만으론 못 받음) */
+    if (surf_level === 'EXPERT') {
+      await this.checkProSurfer(ctx.userId, award);
+    }
+  }
+
+  /**
+   * PRO_SURFER 활동 검증 — EXPERT 레벨 + 두 옵션 중 하나 충족 시 부여
+   *  - 옵션 A: 사진 포함 다이어리 10개 이상 (사진으로 활동 인증)
+   *  - 옵션 B: 다이어리 10개 + 다른 뱃지 5개 이상 (전반 활동성 인증)
+   * 사용자 활동 스타일이 다양해서 OR 조건으로 케이스 모두 인정.
+   */
+  private async checkProSurfer(userId: string, award: (key: string) => Promise<void>) {
+    /** 사진 포함 다이어리 수 */
+    const photoResult = await this.dataSource.query(
+      `SELECT COUNT(DISTINCT d.id) as cnt FROM surf_diaries d
+       JOIN diary_images di ON di.diary_id = d.id
+       WHERE d.user_id = $1 AND d.deleted_at IS NULL`,
+      [userId],
+    );
+    const photoCount = parseInt(photoResult[0].cnt, 10);
+
+    /** 일반 다이어리 수 */
+    const diaryResult = await this.dataSource.query(
+      `SELECT COUNT(*) as cnt FROM surf_diaries WHERE user_id = $1 AND deleted_at IS NULL`,
+      [userId],
+    );
+    const diaryCount = parseInt(diaryResult[0].cnt, 10);
+
+    /** PRO_SURFER 자신 제외 보유 뱃지 수 */
+    const badgeResult = await this.dataSource.query(
+      `SELECT COUNT(*) as cnt FROM user_badges WHERE user_id = $1 AND badge_key != 'PRO_SURFER'`,
+      [userId],
+    );
+    const badgeCount = parseInt(badgeResult[0].cnt, 10);
+
+    const optionA = photoCount >= 10;
+    const optionB = diaryCount >= 10 && badgeCount >= 5;
+
+    if (optionA || optionB) {
       await award('PRO_SURFER');
     }
   }
@@ -421,6 +459,18 @@ export class BadgesService {
 
     /** 퍼스트 웨이버 — race condition 방지: spot_first_wavers PRIMARY KEY 활용 */
     await this.checkFirstWaver(ctx.userId, spotId, diaryId, award);
+
+    /**
+     * PRO_SURFER 체크 — 다이어리 작성 시 사진/다이어리 수가 늘어나니 매번 체크.
+     * EXPERT 레벨 사용자만 의미 있어 surf_level 먼저 확인.
+     */
+    const proCheckUser = await this.dataSource.query(
+      `SELECT surf_level FROM users WHERE id = $1`,
+      [ctx.userId],
+    );
+    if (proCheckUser[0]?.surf_level === 'EXPERT') {
+      await this.checkProSurfer(ctx.userId, award);
+    }
   }
 
   /** 즐겨찾기 추가 시 체크 */
