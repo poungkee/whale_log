@@ -185,8 +185,9 @@ const FIT_LABELS: { key: keyof RatingDetail; label: string; color: string }[] = 
 // ── 24h SVG 차트 ─────────────────────────────────────────────
 const SCR_W = Dimensions.get('window').width;
 const CHART_W = SCR_W - spacing.lg * 2 - spacing.md * 2; // 카드 안쪽 여백 반영
-const CHART_H = 110;
-const P = { top: 14, right: 6, bottom: 24, left: 30 };
+const CHART_H = 130;
+/** Y축 라벨 공간 — 좌측 38px (조석 "0.6m" 같은 라벨이 그래프와 겹치지 않게), 우측 36px (풍속 km/h용) */
+const P = { top: 14, right: 36, bottom: 26, left: 38 };
 
 /** 차트 공통 — X축 시간 라벨 인덱스 (4시간 간격) */
 function getLabelIdxs(n: number): number[] {
@@ -582,25 +583,26 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/*
-         * 히어로 컴팩트 — 큰 이미지 대신 텍스트 헤더 (웹앱과 통일).
-         * 큰 이미지는 면적만 차지하고 정보 전달엔 도움 안 됨 → 점수+스팟명+지역+난이도만 한 카드에.
+         * 작은 히어로 배경 — 사진이 완전히 없으면 휑한 느낌이라 작은 배너로 분위기.
+         * 점수는 아래 탭 헤더에만 표시 (이중 표시 방지).
          */}
-        <View style={s.heroCompact}>
-          <View style={s.heroLeft}>
-            <Text style={s.heroNameCompact}>{spot.name}</Text>
+        <ImageBackground
+          source={getSpotImage(spot.region, spot.name)}
+          style={s.heroBanner}
+          imageStyle={{ opacity: 0.85 }}
+        >
+          <View style={s.heroBannerOverlay} />
+          <View style={s.heroBannerContent}>
+            <Text style={s.heroNameOnImg}>{spot.name}</Text>
             <View style={s.heroMetaRow}>
-              <Text style={s.heroRegionCompact}>{spot.region}</Text>
-              <Text style={s.heroDot}>·</Text>
-              <View style={s.diffBadgeCompact}>
-                <Text style={s.diffText}>{DIFFICULTY_LABEL[spot.difficulty] || spot.difficulty}</Text>
+              <Text style={s.heroRegionOnImg}>{spot.region}</Text>
+              <Text style={s.heroDotOnImg}>·</Text>
+              <View style={s.diffBadgeOnImg}>
+                <Text style={s.diffTextOnImg}>{DIFFICULTY_LABEL[spot.difficulty] || spot.difficulty}</Text>
               </View>
             </View>
           </View>
-          <View style={[s.ratingCircleCompact, { backgroundColor: ratingColor + '22' }]}>
-            <Text style={[s.ratingNumCompact, { color: ratingColor }]}>{surfRating}</Text>
-            <Text style={[s.ratingLblCompact, { color: ratingColor }]}>{getRatingLabel(surfRating)}</Text>
-          </View>
-        </View>
+        </ImageBackground>
 
         {/* ─── 안전 경고 배너 ─── */}
         {safetyReasons && safetyReasons.length > 0 && (
@@ -711,8 +713,8 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                     <Text style={s.legendTxt}>파고 (m)</Text>
                   </View>
                   <View style={s.legendItem}>
-                    {/** 풍속 라인 — 점선과 동일하게 시각화 (라벨도 km/h로 통일) */}
-                    <View style={[s.legendDash, { borderColor: '#22c55e' }]} />
+                    {/** 풍속 — 점도 함께 표시 (이전엔 점선만 있어 점 없음 지적 반영) */}
+                    <View style={[s.legendDot, { backgroundColor: '#22c55e' }]} />
                     <Text style={s.legendTxt}>풍속 (km/h)</Text>
                   </View>
                 </View>
@@ -929,11 +931,7 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                 </View>
               )}
 
-              {/* AI 추천 코멘트 */}
-              <View style={[s.card, { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm }]}>
-                <Text style={{ fontSize: 18 }}>💬</Text>
-                <Text style={s.recommendTxt}>{recommendationKo}</Text>
-              </View>
+              {/* AI 추천 코멘트는 제거 — 현재 요약/적합도 분석/hints에 이미 정보가 충분히 표시되어 중복 */}
 
               {/* 투표 */}
               <View style={s.card}>
@@ -1103,19 +1101,20 @@ const s = StyleSheet.create({
   ratingNum: { fontSize: 22, fontWeight: '800', color: '#fff' },
   ratingLbl: { fontSize: 10, color: '#fff', fontWeight: '600' },
 
-  // 안전 경고
+  // 안전 경고 — 탭 헤더와 간격 추가 (이전엔 붙어있어서 답답)
   safetyBanner: {
     flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm,
-    marginHorizontal: spacing.lg, marginTop: spacing.sm,
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    marginBottom: spacing.md,
     padding: spacing.sm, borderRadius: 10, borderWidth: 1,
   },
   safetyText: { fontSize: 12, fontWeight: '600' },
 
-  // 탭 헤더
+  // 탭 헤더 — 이미지 배너 아래 점수 + 3탭. 점수는 여기에만 (이중 표시 방지)
   tabHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: spacing.lg, paddingVertical: spacing.sm,
-    borderBottomWidth: 1, borderBottomColor: colors.border,
     backgroundColor: colors.surface,
   },
   scoreArea: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
@@ -1181,26 +1180,25 @@ const s = StyleSheet.create({
   detailValue: { fontSize: 13, color: colors.text, fontWeight: '700', textAlign: 'right' },
   detailSubInline: { fontSize: 11, color: colors.textTertiary, fontWeight: '500' },
 
-  /** ── 히어로 컴팩트 (큰 이미지 제거, 텍스트 헤더만) ── */
-  heroCompact: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
-    gap: spacing.sm,
+  /** ── 히어로 배너 (작은 이미지) — 점수는 아래 탭 영역에만 표시 ── */
+  heroBanner: { height: 120 },
+  heroBannerOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.35)',
   },
-  heroNameCompact: { ...typography.h3, fontWeight: '800', color: colors.text },
+  heroBannerContent: {
+    flex: 1, justifyContent: 'flex-end',
+    paddingHorizontal: spacing.lg, paddingBottom: spacing.md,
+  },
+  heroNameOnImg: { fontSize: 22, fontWeight: '800', color: '#fff' },
   heroMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
-  heroRegionCompact: { fontSize: 12, color: colors.textSecondary },
-  heroDot: { fontSize: 12, color: colors.textTertiary },
-  diffBadgeCompact: {
+  heroRegionOnImg: { fontSize: 12, color: '#fff', opacity: 0.9 },
+  heroDotOnImg: { fontSize: 12, color: '#fff', opacity: 0.6 },
+  diffBadgeOnImg: {
     paddingHorizontal: 8, paddingVertical: 2,
-    backgroundColor: colors.surfaceSecondary, borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: 4,
   },
-  ratingCircleCompact: {
-    width: 56, height: 56, borderRadius: 28,
-    justifyContent: 'center', alignItems: 'center',
-  },
-  ratingNumCompact: { fontSize: 18, fontWeight: '900' },
-  ratingLblCompact: { fontSize: 10, fontWeight: '700' },
+  diffTextOnImg: { fontSize: 10, color: '#fff', fontWeight: '700' },
 
   /** ── KHOA 실측 카드 ── */
   khoaHeaderRow: {
