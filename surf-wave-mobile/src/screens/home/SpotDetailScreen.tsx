@@ -78,6 +78,33 @@ interface CommunityPost {
 }
 
 // ── 유틸 ────────────────────────────────────────────────────
+
+/** 풍향 도수 → 한국어 방위 (16방위) — 웹앱 degToCompass와 동일 */
+function degToCompass(deg: number): string {
+  if (isNaN(deg) || deg < 0 || deg > 360) return '?';
+  const directions = ['북', '북북동', '북동', '동북동', '동', '동남동', '남동', '남남동', '남', '남남서', '남서', '서남서', '서', '서북서', '북서', '북북서'];
+  return directions[Math.round(deg / 22.5) % 16];
+}
+
+/** 풍속 한국어 강도 라벨 */
+function getWindStrength(kmh: number): string {
+  if (kmh < 5) return '미풍';
+  if (kmh < 15) return '약함';
+  if (kmh < 25) return '보통';
+  if (kmh < 40) return '강함';
+  return '매우 강함';
+}
+
+/** 날씨 이모지 매핑 — 차트/카드에서 사용 */
+function getWeatherEmoji(condition: string | null | undefined): string {
+  if (!condition) return '';
+  if (condition.includes('맑음')) return '☀️';
+  if (condition.includes('비') || condition.includes('소나기')) return '🌧️';
+  if (condition.includes('눈')) return '❄️';
+  if (condition.includes('흐림')) return '☁️';
+  if (condition.includes('구름')) return '⛅';
+  return '🌤️';
+}
 const getSpotImage = (region: string, name: string) => {
   const r = region.toLowerCase();
   const n = name.toLowerCase();
@@ -145,6 +172,13 @@ const CHART_W = SCR_W - spacing.lg * 2 - spacing.md * 2; // 카드 안쪽 여백
 const CHART_H = 110;
 const P = { top: 14, right: 6, bottom: 24, left: 30 };
 
+/**
+ * 24시간 시간별 예보 차트
+ * - 파고: 영역 그래프 (primary 색상)
+ * - 풍속: 점선 (초록)
+ * - Y축 라벨 좌(파고 m) / 우(풍속 km/h) 표시
+ * - X축에 4시간 간격 시간 + 0/12/24시 그리드 라인
+ */
 const HourlyChart: React.FC<{ data: HourlyForecast[] }> = ({ data }) => {
   if (data.length < 2) return null;
 
@@ -169,6 +203,9 @@ const HourlyChart: React.FC<{ data: HourlyForecast[] }> = ({ data }) => {
     return acc;
   }, []);
 
+  /** 가로 그리드 라인 — 0%, 50%, 100% (max 기준) */
+  const gridYs = [P.top, P.top + iH * 0.5, P.top + iH];
+
   return (
     <Svg width={CHART_W} height={CHART_H}>
       <Defs>
@@ -177,14 +214,41 @@ const HourlyChart: React.FC<{ data: HourlyForecast[] }> = ({ data }) => {
           <Stop offset="100%" stopColor={colors.primary} stopOpacity="0" />
         </LinearGradient>
       </Defs>
+
+      {/* 가로 그리드 (3줄) */}
+      {gridYs.map((y, i) => (
+        <Path
+          key={`g${i}`}
+          d={`M${P.left},${y} L${P.left + iW},${y}`}
+          stroke={colors.border}
+          strokeWidth="0.5"
+          strokeDasharray="2,3"
+        />
+      ))}
+
+      {/* 파고 영역 + 라인 */}
       <Path d={waveArea} fill="url(#wg2)" />
-      <Path d={wavePath} stroke={colors.primary} strokeWidth="2" fill="none" />
+      <Path d={wavePath} stroke={colors.primary} strokeWidth="2.5" fill="none" />
+
+      {/* 풍속 점선 */}
       <Path d={windPath} stroke="#22c55e" strokeWidth="1.5" fill="none" strokeDasharray="4,3" />
-      <SvgText x={P.left - 3} y={P.top + 4} fontSize="9" fill={colors.textSecondary} textAnchor="end">
+
+      {/* Y축 라벨 좌측 (파고 max m) */}
+      <SvgText x={P.left - 4} y={P.top + 4} fontSize="9" fill={colors.primary} fontWeight="700" textAnchor="end">
         {maxWave.toFixed(1)}m
       </SvgText>
+      <SvgText x={P.left - 4} y={P.top + iH + 3} fontSize="9" fill={colors.textTertiary} textAnchor="end">
+        0
+      </SvgText>
+
+      {/* Y축 라벨 우측 (풍속 max km/h) */}
+      <SvgText x={CHART_W - P.right + 4} y={P.top + 4} fontSize="9" fill="#22c55e" fontWeight="700" textAnchor="start">
+        {maxWind.toFixed(0)}km/h
+      </SvgText>
+
+      {/* X축 시간 라벨 */}
       {labelIdxs.map(i => (
-        <SvgText key={i} x={xP(i)} y={CHART_H - 5} fontSize="9" fill={colors.textSecondary} textAnchor="middle">
+        <SvgText key={i} x={xP(i)} y={CHART_H - 4} fontSize="10" fill={colors.textSecondary} textAnchor="middle">
           {new Date(data[i].forecastTime).getHours()}시
         </SvgText>
       ))}
@@ -473,8 +537,9 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                     <Text style={s.legendTxt}>파고 (m)</Text>
                   </View>
                   <View style={s.legendItem}>
-                    <View style={[s.legendDot, { backgroundColor: '#22c55e' }]} />
-                    <Text style={s.legendTxt}>풍속 (m/s)</Text>
+                    {/** 풍속 라인 — 점선과 동일하게 시각화 (라벨도 km/h로 통일) */}
+                    <View style={[s.legendDash, { borderColor: '#22c55e' }]} />
+                    <Text style={s.legendTxt}>풍속 (km/h)</Text>
                   </View>
                 </View>
                 {chartLoading
@@ -492,18 +557,56 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                   {[
                     { label: '파고', value: `${parseFloat(forecast.waveHeight).toFixed(1)}m` },
                     { label: '파도 주기', value: `${parseFloat(forecast.wavePeriod).toFixed(0)}s` },
-                    { label: '풍속', value: `${parseFloat(forecast.windSpeed).toFixed(0)}km/h` },
-                    { label: '풍향', value: forecast.windDirection },
+                    {
+                      label: '풍속',
+                      value: `${parseFloat(forecast.windSpeed).toFixed(0)}km/h`,
+                      sub: getWindStrength(parseFloat(forecast.windSpeed)),
+                    },
+                    {
+                      /** 풍향: 도수만 표시하던 "188.00"을 한국어 방위 + 도수로 변경 */
+                      label: '풍향',
+                      value: degToCompass(parseFloat(forecast.windDirection)),
+                      sub: `${parseFloat(forecast.windDirection).toFixed(0)}°`,
+                    },
                     { label: '수온', value: `${parseFloat(forecast.waterTemperature).toFixed(0)}°C` },
                     { label: '기온', value: `${parseFloat(forecast.airTemperature).toFixed(0)}°C` },
-                  ].map(({ label, value }) => (
+                  ].map(({ label, value, sub }) => (
                     <View key={label} style={s.dataItem}>
                       <Text style={s.dataVal}>{value}</Text>
+                      {sub && <Text style={s.dataSub}>{sub}</Text>}
                       <Text style={s.dataLbl}>{label}</Text>
                     </View>
                   ))}
                 </View>
               </View>
+
+              {/* 스웰 정보 — forecast.swellHeight/swellPeriod/swellDirection 있으면 표시 */}
+              {(forecast.swellHeight || forecast.swellPeriod || forecast.swellDirection) && (
+                <View style={s.card}>
+                  <Text style={s.cardTitle}>🌊 스웰 (Swell)</Text>
+                  <View style={s.dataGrid}>
+                    {forecast.swellHeight && (
+                      <View style={s.dataItem}>
+                        <Text style={s.dataVal}>{parseFloat(forecast.swellHeight).toFixed(1)}m</Text>
+                        <Text style={s.dataLbl}>스웰 높이</Text>
+                      </View>
+                    )}
+                    {forecast.swellPeriod && (
+                      <View style={s.dataItem}>
+                        <Text style={s.dataVal}>{parseFloat(forecast.swellPeriod).toFixed(0)}s</Text>
+                        <Text style={s.dataLbl}>스웰 주기</Text>
+                      </View>
+                    )}
+                    {forecast.swellDirection && (
+                      <View style={s.dataItem}>
+                        <Text style={s.dataVal}>{degToCompass(parseFloat(forecast.swellDirection))}</Text>
+                        <Text style={s.dataSub}>{parseFloat(forecast.swellDirection).toFixed(0)}°</Text>
+                        <Text style={s.dataLbl}>스웰 방향</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              )}
 
               {/* KHOA 정부 서핑지수 카드 (한국 스팟만) */}
               {khoaEnrichment?.khoaIndex && (
@@ -768,6 +871,8 @@ const s = StyleSheet.create({
   legend: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.sm },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   legendDot: { width: 8, height: 8, borderRadius: 4 },
+  /** 점선 범례 — 차트의 풍속 점선과 일치 */
+  legendDash: { width: 14, height: 0, borderTopWidth: 1.5, borderStyle: 'dashed' },
   legendTxt: { fontSize: 11, color: colors.textSecondary },
   emptyTxt: { ...typography.caption, color: colors.textTertiary, textAlign: 'center', paddingVertical: 16 },
 
@@ -782,6 +887,8 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: colors.border,
   },
   dataVal: { ...typography.body1, fontWeight: '700', color: colors.text },
+  /** 보조 텍스트 — 풍향 도수("188°") / 스웰 방향 도수 등 dataVal 아래 작게 */
+  dataSub: { fontSize: 10, color: colors.textTertiary, marginTop: 1 },
   dataLbl: { fontSize: 11, color: colors.textSecondary },
 
   // hints
