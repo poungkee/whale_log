@@ -16,6 +16,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { User } from '../users/entities/user.entity';
 import { GuideQueryDto } from './dto/guide-query.dto';
+import { GUIDE_SEED } from '../../database/seeds/guides-data';
 
 @ApiTags('guides')
 @ApiBearerAuth()
@@ -31,6 +32,61 @@ export class GuidesController {
    * 시드 INSERT 후 DB에 가이드가 들어갔는지 빠르게 검증.
    * 출시 직전 제거 권장.
    */
+  /**
+   * [디버그] 시드 강제 실행 + 단계별 결과 반환
+   * GUIDE_SEED import 상태 + INSERT 결과 + 에러 메시지를 한 번에 반환.
+   * 이걸로 OnModuleInit이 왜 안 됐는지 핀포인트 가능.
+   */
+  @Get('_debug/seed-now')
+  @Public()
+  @ApiOperation({ summary: '[디버그] 시드 강제 실행' })
+  async debugSeedNow() {
+    const seedSize = GUIDE_SEED?.length ?? -1;
+    let inserted = 0;
+    let skipped = 0;
+    const errors: { title: string; error: string }[] = [];
+
+    if (!Array.isArray(GUIDE_SEED) || GUIDE_SEED.length === 0) {
+      return {
+        ok: false,
+        reason: 'GUIDE_SEED import 실패 또는 빈 배열',
+        seedSize,
+      };
+    }
+
+    for (const item of GUIDE_SEED) {
+      try {
+        const result = await this.dataSource.query(
+          `INSERT INTO guides (title, content, category, sort_order, estimated_read_minutes, is_published)
+           SELECT $1, $2, $3, $4, $5, $6
+           WHERE NOT EXISTS (SELECT 1 FROM guides WHERE title = $1)
+           RETURNING id`,
+          [
+            item.title,
+            item.content,
+            item.category,
+            item.sortOrder,
+            item.estimatedReadMinutes,
+            item.isPublished,
+          ],
+        );
+        if (result.length > 0) inserted++;
+        else skipped++;
+      } catch (err) {
+        errors.push({ title: item.title, error: (err as Error).message });
+      }
+    }
+
+    return {
+      ok: errors.length === 0,
+      seedSize,
+      inserted,
+      skipped,
+      errorCount: errors.length,
+      sampleErrors: errors.slice(0, 3),
+    };
+  }
+
   @Get('_debug/count')
   @Public()
   @ApiOperation({ summary: '[디버그] 가이드 개수 확인 (무인증)' })
