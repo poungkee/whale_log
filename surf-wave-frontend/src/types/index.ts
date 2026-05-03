@@ -146,6 +146,10 @@ export interface SpotInfo {
   season: string | null;         // 최적 시즌 (예: "4월~10월")
   coastFacingDeg: number | null; // 해안 방향 (0-359도)
   bestSwellDirection: string | null; // 최적 스웰 방향
+  /** 사용자 평균 평점 (1~5, 문자열 - decimal). 0이면 아직 평가 없음 */
+  rating?: string;
+  /** 평점 매긴 사용자 수 — 0이면 표시 안 함 */
+  ratingCount?: number;
 }
 
 /**

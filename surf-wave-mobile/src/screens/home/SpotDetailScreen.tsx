@@ -616,6 +616,24 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
           </View>
         )}
 
+        {/* ─── 사용자 평균 평점 (1명 이상일 때만 표시) ─── */}
+        {(() => {
+          const userRating = Number((spot as any)?.rating ?? 0);
+          const ratingCount = (spot as any)?.ratingCount ?? 0;
+          if (ratingCount === 0) return null;
+          return (
+            <View style={s.userRatingBanner}>
+              <Text style={s.userRatingStars}>
+                {[1, 2, 3, 4, 5].map(i => (i <= Math.round(userRating) ? '★' : '☆')).join('')}
+              </Text>
+              <Text style={s.userRatingNum}>{userRating.toFixed(1)}</Text>
+              <Text style={s.userRatingCount}>
+                서퍼 {ratingCount}명 평가{ratingCount === 1 ? ' (참고용)' : ''}
+              </Text>
+            </View>
+          );
+        })()}
+
         {/* ─── 점수 + 3탭 전환 ─── */}
         <View style={s.tabHeader}>
           <View style={s.scoreArea}>
@@ -1110,6 +1128,19 @@ const s = StyleSheet.create({
     padding: spacing.sm, borderRadius: 10, borderWidth: 1,
   },
   safetyText: { fontSize: 12, fontWeight: '600' },
+
+  // 사용자 평균 평점 배너 — 1명 이상일 때만 표시
+  userRatingBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    marginHorizontal: spacing.lg, marginTop: spacing.sm,
+    paddingHorizontal: spacing.md, paddingVertical: 8,
+    backgroundColor: '#FFFBEB', // 노란 배경
+    borderRadius: 10,
+    borderWidth: 1, borderColor: '#FCD34D',
+  },
+  userRatingStars: { fontSize: 16, color: '#FCD34D', letterSpacing: 1 },
+  userRatingNum: { fontSize: 14, fontWeight: '700', color: '#92400E' },
+  userRatingCount: { fontSize: 11, color: colors.textSecondary, marginLeft: 'auto' },
 
   // 탭 헤더 — 이미지 배너 아래 점수 + 3탭. 점수는 여기에만 (이중 표시 방지)
   tabHeader: {

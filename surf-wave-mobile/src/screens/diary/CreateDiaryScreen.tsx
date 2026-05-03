@@ -54,6 +54,8 @@ const CreateDiaryScreen: React.FC<Props> = ({ navigation, route }) => {
   const [boardSizeFt, setBoardSizeFt] = useState('');   // 보드 길이 (3.0~12.0 ft)
   const [duration, setDuration] = useState('');
   const [satisfaction, setSatisfaction] = useState(3);
+  /** 이 스팟 추천 별점 (1~5, 0=미입력 — 평균 계산에서 제외) */
+  const [rating, setRating] = useState(0);
   const [memo, setMemo] = useState('');
   const [imageUris, setImageUris] = useState<string[]>([]); // 최대 5장
   const [visibility, setVisibility] = useState<'PUBLIC' | 'PRIVATE'>('PUBLIC'); // 공개/비공개
@@ -122,6 +124,8 @@ const CreateDiaryScreen: React.FC<Props> = ({ navigation, route }) => {
       formData.append('boardType', boardType);
       formData.append('satisfaction', String(satisfaction));
       formData.append('visibility', visibility);
+      /** 별점 — 0이면 미입력으로 간주 (보내지 않음) */
+      if (rating > 0) formData.append('rating', String(rating));
       if (boardSizeFt) formData.append('boardSizeFt', boardSizeFt);
       if (duration) formData.append('durationMinutes', duration);
       if (memo) formData.append('memo', memo);
@@ -268,6 +272,28 @@ const CreateDiaryScreen: React.FC<Props> = ({ navigation, route }) => {
             ))}
             <Text style={styles.satisfactionLabel}>
               {['', '아쉬웠어요', '그저 그랬어요', '보통이에요', '좋았어요', '최고였어요'][satisfaction]}
+            </Text>
+          </View>
+        </View>
+
+        {/* 이 스팟 추천도 (별점, 선택) — 매기면 스팟 평균 평점 반영 */}
+        <View style={styles.field}>
+          <Text style={styles.label}>🌊 이 스팟 추천도</Text>
+          <Text style={[styles.satisfactionLabel, { marginBottom: 4 }]}>
+            (선택 — 매기면 스팟 평점에 반영됩니다)
+          </Text>
+          <View style={styles.starsRow}>
+            {[1, 2, 3, 4, 5].map(n => (
+              <TouchableOpacity key={n} onPress={() => setRating(rating === n ? 0 : n)}>
+                <Star
+                  size={32}
+                  color={n <= rating ? '#FCD34D' : colors.gray300}
+                  fill={n <= rating ? '#FCD34D' : 'transparent'}
+                />
+              </TouchableOpacity>
+            ))}
+            <Text style={styles.satisfactionLabel}>
+              {rating === 0 ? '평가 안 함' : `${rating}.0`}
             </Text>
           </View>
         </View>

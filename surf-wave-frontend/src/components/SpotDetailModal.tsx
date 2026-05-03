@@ -409,6 +409,29 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
           </div>
         </div>
 
+        {/* 사용자 평균 평점 — 1명 이상이면 표시, 0명이면 숨김 (UX) */}
+        {(() => {
+          const ratingNum = Number(spot?.rating ?? 0);
+          const ratingCount = spot?.ratingCount ?? 0;
+          if (ratingCount === 0) return null;
+          return (
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center gap-2">
+              <span className="text-yellow-500 text-lg">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <span key={i}>{i <= Math.round(ratingNum) ? '★' : '☆'}</span>
+                ))}
+              </span>
+              <span className="text-sm font-bold text-yellow-700">
+                {ratingNum.toFixed(1)}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                서퍼 {ratingCount}명 평가
+                {ratingCount === 1 && ' (참고용)'}
+              </span>
+            </div>
+          );
+        })()}
+
         {/* ====== 소통 탭 ====== */}
         {activeTab === 'community' && (
           <div className="mb-4">
