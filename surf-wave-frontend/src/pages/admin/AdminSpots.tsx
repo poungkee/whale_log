@@ -63,6 +63,19 @@ const BREAK_LABELS: Record<string, string> = {
   point_break: '포인트 브레이크',
 };
 
+/**
+ * 지역 분류 — Header.tsx의 DOMESTIC_GROUPS와 일치
+ * 부산은 메인 서핑 스팟이 동해 영향이라 동해로 분류.
+ */
+const REGION_FILTERS: { id: string; label: string; match: (region: string) => boolean }[] = [
+  { id: 'ALL',  label: '전체', match: () => true },
+  { id: 'EAST', label: '동해', match: (r) => ['양양', '고성', '속초', '강릉', '동해', '포항', '울산', '부산'].includes(r) },
+  { id: 'SOUTH', label: '남해', match: (r) => ['거제', '완도', '고흥'].includes(r) },
+  { id: 'WEST', label: '서해', match: (r) => ['태안'].includes(r) },
+  { id: 'JEJU', label: '제주', match: (r) => r === '제주' },
+  { id: 'BALI', label: '발리', match: (r) => r.startsWith('Bali') },
+];
+
 export function AdminSpots({ token }: AdminSpotsProps) {
   /** 스팟 목록 */
   const [spots, setSpots] = useState<SpotItem[]>([]);
@@ -74,6 +87,8 @@ export function AdminSpots({ token }: AdminSpotsProps) {
   const [form, setForm] = useState<SpotFormData>(EMPTY_FORM);
   /** 처리 중 상태 */
   const [processing, setProcessing] = useState(false);
+  /** 지역 필터 (전체/동해/남해/서해/제주/발리) */
+  const [regionFilter, setRegionFilter] = useState('ALL');
 
   /** 스팟 목록 조회 (GET /api/v1/spots — @Public API 사용) */
   const fetchSpots = async () => {
@@ -209,6 +224,23 @@ export function AdminSpots({ token }: AdminSpotsProps) {
         </button>
       </div>
 
+      {/* 지역 필터 칩 */}
+      <div className="flex gap-1.5 flex-wrap">
+        {REGION_FILTERS.map(rf => (
+          <button
+            key={rf.id}
+            onClick={() => setRegionFilter(rf.id)}
+            className={`px-2.5 py-1 text-xs rounded-full font-medium transition-colors ${
+              regionFilter === rf.id
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-secondary text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {rf.label}
+          </button>
+        ))}
+      </div>
+
       {/* 스팟 생성/수정 폼 */}
       {formMode !== null && (
         <div className="bg-card border border-primary/30 rounded-xl p-4 space-y-3">
@@ -341,10 +373,18 @@ export function AdminSpots({ token }: AdminSpotsProps) {
         <div className="text-center py-12 text-muted-foreground text-sm">
           스팟이 없습니다
         </div>
-      ) : (
+      ) : (() => {
+        /** 선택된 지역 필터 적용 */
+        const activeFilter = REGION_FILTERS.find(r => r.id === regionFilter)!;
+        const filtered = spots.filter(s => activeFilter.match(s.region));
+        return (
         <div className="space-y-2">
-          <p className="text-xs text-muted-foreground">총 {spots.length}개 스팟</p>
-          {spots.map(spot => (
+          <p className="text-xs text-muted-foreground">
+            {regionFilter === 'ALL'
+              ? `총 ${filtered.length}개 스팟`
+              : `${activeFilter.label} ${filtered.length}개 / 전체 ${spots.length}개`}
+          </p>
+          {filtered.map(spot => (
             <div key={spot.id} className="bg-card border border-border rounded-xl p-3 flex items-center gap-3">
               {/* 스팟 정보 */}
               <div className="flex-1 min-w-0">
@@ -386,7 +426,8 @@ export function AdminSpots({ token }: AdminSpotsProps) {
             </div>
           ))}
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
