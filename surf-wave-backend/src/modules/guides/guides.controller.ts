@@ -9,8 +9,11 @@
  */
 import { Controller, Get, Post, Param, Query, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { GuidesService } from './guides.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { User } from '../users/entities/user.entity';
 import { GuideQueryDto } from './dto/guide-query.dto';
 
@@ -18,7 +21,38 @@ import { GuideQueryDto } from './dto/guide-query.dto';
 @ApiBearerAuth()
 @Controller('guides')
 export class GuidesController {
-  constructor(private readonly guidesService: GuidesService) {}
+  constructor(
+    private readonly guidesService: GuidesService,
+    @InjectDataSource() private readonly dataSource: DataSource,
+  ) {}
+
+  /**
+   * 임시 진단 엔드포인트 — 가이드 DB 상태 직접 확인 (인증 없이)
+   * 시드 INSERT 후 DB에 가이드가 들어갔는지 빠르게 검증.
+   * 출시 직전 제거 권장.
+   */
+  @Get('_debug/count')
+  @Public()
+  @ApiOperation({ summary: '[디버그] 가이드 개수 확인 (무인증)' })
+  async debugCount() {
+    const result = await this.dataSource.query(
+      `SELECT category, COUNT(*) as cnt, BOOL_OR(is_published) as has_published
+       FROM guides GROUP BY category ORDER BY category`,
+    );
+    const total = await this.dataSource.query(
+      `SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE is_published = true) as published
+       FROM guides`,
+    );
+    return {
+      total: parseInt(total[0].total, 10),
+      published: parseInt(total[0].published, 10),
+      byCategory: result.map((r: any) => ({
+        category: r.category,
+        count: parseInt(r.cnt, 10),
+        hasPublished: r.has_published,
+      })),
+    };
+  }
 
   @Get()
   @ApiOperation({ summary: 'Get guides list' })
