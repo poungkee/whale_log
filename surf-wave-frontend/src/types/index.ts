@@ -16,7 +16,7 @@ export type BoardType = 'SHORTBOARD' | 'LONGBOARD' | 'FUNBOARD' | 'FISH' | 'SUP'
 export type AppScreen = 'splash' | 'welcome' | 'login' | 'register' | 'forgot-password' | 'level-select' | 'main' | 'admin';
 
 /** 관리자 대시보드 탭 */
-export type AdminTab = 'overview' | 'users' | 'content' | 'spots' | 'traffic' | 'logs';
+export type AdminTab = 'overview' | 'users' | 'content' | 'spots' | 'guides' | 'traffic' | 'logs';
 
 /** 관리자 대시보드 통계 — GET /api/v1/admin/dashboard 응답 */
 export interface AdminStats {
