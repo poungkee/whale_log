@@ -78,11 +78,21 @@ export function AdminSpots({ token }: AdminSpotsProps) {
   /** 스팟 목록 조회 (GET /api/v1/spots — @Public API 사용) */
   const fetchSpots = async () => {
     try {
-      const res = await fetch(api('/api/v1/spots'));
+      /** limit=200으로 124개 모두 조회 (기본 페이지네이션 회피) */
+      const res = await fetch(api('/api/v1/spots?limit=200'));
       if (!res.ok) return;
       const data = await res.json();
-      /** spots 배열 또는 직접 배열 응답 처리 */
-      setSpots(Array.isArray(data) ? data : data.spots ?? []);
+      /**
+       * 응답 구조 처리:
+       * - { data: [...] }  ← 페이지네이션 형식 (실제 응답)
+       * - { spots: [...] } ← 레거시 호환
+       * - [...]            ← 직접 배열
+       */
+      setSpots(
+        Array.isArray(data)
+          ? data
+          : data.data ?? data.spots ?? [],
+      );
     } catch {
       console.error('스팟 목록 조회 실패');
     } finally {
