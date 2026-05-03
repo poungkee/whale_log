@@ -408,7 +408,8 @@ const HourlyChart: React.FC<{ data: HourlyForecast[] }> = ({ data }) => {
 };
 
 // ── 메인 화면 ─────────────────────────────────────────────────
-type DetailTab = 'wave' | 'community' | 'diary';
+/** Phase 2: [소통](Posts) 탭 제거 — 다이어리 통합으로 대체 */
+type DetailTab = 'wave' | 'diary';
 
 const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { spotId, spotName } = route.params as { spotId: string; spotName: string };
@@ -513,9 +514,7 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     finally { setPostLoading(false); }
   }, [spotId]);
 
-  useEffect(() => {
-    if (activeTab === 'community' && !postLoaded) fetchPosts();
-  }, [activeTab, postLoaded, fetchPosts]);
+  /** Phase 2: 소통 탭 제거 — Posts 조회 비활성화 (코드는 유지, 호출 X) */
 
   const likeMutation = useMutation({
     mutationFn: (id: string) => api.post(`/community/posts/${id}/like`),
@@ -642,9 +641,8 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
           </View>
           <View style={s.tabBar}>
             {([
-              { id: 'wave' as DetailTab,      icon: Waves,          label: '파도' },
-              { id: 'community' as DetailTab, icon: MessageCircle,  label: '소통' },
-              { id: 'diary' as DetailTab,     icon: BookOpen,       label: '기록' },
+              { id: 'wave' as DetailTab,  icon: Waves,    label: '파도' },
+              { id: 'diary' as DetailTab, icon: BookOpen, label: '기록' },
             ]).map(({ id, icon: Icon, label }) => (
               <TouchableOpacity
                 key={id}
@@ -984,48 +982,6 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             </>
           )}
 
-          {/* ═══════════════ 소통 탭 ═══════════════ */}
-          {activeTab === 'community' && (
-            <>
-              {postLoading && <ActivityIndicator color={colors.primary} style={{ marginVertical: 24 }} />}
-              {!postLoading && posts.length === 0 && (
-                <View style={s.emptyBox}>
-                  <Text style={s.emptyIcon}>💬</Text>
-                  <Text style={s.emptyTitle}>아직 게시글이 없어요</Text>
-                  <Text style={s.emptySub}>이 스팟에 대한 첫 번째 이야기를 남겨보세요!</Text>
-                </View>
-              )}
-              {posts.map(post => (
-                <View key={post.id} style={s.feedCard}>
-                  <View style={s.feedAuthorRow}>
-                    <Avatar name={post.author.username || '?'} uri={post.author.avatarUrl || undefined} size="sm" />
-                    <View style={{ marginLeft: spacing.sm, flex: 1 }}>
-                      <Text style={s.feedNick}>{post.author.username || '알 수 없음'}</Text>
-                      <Text style={s.feedTime}>{relTime(post.createdAt)}</Text>
-                    </View>
-                  </View>
-                  <Text style={s.feedBody}>{post.content}</Text>
-                  {post.images.length > 0 && (
-                    <Image source={{ uri: post.images[0].imageUrl }} style={s.feedImg} />
-                  )}
-                  <View style={s.feedActions}>
-                    <TouchableOpacity
-                      style={s.feedAction}
-                      onPress={() => {
-                        if (!isAuthenticated) { Alert.alert('로그인 필요'); return; }
-                        likeMutation.mutate(post.id);
-                      }}
-                    >
-                      <Text style={[s.feedActionTxt, post.isLiked && { color: colors.error }]}>
-                        {post.isLiked ? '❤️' : '🤍'} {post.likeCount}
-                      </Text>
-                    </TouchableOpacity>
-                    <Text style={s.feedActionTxt}>💬 {post.commentCount}</Text>
-                  </View>
-                </View>
-              ))}
-            </>
-          )}
 
           {/* ═══════════════ 기록 탭 ═══════════════ */}
           {activeTab === 'diary' && (

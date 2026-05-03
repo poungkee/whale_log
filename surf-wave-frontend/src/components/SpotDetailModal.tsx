@@ -53,8 +53,10 @@ interface SpotDetailModalProps {
   onClose: () => void;
 }
 
-/** 상세 모달의 탭 종류 - 파도(적합도+시간별 통합) / 소통 / 기록 */
-type DetailTab = 'wave' | 'community' | 'diary';
+/** 상세 모달의 탭 종류 — 파도(적합도+시간별+컨디션투표) / 기록(공개 다이어리)
+ *  Phase 2에서 [소통](Posts) 탭 제거 — 다이어리 통합으로 대체
+ */
+type DetailTab = 'wave' | 'diary';
 
 /**
  * 스팟별 공개 다이어리 항목 타입
@@ -382,18 +384,7 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
               <Waves className="w-3 h-3" />
               파도
             </button>
-            {/* 소통 탭 - 이 스팟의 게시판 */}
-            <button
-              onClick={() => setActiveTab('community')}
-              className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                activeTab === 'community'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <MessageCircle className="w-3 h-3" />
-              소통
-            </button>
+            {/* Phase 2: [소통] 탭 제거 — 다이어리 통합으로 대체 */}
             {/* 서핑 기록 탭 - 이 스팟의 공개 다이어리 모아보기 */}
             <button
               onClick={() => setActiveTab('diary')}
@@ -431,13 +422,6 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
             </div>
           );
         })()}
-
-        {/* ====== 소통 탭 ====== */}
-        {activeTab === 'community' && (
-          <div className="mb-4">
-            <CommunityFeed spotId={spot.id} />
-          </div>
-        )}
 
         {/* ====== 파도 탭 (적합도 + 시간별 통합) ====== */}
         {activeTab === 'wave' && forecast && detail && (
