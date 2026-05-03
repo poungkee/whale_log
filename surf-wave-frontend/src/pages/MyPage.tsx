@@ -440,22 +440,6 @@ export function MyPage({
               {/* 내 보드 컬렉션 — 여러 보드 등록/관리 */}
               <MyBoardsSection />
 
-              {/* 자세 연습 바로가기 */}
-              <button
-                onClick={onNavigateToPoseTraining}
-                className="w-full flex items-center justify-between p-4 bg-card border border-border rounded-xl hover:bg-secondary transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <Camera className="w-4 h-4 text-primary" />
-                  <div>
-                    <p className="text-sm font-medium">자세 연습</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">실시간 포즈 감지</p>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              </button>
-
-
               {/* 서핑 레벨 변경 — 보드 타입은 "내 보드" 섹션으로 이관됨 */}
               <div className="bg-card border border-border rounded-xl">
                 <button
@@ -485,6 +469,24 @@ export function MyPage({
                   </div>
                 )}
               </div>
+
+              {/* 자세 연습 바로가기 — 서핑 레벨 아래로 이동 + 베타 표시 */}
+              <button
+                onClick={onNavigateToPoseTraining}
+                className="w-full flex items-center justify-between p-4 bg-card border border-border rounded-xl hover:bg-secondary transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Camera className="w-4 h-4 text-primary" />
+                  <div>
+                    <p className="text-sm font-medium flex items-center gap-1.5">
+                      자세 연습
+                      <span className="text-[9px] font-bold text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded">BETA</span>
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">실시간 포즈 감지</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </button>
             </div>
           )}
 
