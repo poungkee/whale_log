@@ -104,11 +104,22 @@ export class GuidesModule implements OnModuleInit {
     let skipped = 0;
     for (const item of GUIDE_SEED) {
       try {
-        const result = await this.dataSource.query(
+        /**
+         * 두 단계 처리 — 같은 SQL에서 $1을 두 곳에 쓰면 PostgreSQL이
+         * "inconsistent types deduced for parameter $1" 에러 발생.
+         * 따라서 EXISTS 체크 후 별도 INSERT.
+         */
+        const existing = await this.dataSource.query(
+          `SELECT 1 FROM guides WHERE title = $1 LIMIT 1`,
+          [item.title],
+        );
+        if (existing.length > 0) {
+          skipped++;
+          continue;
+        }
+        await this.dataSource.query(
           `INSERT INTO guides (title, content, category, sort_order, estimated_read_minutes, is_published)
-           SELECT $1, $2, $3, $4, $5, $6
-           WHERE NOT EXISTS (SELECT 1 FROM guides WHERE title = $1)
-           RETURNING id`,
+           VALUES ($1, $2, $3, $4, $5, $6)`,
           [
             item.title,
             item.content,
@@ -118,8 +129,7 @@ export class GuidesModule implements OnModuleInit {
             item.isPublished,
           ],
         );
-        if (result.length > 0) inserted++;
-        else skipped++;
+        inserted++;
       } catch (err) {
         this.logger.warn(`가이드 시드 실패 (${item.title}): ${(err as Error).message}`);
       }

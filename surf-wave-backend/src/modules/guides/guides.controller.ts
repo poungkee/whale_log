@@ -56,11 +56,18 @@ export class GuidesController {
 
     for (const item of GUIDE_SEED) {
       try {
-        const result = await this.dataSource.query(
+        /** 두 단계 처리 — $1 타입 추론 충돌 회피 */
+        const existing = await this.dataSource.query(
+          `SELECT 1 FROM guides WHERE title = $1 LIMIT 1`,
+          [item.title],
+        );
+        if (existing.length > 0) {
+          skipped++;
+          continue;
+        }
+        await this.dataSource.query(
           `INSERT INTO guides (title, content, category, sort_order, estimated_read_minutes, is_published)
-           SELECT $1, $2, $3, $4, $5, $6
-           WHERE NOT EXISTS (SELECT 1 FROM guides WHERE title = $1)
-           RETURNING id`,
+           VALUES ($1, $2, $3, $4, $5, $6)`,
           [
             item.title,
             item.content,
@@ -70,8 +77,7 @@ export class GuidesController {
             item.isPublished,
           ],
         );
-        if (result.length > 0) inserted++;
-        else skipped++;
+        inserted++;
       } catch (err) {
         errors.push({ title: item.title, error: (err as Error).message });
       }
