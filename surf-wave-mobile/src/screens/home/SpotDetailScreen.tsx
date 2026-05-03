@@ -17,7 +17,7 @@ import { api } from '../../config/api';
 import { colors, spacing, typography } from '../../theme';
 import { useAuthStore } from '../../stores/authStore';
 import Avatar from '../../components/common/Avatar';
-import { DiaryHelpfulButton } from '../../components/DiaryHelpfulButton';
+import { DiaryInteractions } from '../../components/DiaryInteractions';
 import KhoaBadge, { KhoaEnrichment } from '../../components/spot/KhoaBadge';
 
 // HomeStack과 ExploreStack 둘 다 동일한 파라미터 구조 사용
@@ -995,8 +995,8 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                   </View>
                   {d.memo && <Text style={s.diaryMemo} numberOfLines={3}>{d.memo}</Text>}
 
-                  {/* 도움됐어요 + 댓글 토글 (Phase 2C) */}
-                  <DiaryHelpfulButton diaryId={d.id} />
+                  {/* 도움됐어요 + 댓글 토글 (Phase 2C-mobile) */}
+                  <DiaryInteractions diaryId={d.id} />
                 </View>
               ))}
               {diaryHasMore && (
