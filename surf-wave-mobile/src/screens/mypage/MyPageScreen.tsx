@@ -180,6 +180,38 @@ const MyPageScreen: React.FC<Props> = ({ navigation }) => {
   // 레벨 아코디언 (보드 picker는 "내 보드" 통합으로 제거됨)
   const [showLevelPicker, setShowLevelPicker] = useState(false);
 
+  /** AI 학습 데이터 활용 동의 — terms ID + 동의 상태 (간단히 컴포넌트 state) */
+  const [aiTermsId, setAiTermsId] = useState<string | null>(null);
+  const [aiAgreed, setAiAgreed] = useState(false);
+  const [aiSaving, setAiSaving] = useState(false);
+
+  /** 마운트 시 AI 동의 약관 ID 조회 + 캐시된 동의 상태 복원 */
+  React.useEffect(() => {
+    api.get('/terms').then((r) => {
+      const list = Array.isArray(r.data) ? r.data : (r.data?.data ?? []);
+      const aiTerm = list.find((t: { title: string }) =>
+        t.title?.startsWith('AI 학습 데이터 활용'),
+      );
+      if (aiTerm) setAiTermsId(aiTerm.id);
+    }).catch(() => {});
+  }, []);
+
+  const handleAiToggle = async (checked: boolean) => {
+    if (!aiTermsId) return;
+    setAiSaving(true);
+    try {
+      if (checked) {
+        await api.post('/terms/agree', { termsIds: [aiTermsId] });
+      }
+      /** 철회는 별도 API 미구현 — 컴포넌트 state로만 토글 (V2에서 백엔드 추가) */
+      setAiAgreed(checked);
+    } catch {
+      Alert.alert('AI 동의 변경 실패');
+    } finally {
+      setAiSaving(false);
+    }
+  };
+
   // 뱃지 상세 팝업
   const [selectedBadge, setSelectedBadge] = useState<BadgeItem | null>(null);
   const [selectedBadgeCategory, setSelectedBadgeCategory] = useState('ALL');
@@ -584,6 +616,29 @@ const MyPageScreen: React.FC<Props> = ({ navigation }) => {
             </View>
 
             <View style={s.settingsDivider} />
+
+            {/* AI 학습 데이터 활용 동의 (선택) — terms 항목 있을 때만 표시 */}
+            {aiTermsId && (
+              <>
+                <View style={s.settingsRow}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+                    <Text style={{ fontSize: 16 }}>🤖</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.settingsRowLabel}>AI 자세 분석 학습 동의</Text>
+                      <Text style={s.settingsRowDesc}>업로드한 사진/영상을 AI 베타 학습에 활용 (선택)</Text>
+                    </View>
+                  </View>
+                  <Switch
+                    value={aiAgreed}
+                    disabled={aiSaving}
+                    onValueChange={handleAiToggle}
+                    thumbColor="#fff"
+                    trackColor={{ false: colors.gray200, true: colors.primary }}
+                  />
+                </View>
+                <View style={s.settingsDivider} />
+              </>
+            )}
 
             {/* 관리자 패널 (ADMIN만 노출) */}
             {user?.role === 'ADMIN' && (

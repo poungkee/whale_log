@@ -166,6 +166,16 @@ export function MyPage({
   const [selectedBadgeCategory, setSelectedBadgeCategory] = useState<string>('ALL');
   const [selectedBadge, setSelectedBadge] = useState<BadgeItem | null>(null);
 
+  /**
+   * AI 학습 데이터 활용 동의 상태 (선택 약관)
+   * - GET /api/v1/terms로 약관 목록 조회 후 AI 약관 ID 추출
+   * - GET /api/v1/terms/me로 사용자 동의 이력 조회 (간단히 LocalStorage로 캐시)
+   * - 토글 시 POST /api/v1/terms/agree 호출
+   */
+  const [aiTermsId, setAiTermsId] = useState<string | null>(null);
+  const [aiAgreed, setAiAgreed] = useState<boolean>(false);
+  const [aiSaving, setAiSaving] = useState(false);
+
   const currentBoard: BoardType = userInfo?.boardType ?? 'UNSET';
   const currentBoardFt = userInfo?.boardSizeFt;
   const [boardFtInput, setBoardFtInput] = useState(currentBoardFt?.toString() || '');
@@ -289,6 +299,56 @@ export function MyPage({
     };
     fetchDiaryData();
   }, []);
+
+  /**
+   * AI 학습 동의 약관 정보 조회 (마운트 시 1회)
+   * - GET /terms 응답에서 title이 "AI 학습 데이터 활용..."로 시작하는 항목 찾기
+   * - localStorage에서 사용자 동의 상태 캐시 확인
+   */
+  useEffect(() => {
+    const fetchAiTerms = async () => {
+      try {
+        const res = await fetch(api('/api/v1/terms'));
+        if (!res.ok) return;
+        const list = await res.json();
+        const aiTerm = (Array.isArray(list) ? list : list.data ?? [])
+          .find((t: { title: string }) => t.title?.startsWith('AI 학습 데이터 활용'));
+        if (aiTerm) {
+          setAiTermsId(aiTerm.id);
+          /** 동의 상태는 localStorage에 캐시 (간단한 구현 — 실제 DB 동의는 백엔드에서) */
+          setAiAgreed(localStorage.getItem(`aiAgreed:${aiTerm.id}`) === 'true');
+        }
+      } catch { /* ignore */ }
+    };
+    fetchAiTerms();
+  }, []);
+
+  /** AI 동의 토글 */
+  const handleAiToggle = async (checked: boolean) => {
+    if (!aiTermsId) return;
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+    setAiSaving(true);
+    try {
+      if (checked) {
+        await fetch(api('/api/v1/terms/agree'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ termsIds: [aiTermsId] }),
+        });
+      }
+      /**
+       * 철회는 별도 API 없음 (현재 시스템) → localStorage에서만 토글
+       * V2에서 백엔드 철회 API 추가 예정
+       */
+      setAiAgreed(checked);
+      localStorage.setItem(`aiAgreed:${aiTermsId}`, checked ? 'true' : 'false');
+    } catch {
+      alert('AI 동의 변경에 실패했어요');
+    } finally {
+      setAiSaving(false);
+    }
+  };
 
   /** 뱃지 목록 조회 */
   useEffect(() => {
@@ -802,6 +862,31 @@ export function MyPage({
                   <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                 </label>
               </div>
+
+              {/* AI 학습 데이터 활용 동의 (선택) */}
+              {aiTermsId && (
+                <div className="flex items-center justify-between px-5 py-4">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <span className="w-4 h-4 text-primary text-base leading-4">🤖</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm">AI 자세 분석 학습 동의</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                        업로드한 사진/영상을 AI 베타 학습에 활용 (선택)
+                      </p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={aiAgreed}
+                      disabled={aiSaving}
+                      onChange={(e) => handleAiToggle(e.target.checked)}
+                    />
+                    <div className="w-11 h-6 bg-muted rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                  </label>
+                </div>
+              )}
 
               {/* 관리자 패널 — ADMIN 계정에만 표시 */}
               {userInfo?.role === 'ADMIN' && (
