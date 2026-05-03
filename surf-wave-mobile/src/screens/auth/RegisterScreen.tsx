@@ -40,6 +40,8 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   // 약관 동의 상태
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
+  /** AI 학습 데이터 활용 동의 (선택) — Task #67 */
+  const [agreeAi, setAgreeAi] = useState(false);
 
   // 정책 페이지 URL
   const TERMS_URL = 'https://whale-log.vercel.app/terms.html';
@@ -111,6 +113,24 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
         password,
       });
       await login(res.data.accessToken, res.data.user);
+
+      /**
+       * Task #67 — AI 동의 켰으면 가입 직후 POST /terms/agree 자동 호출
+       * (login 완료 후 토큰 인터셉터로 자동 인증)
+       */
+      if (agreeAi) {
+        try {
+          const termsRes = await api.get('/terms');
+          const list = Array.isArray(termsRes.data) ? termsRes.data : (termsRes.data?.data ?? []);
+          const aiTerm = list.find((t: { title: string }) => t.title?.startsWith('AI 학습 데이터 활용'));
+          if (aiTerm) {
+            await api.post('/terms/agree', { termsIds: [aiTerm.id] });
+          }
+        } catch {
+          /** 가입은 성공했으니 동의 실패해도 진행 (마이페이지에서 다시 가능) */
+        }
+      }
+
       navigation.navigate('Onboarding');
     } catch (err: any) {
       const msg = err.response?.data?.message || '회원가입에 실패했어요.';
@@ -271,6 +291,20 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 <TouchableOpacity onPress={() => Linking.openURL(PRIVACY_URL)}>
                   <Text style={styles.agreeLink}>보기</Text>
                 </TouchableOpacity>
+              </View>
+
+              {/* AI 학습 데이터 활용 동의 (선택) — Task #67 */}
+              <View style={styles.agreeRow}>
+                <TouchableOpacity
+                  style={[styles.checkbox, agreeAi && styles.checkboxChecked]}
+                  onPress={() => setAgreeAi(!agreeAi)}
+                >
+                  {agreeAi && <Text style={styles.checkmark}>✓</Text>}
+                </TouchableOpacity>
+                <Text style={styles.agreeText}>
+                  <Text style={[styles.agreeRequired, { color: '#2AAFC6' }]}>[선택] </Text>
+                  AI 자세 분석 학습 데이터 활용 동의
+                </Text>
               </View>
             </View>
 

@@ -60,4 +60,33 @@ export class TermsService {
       agreedAt: agreementMap.get(term.id)?.agreedAt || null,
     }));
   }
+
+  /**
+   * 약관 동의 철회 (Task #68)
+   * - 선택 약관에 한해 철회 가능 (isRequired=true 약관은 철회 불가)
+   * - agreed=false로 업데이트 (이력 보존)
+   * - 동의 이력 없으면 NOOP (이미 미동의 상태)
+   *
+   * 사용 예: AI 학습 데이터 활용 동의 → 사용자가 마이페이지 토글 OFF 시 호출
+   */
+  async revoke(userId: string, termsId: string) {
+    const term = await this.termsRepository.findOne({ where: { id: termsId } });
+    if (!term) {
+      return { ok: false, reason: '약관을 찾을 수 없습니다' };
+    }
+    if (term.isRequired) {
+      return { ok: false, reason: '필수 약관은 철회할 수 없습니다' };
+    }
+
+    const agreement = await this.agreementRepository.findOne({
+      where: { userId, termsId, agreed: true },
+    });
+    if (!agreement) {
+      return { ok: true, message: '이미 미동의 상태입니다' };
+    }
+
+    agreement.agreed = false;
+    await this.agreementRepository.save(agreement);
+    return { ok: true, message: '동의가 철회되었습니다' };
+  }
 }

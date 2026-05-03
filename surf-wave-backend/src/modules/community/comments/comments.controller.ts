@@ -26,12 +26,17 @@ import { User } from '../../users/entities/user.entity';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
+import { ReportsService } from '../reports/reports.service';
+import { ReportPostDto } from '../posts/dto/report-post.dto';
 
 @ApiTags('community')
 @ApiBearerAuth()
 @Controller('community')
 export class CommentsController {
-  constructor(private readonly commentsService: CommentsService) {}
+  constructor(
+    private readonly commentsService: CommentsService,
+    private readonly reportsService: ReportsService,
+  ) {}
 
   @Get('posts/:postId/comments')
   @ApiOperation({ summary: 'Get comments for post' })
@@ -69,5 +74,20 @@ export class CommentsController {
     @CurrentUser() user: User,
   ) {
     return this.commentsService.delete(commentId, user.id);
+  }
+
+  /**
+   * 댓글 신고 (Task #61)
+   * 이전엔 reports.service에 createCommentReport()만 있고 컨트롤러 라우트 없었음.
+   * 게시글 신고와 동일한 ReportPostDto 재사용.
+   */
+  @Post('comments/:commentId/report')
+  @ApiOperation({ summary: '댓글 신고' })
+  async reportComment(
+    @Param('commentId', ParseUUIDPipe) commentId: string,
+    @CurrentUser() user: User,
+    @Body() reportDto: ReportPostDto,
+  ) {
+    return this.reportsService.createCommentReport(commentId, user.id, reportDto);
   }
 }

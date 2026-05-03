@@ -34,6 +34,8 @@ export function Register({ onBack, onAuthSuccess, onGoLogin }: RegisterProps) {
   /** 약관 동의 상태 */
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
+  /** AI 학습 데이터 활용 동의 (선택) — 가입 후 자동으로 POST /terms/agree 호출 */
+  const [agreeAi, setAgreeAi] = useState(false);
 
   /** 이메일 입력값 */
   const [email, setEmail] = useState('');
@@ -204,6 +206,35 @@ export function Register({ onBack, onAuthSuccess, onGoLogin }: RegisterProps) {
       }
 
       const authData: AuthResponse = await res.json();
+
+      /**
+       * Task #67 — AI 동의 체크박스 켰으면 가입 직후 POST /terms/agree 호출
+       * (가입 응답에 토큰이 있으니 즉시 동의 처리 가능)
+       */
+      if (agreeAi && authData.accessToken) {
+        try {
+          /** 약관 목록에서 AI 항목 ID 조회 */
+          const termsRes = await fetch(api('/api/v1/terms'));
+          if (termsRes.ok) {
+            const list = await termsRes.json();
+            const aiTerm = (Array.isArray(list) ? list : list.data ?? [])
+              .find((t: { title: string }) => t.title?.startsWith('AI 학습 데이터 활용'));
+            if (aiTerm) {
+              await fetch(api('/api/v1/terms/agree'), {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${authData.accessToken}`,
+                },
+                body: JSON.stringify({ termsIds: [aiTerm.id] }),
+              });
+            }
+          }
+        } catch {
+          /** 가입은 성공했으니 동의 실패해도 그대로 진행 (마이페이지에서 다시 가능) */
+        }
+      }
+
       onAuthSuccess(authData);
     } catch {
       setErrors({ email: '서버에 연결할 수 없습니다' });
@@ -417,6 +448,24 @@ export function Register({ onBack, onAuthSuccess, onGoLogin }: RegisterProps) {
               >
                 보기
               </a>
+            </label>
+            {/* AI 학습 데이터 활용 동의 (선택) — Task #67 */}
+            <label className="flex items-start gap-2.5 cursor-pointer select-none pt-1">
+              <input
+                type="checkbox"
+                checked={agreeAi}
+                onChange={(e) => setAgreeAi(e.target.checked)}
+                className="w-4 h-4 rounded accent-[#2AAFC6] mt-0.5"
+              />
+              <div className="flex-1 text-xs text-[#4a4338]">
+                <div>
+                  <span className="text-[#2AAFC6] font-semibold">[선택] </span>
+                  AI 자세 분석 학습 데이터 활용 동의
+                </div>
+                <p className="text-[10px] text-[#6b6355] mt-0.5 leading-relaxed">
+                  업로드한 사진/영상을 익명화하여 AI 학습에 활용 (마이페이지에서 철회 가능)
+                </p>
+              </div>
             </label>
             {errors.agree && <p className="text-xs text-red-500">{errors.agree}</p>}
           </div>

@@ -6,7 +6,7 @@
  * - GET  /terms       - 약관 목록 조회
  * - POST /terms/agree - 약관 동의 처리
  */
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TermsService } from './terms.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -38,5 +38,19 @@ export class TermsController {
   @ApiOperation({ summary: 'Get my terms agreements' })
   async getAgreements(@CurrentUser() user: User) {
     return this.termsService.getAgreements(user.id);
+  }
+
+  /**
+   * 약관 동의 철회 (Task #68)
+   * 선택 약관(isRequired=false)만 철회 가능. 필수 약관은 거부.
+   */
+  @Delete('agreement/:termsId')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '약관 동의 철회 (선택 약관만)' })
+  async revoke(
+    @CurrentUser() user: User,
+    @Param('termsId', ParseUUIDPipe) termsId: string,
+  ) {
+    return this.termsService.revoke(user.id, termsId);
   }
 }

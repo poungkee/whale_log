@@ -235,6 +235,18 @@ function AppInner() {
   }, [screen]);
 
   /**
+   * Task #56 안전망 — 메인 진입 후 surfLevel이 null/undefined로 바뀐 경우
+   * (예: 사용자 정보 갱신 시 레벨이 누락되는 엣지 케이스) 자동 리다이렉트.
+   * splash 분기와 별개로 메인 화면에서 추가 보호.
+   */
+  useEffect(() => {
+    if (screen === 'main' && userInfo && !surfLevel) {
+      console.warn('[App] surfLevel 없음 → level-select 리다이렉트');
+      setScreen('level-select');
+    }
+  }, [screen, userInfo, surfLevel]);
+
+  /**
    * 즐겨찾기 토글 (추가/제거)
    * - 이미 즐겨찾기 → DELETE /api/v1/spots/:spotId/favorite
    * - 아직 즐겨찾기 아님 → POST /api/v1/spots/:spotId/favorite
