@@ -213,6 +213,9 @@ export class DiaryService {
       visibility: dto.visibility || Visibility.PRIVATE,
     };
 
+    /** 뱃지 트리거용 forecast 추가 정보 (try 블록 밖에서도 참조하기 위해 외부 변수 보관) */
+    let forecastWeatherCondition: string | null = null;
+
     /**
      * 서핑 시작 시간이 있으면 → 해당 시점의 forecast 데이터 자동 매칭
      * 예: surfDate="2026-03-24", surfTime="10:00", spotId="xxx"
@@ -243,6 +246,8 @@ export class DiaryService {
           diaryData.windDirection = f.windDirection != null
             ? degreesToWindDirection(f.windDirection)
             : null;
+          /** 뱃지 트리거용 weatherCondition 보관 (RAINY_SURFER 체크) */
+          forecastWeatherCondition = (f as any).weatherCondition ?? null;
           this.logger.log(
             `다이어리 forecast 자동 매칭 성공: spot=${dto.spotId}, ` +
             `time=${dto.surfDate} ${dto.surfTime}, ` +
@@ -293,6 +298,10 @@ export class DiaryService {
         satisfaction: dto.satisfaction,
         hasImages: !!(dto.imageUrls?.length),
         waveHeight: diaryData.waveHeight ? Number(diaryData.waveHeight) : undefined,
+        /** 다이어리 본문 길이 (LONG_NOVELIST 1000자 체크용) */
+        bodyLength: dto.memo?.length ?? 0,
+        /** 당일 forecast 날씨 컨디션 (RAINY_SURFER 비 체크용) */
+        weatherCondition: forecastWeatherCondition,
       },
     }).catch((err) => { this.logger.warn(`뱃지 체크 실패: ${err.message}`); return []; });
 

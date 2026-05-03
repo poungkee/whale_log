@@ -15,6 +15,7 @@ import { Settings, ChevronRight, Waves, Clock, MapPin, Star, BookOpen, Camera, S
 import { useState, useEffect, useMemo, useRef } from 'react';
 import type { SurfLevel, BoardType, UserInfo } from '../types';
 import { api } from '../lib/api';
+import { MyBoardsSection } from '../components/MyBoardsSection';
 
 interface MyPageProps {
   surfLevel: SurfLevel;
@@ -85,6 +86,7 @@ const BADGE_CATEGORIES = [
   { key: 'COMMUNITY', label: '커뮤니티' },
   { key: 'STORY', label: '스토리' },
   { key: 'LIMITED', label: '한정' },
+  { key: 'META', label: '컬렉션' },
 ] as const;
 
 /** 뱃지 아이콘 — 이미지 로드 실패 시 이모지 fallback */
@@ -434,6 +436,9 @@ export function MyPage({
                   </div>
                 </div>
               </div>
+
+              {/* 내 보드 컬렉션 — 여러 보드 등록/관리 */}
+              <MyBoardsSection />
 
               {/* 자세 연습 바로가기 */}
               <button

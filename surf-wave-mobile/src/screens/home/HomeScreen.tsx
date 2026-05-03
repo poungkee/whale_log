@@ -875,9 +875,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row', marginHorizontal: spacing.lg, marginBottom: spacing.sm,
     backgroundColor: colors.surfaceSecondary, borderRadius: 10, padding: 3,
   },
-  viewToggleBtn: { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
+  // 뷰 토글 — 컴팩트(웹앱 py-1.5/text-xs와 매칭)
+  viewToggleBtn: { flex: 1, paddingVertical: 6, borderRadius: 6, alignItems: 'center' },
   viewToggleBtnActive: { backgroundColor: colors.primary },
-  viewToggleText: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
+  viewToggleText: { fontSize: 12, fontWeight: '600', color: colors.textSecondary },
   viewToggleTextActive: { color: '#fff' },
 
   // 오늘의 베스트
@@ -914,7 +915,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', backgroundColor: colors.surfaceSecondary,
     borderRadius: 10, padding: 3,
   },
-  majorTab: { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
+  majorTab: { flex: 1, paddingVertical: 6, borderRadius: 6, alignItems: 'center' },
   majorTabActive: { backgroundColor: colors.primary },
   majorTabText: { fontSize: 12, fontWeight: '600', color: colors.textSecondary },
   majorTabTextActive: { color: '#fff' },

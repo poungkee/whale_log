@@ -14,6 +14,7 @@
  * - COMMUNITY: 커뮤니티/가이드
  * - STORY: 예상 못한 스토리 뱃지
  * - LIMITED: 한정/희소
+ * - META: 메타 컬렉션 (뱃지 자체를 모으는 행위 보상)
  */
 
 export interface BadgeDefinition {
@@ -85,13 +86,22 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     sortOrder: 11,
   },
   {
+    key: 'DIARY_50',
+    nameKo: '반환점',
+    descriptionKo: '다이어리를 50개 작성했어요 (절반의 여정)',
+    icon: '🚩',
+    category: 'DIARY',
+    isHidden: false,
+    sortOrder: 12,
+  },
+  {
     key: 'DIARY_100',
     nameKo: '레전드 서퍼',
     descriptionKo: '다이어리를 100개 작성했어요',
     icon: '🏆',
     category: 'DIARY',
     isHidden: false,
-    sortOrder: 12,
+    sortOrder: 13,
   },
 
   // ─── RECORD 다꾸/기록 (4개) ────────────────────────────────
@@ -130,6 +140,15 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     category: 'RECORD',
     isHidden: false,
     sortOrder: 23,
+  },
+  {
+    key: 'LONG_NOVELIST',
+    nameKo: '장편 작가',
+    descriptionKo: '다이어리 본문을 1000자 이상 작성한 진정한 기록 장인',
+    icon: '📜',
+    category: 'RECORD',
+    isHidden: true,
+    sortOrder: 24,
   },
 
   // ─── BOARD 보드 수집 (4개) ─────────────────────────────────
@@ -261,6 +280,33 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     isHidden: false,
     sortOrder: 49,
   },
+  {
+    key: 'FOUR_REGIONS_KOREA',
+    nameKo: '한반도 정복자',
+    descriptionKo: '동해/남해/서해/제주 4지역 모두에서 서핑한 진정한 탐험가',
+    icon: '🗾',
+    category: 'SPOT',
+    isHidden: true,
+    sortOrder: 50,
+  },
+  {
+    key: 'BALI_EXPLORER',
+    nameKo: '발리 탐험가',
+    descriptionKo: '발리에서 5개 이상의 다른 스팟을 경험했어요',
+    icon: '🌴',
+    category: 'SPOT',
+    isHidden: false,
+    sortOrder: 51,
+  },
+  {
+    key: 'ALL_REGIONS_REGULAR',
+    nameKo: '전국 단골',
+    descriptionKo: '한국 4지역(동/남/서/제주)에서 각 5회 이상 서핑한 단골 서퍼',
+    icon: '📌',
+    category: 'SPOT',
+    isHidden: true,
+    sortOrder: 52,
+  },
 
   // ─── TIME 시간대/계절 (6개) ────────────────────────────────
   {
@@ -383,6 +429,15 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     category: 'STREAK',
     isHidden: false,
     sortOrder: 71,
+  },
+  {
+    key: 'STREAK_100',
+    nameKo: '백일의 약속',
+    descriptionKo: '100일 연속으로 다이어리를 작성한 의지의 서퍼',
+    icon: '🔱',
+    category: 'STREAK',
+    isHidden: false,
+    sortOrder: 72,
   },
 
   // ─── COMMUNITY 커뮤니티/가이드 (4개) ──────────────────────
@@ -514,6 +569,33 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     isHidden: true,
     sortOrder: 99,
   },
+  {
+    key: 'WEEKEND_WARRIOR',
+    nameKo: '주말 전사',
+    descriptionKo: '4주 연속으로 토/일 다이어리를 작성한 주말 전사',
+    icon: '⚔️',
+    category: 'STORY',
+    isHidden: true,
+    sortOrder: 200,
+  },
+  {
+    key: 'MONDAY_SURFER',
+    nameKo: '월요 명약',
+    descriptionKo: '월요일에 5번 이상 서핑한 월요병 처방전',
+    icon: '💊',
+    category: 'STORY',
+    isHidden: true,
+    sortOrder: 201,
+  },
+  {
+    key: 'RAINY_SURFER',
+    nameKo: '우중 서퍼',
+    descriptionKo: '비 오는 날에도 바다를 찾은 진정한 서퍼',
+    icon: '☔',
+    category: 'STORY',
+    isHidden: true,
+    sortOrder: 202,
+  },
 
   // ─── LIMITED 한정/희소 (7개) ───────────────────────────────
   {
@@ -578,6 +660,71 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     category: 'LIMITED',
     isHidden: false,
     sortOrder: 106,
+  },
+  {
+    key: 'ANNIVERSARY_HALF',
+    nameKo: '반년 동지',
+    descriptionKo: '가입 6개월을 맞이한 든든한 동행자',
+    icon: '🎉',
+    category: 'LIMITED',
+    isHidden: false,
+    sortOrder: 107,
+  },
+  {
+    key: 'CHRISTMAS_WAVE',
+    nameKo: '크리스마스 파도',
+    descriptionKo: '12월 25일 크리스마스에 서핑 기록을 남겼어요',
+    icon: '🎄',
+    category: 'LIMITED',
+    isHidden: true,
+    sortOrder: 108,
+  },
+  {
+    key: 'NEW_YEAR_SURF',
+    nameKo: '해넘이 서퍼',
+    descriptionKo: '1월 1일 새해 첫날에 서핑 기록을 남긴 의지의 서퍼',
+    icon: '🌅',
+    category: 'LIMITED',
+    isHidden: true,
+    sortOrder: 109,
+  },
+  {
+    key: 'BIRTHDAY_WAVE',
+    nameKo: '생일 파도',
+    descriptionKo: '본인 생일에 바다를 찾은 특별한 하루',
+    icon: '🎂',
+    category: 'LIMITED',
+    isHidden: true,
+    sortOrder: 110,
+  },
+
+  // ─── META 메타 컬렉션 (4개) ───────────────────────────────
+  {
+    key: 'BADGE_COLLECTOR',
+    nameKo: '뱃지 수집가',
+    descriptionKo: '뱃지를 30개 이상 모은 컬렉터',
+    icon: '🎖️',
+    category: 'META',
+    isHidden: false,
+    sortOrder: 300,
+  },
+  {
+    key: 'BADGE_LEGEND',
+    nameKo: '뱃지 전설',
+    descriptionKo: '뱃지를 50개 이상 모은 전설의 서퍼',
+    icon: '👑',
+    category: 'META',
+    isHidden: false,
+    sortOrder: 301,
+  },
+  {
+    key: 'HIDDEN_HUNTER',
+    nameKo: '히든 헌터',
+    descriptionKo: '히든 뱃지를 10개 이상 발견한 탐험가',
+    icon: '🔍',
+    category: 'META',
+    isHidden: true,
+    sortOrder: 302,
   },
 ];
 

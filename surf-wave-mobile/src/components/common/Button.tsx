@@ -1,3 +1,5 @@
+// 공통 버튼 — Whale Log 오션 크림 테마 (colors.ts 기반)
+// 기존 하드코딩(#0077B6/#90E0EF)에서 colors.primary 등으로 통일
 import React from 'react';
 import {
   TouchableOpacity,
@@ -8,6 +10,7 @@ import {
   TextStyle,
   StyleProp,
 } from 'react-native';
+import { colors } from '../../theme/colors';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'text';
 
@@ -53,7 +56,7 @@ const Button: React.FC<ButtonProps> = ({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === 'primary' ? '#FFFFFF' : '#0077B6'}
+          color={variant === 'primary' ? colors.textInverse : colors.primary}
         />
       ) : (
         <Text style={textStyles}>{title}</Text>
@@ -71,16 +74,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minHeight: 48,
   },
+  /** primary — 메인 강조 (틸 #2AAFC6) */
   primary: {
-    backgroundColor: '#0077B6',
+    backgroundColor: colors.primary,
   },
+  /** secondary — 부드러운 보조 (라이트 틸) */
   secondary: {
-    backgroundColor: '#90E0EF',
+    backgroundColor: colors.primaryLight,
   },
+  /** outline — 테두리만 강조 */
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 1.5,
-    borderColor: '#0077B6',
+    borderColor: colors.primary,
   },
   text: {
     backgroundColor: 'transparent',
@@ -88,22 +94,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   primaryText: {
-    color: '#FFFFFF',
+    color: colors.textInverse,
   },
   secondaryText: {
-    color: '#023E8A',
+    color: colors.primaryDark,
   },
   outlineText: {
-    color: '#0077B6',
+    color: colors.primary,
   },
   textText: {
-    color: '#0077B6',
+    color: colors.primary,
   },
   disabled: {
     opacity: 0.5,
   },
   disabledText: {
-    color: '#999999',
+    color: colors.textTertiary,
   },
 });
 

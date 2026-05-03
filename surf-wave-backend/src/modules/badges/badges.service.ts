@@ -44,6 +44,10 @@ export interface BadgeContext {
     hasImages: boolean;
     waveHeight?: number;      // 해당 스팟 당일 예보 파고 (m)
     surfRating?: number;      // 해당 스팟 당일 예보 점수 (1~10)
+    /** 다이어리 본문 길이 (LONG_NOVELIST 1000자 체크용) */
+    bodyLength?: number;
+    /** 당일 예보 날씨 컨디션 (RAINY_SURFER 비 체크용 — 'rain', 'snow' 등) */
+    weatherCondition?: string | null;
   };
   /** 즐겨찾기 관련 */
   favoriteCount?: number;
@@ -125,6 +129,12 @@ export class BadgesService {
           await this.checkLoginBadges(ctx, award);
           break;
       }
+
+      /**
+       * 메타 뱃지 체크 — 일반 뱃지 부여 후 누적 카운트 검사
+       * (이 트리거에서 새 뱃지를 받았다면 메타 조건 충족했을 가능성 있음)
+       */
+      await this.checkMetaBadges(ctx.userId, award);
     } catch (err) {
       this.logger.error(`뱃지 체크 오류 (userId=${ctx.userId}): ${(err as Error).message}`);
     }
@@ -230,6 +240,8 @@ export class BadgesService {
     if (diaryCount >= 1) await award('FIRST_DIARY');
     /** 10개 */
     if (diaryCount >= 10) await award('DIARY_10');
+    /** 50개 (반환점) */
+    if (diaryCount >= 50) await award('DIARY_50');
     /** 100개 */
     if (diaryCount >= 100) await award('DIARY_100');
 
@@ -284,6 +296,51 @@ export class BadgesService {
     /** 3만ft 서퍼 — 한국/발리 각 5개 이상 */
     if (parseInt(baliCount[0].cnt) >= 5 && parseInt(koreaCount[0].cnt) >= 5) {
       await award('THREE_COUNTRIES');
+    }
+
+    /** 발리 탐험가 — 발리에서 5개 이상 다른 스팟 */
+    if (isBali) {
+      const baliSpotResult = await this.dataSource.query(
+        `SELECT COUNT(DISTINCT d.spot_id) as cnt FROM surf_diaries d
+         JOIN spots s ON s.id = d.spot_id
+         WHERE d.user_id = $1 AND s.region LIKE 'Bali%' AND d.deleted_at IS NULL`,
+        [ctx.userId],
+      );
+      if (parseInt(baliSpotResult[0].cnt) >= 5) await award('BALI_EXPLORER');
+    }
+
+    /**
+     * 한반도 정복자 / 전국 단골 — 동/남/서/제주 4지역 분류
+     * region 기준: 강원/속초/양양/고성/동해 → 동해, 부산/포항/울산 → 동해(부산은 남해라 보일 수 있어도 서핑 스팟 분류 기준에 따름),
+     *             제주 → 제주, 그 외(거제/완도/고흥) → 남해, 인천/태안 → 서해
+     * 단순화: 한국 region을 4그룹으로 매핑하여 distinct count + 각 그룹별 count
+     */
+    if (!isBali) {
+      const regionStatsResult = await this.dataSource.query(
+        `SELECT
+           SUM(CASE WHEN s.region IN ('강원', '속초', '양양', '고성', '동해', '부산', '포항', '울산', '경북') THEN 1 ELSE 0 END) as east,
+           SUM(CASE WHEN s.region IN ('거제', '완도', '고흥', '경남', '전남') THEN 1 ELSE 0 END) as south,
+           SUM(CASE WHEN s.region IN ('인천', '태안', '충남', '경기') THEN 1 ELSE 0 END) as west,
+           SUM(CASE WHEN s.region IN ('제주') THEN 1 ELSE 0 END) as jeju
+         FROM surf_diaries d
+         JOIN spots s ON s.id = d.spot_id
+         WHERE d.user_id = $1 AND s.region NOT LIKE 'Bali%' AND d.deleted_at IS NULL`,
+        [ctx.userId],
+      );
+      const r = regionStatsResult[0] ?? { east: 0, south: 0, west: 0, jeju: 0 };
+      const east = parseInt(r.east, 10);
+      const south = parseInt(r.south, 10);
+      const west = parseInt(r.west, 10);
+      const jeju = parseInt(r.jeju, 10);
+
+      /** 한반도 정복자 — 4지역 모두 1회 이상 */
+      if (east >= 1 && south >= 1 && west >= 1 && jeju >= 1) {
+        await award('FOUR_REGIONS_KOREA');
+      }
+      /** 전국 단골 — 4지역 각 5회 이상 */
+      if (east >= 5 && south >= 5 && west >= 5 && jeju >= 5) {
+        await award('ALL_REGIONS_REGULAR');
+      }
     }
 
     /** 파도 소믈리에 — 5개 스팟에서 각 3회 이상 */
@@ -446,6 +503,71 @@ export class BadgesService {
       await award('FLAT_DAY');
     }
 
+    /** 장편 작가 — 다이어리 본문 1000자 이상 */
+    if (ctx.diary.bodyLength !== undefined && ctx.diary.bodyLength >= 1000) {
+      await award('LONG_NOVELIST');
+    }
+
+    /** 우중 서퍼 — 비 오는 날 */
+    if (ctx.diary.weatherCondition && /rain|drizzle|shower|비/i.test(ctx.diary.weatherCondition)) {
+      await award('RAINY_SURFER');
+    }
+
+    /** 월요 명약 — 월요일 다이어리 5회 이상 */
+    const mondayResult = await this.dataSource.query(
+      `SELECT COUNT(*) as cnt FROM surf_diaries
+       WHERE user_id = $1 AND EXTRACT(DOW FROM surf_date::date) = 1 AND deleted_at IS NULL`,
+      [ctx.userId],
+    );
+    if (parseInt(mondayResult[0].cnt) >= 5) await award('MONDAY_SURFER');
+
+    /** 주말 전사 — 4주 연속 토(6) 또는 일(0) 다이어리 */
+    const weekendResult = await this.dataSource.query(
+      `SELECT
+         DATE_TRUNC('week', surf_date::date) as week_start,
+         BOOL_OR(EXTRACT(DOW FROM surf_date::date) IN (0, 6)) as has_weekend
+       FROM surf_diaries
+       WHERE user_id = $1 AND deleted_at IS NULL
+       GROUP BY DATE_TRUNC('week', surf_date::date)
+       ORDER BY week_start DESC
+       LIMIT 4`,
+      [ctx.userId],
+    );
+    if (
+      weekendResult.length >= 4 &&
+      weekendResult.every((row: any) => row.has_weekend === true)
+    ) {
+      /** 4개 행이 연속한 주인지 검증 */
+      const weeks = weekendResult.map((r: any) => new Date(r.week_start).getTime());
+      const isConsecutive = weeks.every((w: number, i: number) =>
+        i === 0 ? true : weeks[i - 1] - w === 7 * 24 * 60 * 60 * 1000,
+      );
+      if (isConsecutive) await award('WEEKEND_WARRIOR');
+    }
+
+    /** 크리스마스 파도 — 12월 25일 */
+    const [, m, d] = surfDate.split('-').map(Number);
+    if (m === 12 && d === 25) await award('CHRISTMAS_WAVE');
+
+    /** 해넘이 서퍼 — 1월 1일 */
+    if (m === 1 && d === 1) await award('NEW_YEAR_SURF');
+
+    /** 생일 파도 — User.birthday와 surfDate(MM-DD)가 일치
+     *  ⚠️ User 엔티티에 birthday 컬럼 추가된 후 활성화. 현재는 컬럼 없으면 조용히 패스.
+     */
+    try {
+      const birthdayResult = await this.dataSource.query(
+        `SELECT TO_CHAR(birthday, 'MM-DD') as bday FROM users WHERE id = $1 AND birthday IS NOT NULL`,
+        [ctx.userId],
+      );
+      if (birthdayResult[0]?.bday) {
+        const surfMmDd = `${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        if (birthdayResult[0].bday === surfMmDd) await award('BIRTHDAY_WAVE');
+      }
+    } catch {
+      /** birthday 컬럼이 없으면 무시 (마이그레이션 전) */
+    }
+
     /** 파도 타임캡슐 — 1년 전 ±3일 같은 스팟 */
     const timeCapsuleResult = await this.dataSource.query(
       `SELECT COUNT(*) as cnt FROM surf_diaries
@@ -520,6 +642,58 @@ export class BadgesService {
       const year = now.getFullYear();
       await award(`ANNIVERSARY_${year}`);
     }
+
+    /**
+     * 반년 동지 — 가입 6개월 차(±3일) 로그인 시
+     * 가입일 + 6개월 시점에서 ±3일 사이에 로그인하면 부여
+     */
+    const userJoin = await this.dataSource.query(
+      `SELECT created_at FROM users WHERE id = $1`,
+      [ctx.userId],
+    );
+    if (userJoin[0]) {
+      const joinedAt = new Date(userJoin[0].created_at);
+      const halfAnniversary = new Date(joinedAt);
+      halfAnniversary.setMonth(halfAnniversary.getMonth() + 6);
+      const halfDiff = Math.abs((now.getTime() - halfAnniversary.getTime()) / (1000 * 60 * 60 * 24));
+      if (halfDiff <= 3) await award('ANNIVERSARY_HALF');
+    }
+  }
+
+  /**
+   * 메타 뱃지 체크 — 모든 트리거 끝나고 호출
+   * - BADGE_COLLECTOR: 뱃지 30개 이상
+   * - BADGE_LEGEND: 뱃지 50개 이상
+   * - HIDDEN_HUNTER: 히든 뱃지 10개 이상
+   *
+   * 메타 뱃지 자체는 카운트에서 제외 (자기참조 무한루프 방지)
+   */
+  private async checkMetaBadges(userId: string, award: (key: string) => Promise<void>) {
+    const META_KEYS = ['BADGE_COLLECTOR', 'BADGE_LEGEND', 'HIDDEN_HUNTER'];
+
+    /** 메타 제외 보유 뱃지 수 */
+    const totalResult = await this.dataSource.query(
+      `SELECT COUNT(*) as cnt FROM user_badges
+       WHERE user_id = $1 AND badge_key NOT IN ('BADGE_COLLECTOR','BADGE_LEGEND','HIDDEN_HUNTER')`,
+      [userId],
+    );
+    const totalCount = parseInt(totalResult[0].cnt, 10);
+
+    if (totalCount >= 30) await award('BADGE_COLLECTOR');
+    if (totalCount >= 50) await award('BADGE_LEGEND');
+
+    /** 히든 뱃지 보유 수 (메타 제외) */
+    const hiddenResult = await this.dataSource.query(
+      `SELECT COUNT(*) as cnt FROM user_badges ub
+       JOIN badges b ON b.key = ub.badge_key
+       WHERE ub.user_id = $1
+         AND b.is_hidden = true
+         AND ub.badge_key NOT IN ('BADGE_COLLECTOR','BADGE_LEGEND','HIDDEN_HUNTER')`,
+      [userId],
+    );
+    const hiddenCount = parseInt(hiddenResult[0].cnt, 10);
+
+    if (hiddenCount >= 10) await award('HIDDEN_HUNTER');
   }
 
   // ─── 헬퍼 메서드 ───────────────────────────────────────────
@@ -542,6 +716,7 @@ export class BadgesService {
     const streak = parseInt(result[0]?.streak ?? '0', 10);
     if (streak >= 7) await award('STREAK_7');
     if (streak >= 30) await award('STREAK_30');
+    if (streak >= 100) await award('STREAK_100');
   }
 
   /**

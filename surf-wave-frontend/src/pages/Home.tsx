@@ -244,12 +244,12 @@ export function Home({ surfLevel, boardType, favoriteIds, onToggleFavorite }: Ho
           </div>
         )}
 
-        {/* ── 뷰 모드 토글: 스팟 🌊 / 후기 📝 ── */}
+        {/* ── 뷰 모드 토글: 스팟 🌊 / 후기 📝 (컴팩트 버전) ── */}
         {!isLoading && spots.length > 0 && (
-          <div className="flex bg-secondary rounded-lg p-0.5 mb-3">
+          <div className="flex bg-secondary rounded-md p-0.5 mb-2.5">
             <button
               onClick={() => setViewMode('spots')}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-1.5 text-xs font-medium rounded transition-colors flex items-center justify-center gap-1 ${
                 viewMode === 'spots'
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -259,7 +259,7 @@ export function Home({ surfLevel, boardType, favoriteIds, onToggleFavorite }: Ho
             </button>
             <button
               onClick={() => setViewMode('community')}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-1.5 text-xs font-medium rounded transition-colors flex items-center justify-center gap-1 ${
                 viewMode === 'community'
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -320,15 +320,15 @@ export function Home({ surfLevel, boardType, favoriteIds, onToggleFavorite }: Ho
           </div>
         )}
 
-        {/* 대분류 탭 바: 전체 | 국내 | 발리 */}
+        {/* 대분류 탭 바: 전체 | 국내 | 발리 (컴팩트 버전) */}
         {!isLoading && spots.length > 0 && (
-          <div className="mb-3">
-            <div className="flex bg-secondary rounded-lg p-0.5">
+          <div className="mb-2.5">
+            <div className="flex bg-secondary rounded-md p-0.5">
               {MAJOR_TABS.filter(tab => viewMode === 'community' ? tab.key !== '즐겨찾기' : true).map(tab => (
                 <button
                   key={tab.key}
                   onClick={() => handleMajorTabChange(tab.key)}
-                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+                  className={`flex-1 py-1.5 text-xs font-medium rounded transition-colors ${
                     regionFilter.major === tab.key
                       ? 'bg-primary text-primary-foreground'
                       : 'text-muted-foreground hover:text-foreground'
