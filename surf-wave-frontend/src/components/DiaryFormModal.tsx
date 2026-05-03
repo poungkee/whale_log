@@ -142,6 +142,12 @@ export function DiaryFormModal({ editEntry, defaultBoardType, onClose, onSaved }
   const [durationMinutes, setDurationMinutes] = useState(editEntry?.durationMinutes || 60);
   /** 만족도 (1~5) */
   const [satisfaction, setSatisfaction] = useState(editEntry?.satisfaction || 3);
+  /**
+   * 이 스팟 추천도 별점 (1~5, 선택)
+   * - 0이면 "별점 안 매김" 의미 (백엔드에 null로 전송)
+   * - 매기면 스팟 평균 평점에 반영 (공개/비공개 무관)
+   */
+  const [rating, setRating] = useState((editEntry as any)?.rating ?? 0);
   /** 메모 */
   const [memo, setMemo] = useState(editEntry?.memo || '');
   /** 공개/비공개 설정 (PRIVATE=나만 보기, PUBLIC=전체 공개) */
@@ -358,6 +364,8 @@ export function DiaryFormModal({ editEntry, defaultBoardType, onClose, onSaved }
         boardSizeFt: parsedFt && !isNaN(parsedFt) ? parsedFt : undefined,
         durationMinutes,
         satisfaction,
+        /** 별점 — 0이면 미입력으로 간주 (보내지 않음 → 평균에서 제외) */
+        rating: rating > 0 ? rating : undefined,
         memo: memo.trim() || undefined,
         visibility,
         /** 이미지 URL 배열 — 빈 배열이면 이미지 없음 (수정 시 기존 이미지 삭제됨) */
@@ -710,6 +718,37 @@ export function DiaryFormModal({ editEntry, defaultBoardType, onClose, onSaved }
                   </span>
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* ===== 5-2. 이 스팟 추천도 (별점, 선택) ===== */}
+          <div>
+            <label className="flex items-center gap-1.5 text-sm font-semibold mb-2">
+              🌊 이 스팟 추천도
+              <span className="text-xs text-muted-foreground font-normal">
+                (선택 — 매기면 스팟 평점에 반영)
+              </span>
+            </label>
+            <div className="flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map(star => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(rating === star ? 0 : star)}
+                  className="text-3xl transition-transform hover:scale-110"
+                  aria-label={`${star}점`}
+                >
+                  <span className={star <= rating ? 'text-yellow-400' : 'text-muted-foreground/30'}>
+                    ★
+                  </span>
+                </button>
+              ))}
+              {rating > 0 && (
+                <span className="ml-2 text-sm font-medium text-yellow-600">{rating}.0</span>
+              )}
+              {rating === 0 && (
+                <span className="ml-2 text-xs text-muted-foreground">평가 안 함</span>
+              )}
             </div>
           </div>
 

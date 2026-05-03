@@ -59,6 +59,15 @@ export class SurfDiary extends BaseEntity {
   @Column({ type: 'smallint' })
   satisfaction: number;
 
+  /**
+   * 이 스팟에 대한 사용자 별점 (1~5, 선택)
+   * - null이면 별점 안 매김 (기본 동작)
+   * - 별점 매기면 spots 테이블의 평균 rating + ratingCount에 반영됨
+   * - 공개/비공개 무관하게 평균에 합산 (사용자 의견에 따라)
+   */
+  @Column({ type: 'smallint', nullable: true })
+  rating: number | null;
+
   @Column({ type: 'text', nullable: true })
   memo: string | null;
 

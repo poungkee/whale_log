@@ -16,8 +16,8 @@ import {
   ForbiddenException,
   Logger,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
+import { Repository, Between, DataSource } from 'typeorm';
 import { SurfDiary } from './entities/surf-diary.entity';
 import { DiaryImage } from './entities/diary-image.entity';
 import { CreateDiaryDto } from './dto/create-diary.dto';
@@ -60,6 +60,8 @@ export class DiaryService {
     private readonly forecastsService: ForecastsService,
     /** 뱃지 서비스 - 다이어리 작성 후 뱃지 조건 체크용 */
     private readonly badgesService: BadgesService,
+    /** 별점 입력 시 spots 테이블의 평균 평점/카운트 raw query 갱신용 */
+    @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
   async findByUser(userId: string, query: DiaryQueryDto) {
@@ -209,6 +211,8 @@ export class DiaryService {
       boardType: dto.boardType,
       durationMinutes: dto.durationMinutes,
       satisfaction: dto.satisfaction,
+      /** 이 스팟 추천 별점 (1~5, 선택) — 매기면 스팟 평균 평점에 반영 */
+      rating: dto.rating ?? null,
       memo: dto.memo,
       visibility: dto.visibility || Visibility.PRIVATE,
     };
@@ -283,6 +287,32 @@ export class DiaryService {
     }
 
     const result = await this.findById(savedDiary.id, userId);
+
+    /**
+     * 별점이 입력됐으면 스팟 평균 평점 갱신 (공개/비공개 무관)
+     * spots 테이블의 rating + ratingCount 컬럼 업데이트.
+     */
+    if (dto.rating != null) {
+      try {
+        await this.dataSource.query(
+          `UPDATE spots
+           SET rating = COALESCE((
+             SELECT ROUND(AVG(rating)::numeric, 2)
+             FROM surf_diaries
+             WHERE spot_id = $1 AND rating IS NOT NULL AND deleted_at IS NULL
+           ), 0),
+           rating_count = (
+             SELECT COUNT(*)
+             FROM surf_diaries
+             WHERE spot_id = $1 AND rating IS NOT NULL AND deleted_at IS NULL
+           )
+           WHERE id = $1`,
+          [dto.spotId],
+        );
+      } catch (err) {
+        this.logger.warn(`스팟 평균 평점 갱신 실패: ${(err as Error).message}`);
+      }
+    }
 
     /** 뱃지 조건 체크 — 새로 획득한 뱃지 키 배열 반환 */
     const newBadges = await this.badgesService.checkAndAward({

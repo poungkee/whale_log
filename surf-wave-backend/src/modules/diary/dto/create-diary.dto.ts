@@ -78,6 +78,18 @@ export class CreateDiaryDto {
   @Max(5)
   satisfaction: number;
 
+  /**
+   * 이 스팟에 대한 추천 별점 (1~5, 선택)
+   * - 별점을 매기면 스팟의 평균 평점에 반영됨 (공개/비공개 무관)
+   * - 안 매기면 평균 계산에서 제외 (현재 만족도와 분리)
+   */
+  @ApiPropertyOptional({ description: '이 스팟 추천도 (1~5, 선택)' })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  rating?: number;
+
   /** 메모/기록 (선택, 자유 텍스트) */
   @ApiPropertyOptional({ description: '메모/기록' })
   @IsOptional()
