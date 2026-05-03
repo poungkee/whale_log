@@ -177,10 +177,8 @@ const MyPageScreen: React.FC<Props> = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState<MyInfoTab>('profile');
   const [showSettings, setShowSettings] = useState(false);
 
-  // 레벨/보드 아코디언
+  // 레벨 아코디언 (보드 picker는 "내 보드" 통합으로 제거됨)
   const [showLevelPicker, setShowLevelPicker] = useState(false);
-  const [showBoardPicker, setShowBoardPicker] = useState(false);
-  const [boardFtInput, setBoardFtInput] = useState('');
 
   // 뱃지 상세 팝업
   const [selectedBadge, setSelectedBadge] = useState<BadgeItem | null>(null);
@@ -218,23 +216,6 @@ const MyPageScreen: React.FC<Props> = ({ navigation }) => {
     onError: () => Alert.alert('오류', '레벨 변경에 실패했어요.'),
   });
 
-  // ── API: 보드 타입 변경 ───────────────────────────────────────────
-  const boardMutation = useMutation({
-    mutationFn: (boardType: string) => api.patch('/users/me', { boardType }),
-    onSuccess: (res) => {
-      updateUser({ boardType: res.data.boardType });
-      setShowBoardPicker(false);
-    },
-    onError: () => Alert.alert('오류', '보드 타입 변경에 실패했어요.'),
-  });
-
-  // ── API: 보드 사이즈(ft) 저장 ─────────────────────────────────────
-  const boardFtMutation = useMutation({
-    mutationFn: (boardSizeFt: number | null) => api.patch('/users/me', { boardSizeFt }),
-    onSuccess: () => Alert.alert('저장됨', '보드 길이가 저장됐어요.'),
-    onError: () => Alert.alert('오류', '저장에 실패했어요.'),
-  });
-
   const currentLevel = (user?.surfLevel as SurfLevel) ?? 'BEGINNER';
   const currentBoard = (user?.boardType as BoardType) ?? 'LONGBOARD';
 
@@ -259,7 +240,7 @@ const MyPageScreen: React.FC<Props> = ({ navigation }) => {
       {/* ── 내부 탭 바 ── */}
       <View style={s.tabBar}>
         {(['profile', 'stats', 'badges'] as MyInfoTab[]).map(tab => {
-          const labels: Record<MyInfoTab, string> = { profile: '프로필', stats: '통계', badges: '뱃지' };
+          const labels: Record<MyInfoTab, string> = { profile: '프로필', stats: '다이어리', badges: '뱃지' };
           const active = activeTab === tab;
           return (
             <TouchableOpacity key={tab} style={[s.tabItem, active && s.tabItemActive]} onPress={() => setActiveTab(tab)}>
@@ -303,13 +284,11 @@ const MyPageScreen: React.FC<Props> = ({ navigation }) => {
               </View>
             </View>
 
-            {/* 레벨 · 보드 변경 아코디언 */}
+            {/* 서핑 레벨 변경 — 보드 타입은 "내 보드"로 이관됨 (B-2 후속에서 추가) */}
             <View style={s.pickerCard}>
-
-              {/* 레벨 변경 행 */}
               <TouchableOpacity
                 style={s.pickerRow}
-                onPress={() => { setShowLevelPicker(!showLevelPicker); setShowBoardPicker(false); }}
+                onPress={() => setShowLevelPicker(!showLevelPicker)}
               >
                 <Text style={s.pickerLabel}>서핑 레벨</Text>
                 <View style={s.pickerRight}>
@@ -336,64 +315,15 @@ const MyPageScreen: React.FC<Props> = ({ navigation }) => {
                   ))}
                 </View>
               )}
+            </View>
 
-              <View style={s.pickerDivider} />
-
-              {/* 보드 변경 행 */}
-              <TouchableOpacity
-                style={s.pickerRow}
-                onPress={() => { setShowBoardPicker(!showBoardPicker); setShowLevelPicker(false); }}
-              >
-                <Text style={s.pickerLabel}>보드 타입</Text>
-                <View style={s.pickerRight}>
-                  <Text style={[s.pickerValue, { color: BOARD_COLORS[currentBoard] ?? '#999' }]}>
-                    {BOARD_LABELS[currentBoard] ?? currentBoard}
-                  </Text>
-                  <ChevronRight size={16} color={colors.textTertiary} />
-                </View>
-              </TouchableOpacity>
-
-              {showBoardPicker && (
-                <View style={s.pickerExpand}>
-                  {ALL_BOARDS.map(board => (
-                    <TouchableOpacity
-                      key={board}
-                      style={[s.pickerOption, currentBoard === board && s.pickerOptionActive]}
-                      onPress={() => boardMutation.mutate(board)}
-                    >
-                      <Text style={[s.pickerOptionText, { color: BOARD_COLORS[board] }]}>
-                        {BOARD_LABELS[board]}
-                      </Text>
-                      {currentBoard === board && <Text style={s.pickerCurrent}>현재</Text>}
-                    </TouchableOpacity>
-                  ))}
-
-                  {/* 보드 길이 입력 */}
-                  <View style={s.boardFtRow}>
-                    <Text style={s.boardFtLabel}>보드 길이 (선택)</Text>
-                    <View style={s.boardFtInputRow}>
-                      <TextInput
-                        style={s.boardFtInput}
-                        value={boardFtInput}
-                        onChangeText={setBoardFtInput}
-                        placeholder="예: 6.2"
-                        keyboardType="decimal-pad"
-                        placeholderTextColor={colors.textTertiary}
-                      />
-                      <Text style={s.boardFtUnit}>ft</Text>
-                      <TouchableOpacity
-                        style={s.boardFtSave}
-                        onPress={() => {
-                          const ft = boardFtInput.trim() ? parseFloat(boardFtInput) : null;
-                          boardFtMutation.mutate(ft);
-                        }}
-                      >
-                        <Text style={s.boardFtSaveText}>저장</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </View>
-              )}
+            {/* 추천 메커니즘 안내 — "내 보드" 모바일 UI 도입 전 임시 안내 */}
+            <View style={s.recommendHint}>
+              <Text style={s.recommendHintTitle}>💡 레벨과 메인 보드에 따라 파도가 추천돼요</Text>
+              <Text style={s.recommendHintBody}>
+                본인 보드 외에 자주 타는 강습/렌탈 보드도 등록해보세요{'\n'}
+                (모바일 보드 컬렉션 UI는 곧 추가될 예정)
+              </Text>
             </View>
 
             {/* 즐겨찾기 바로가기 */}
@@ -777,24 +707,19 @@ const s = StyleSheet.create({
   pickerOptionText: { fontSize: 14, fontWeight: '600' },
   pickerCurrent: { fontSize: 12, color: colors.primary, fontWeight: '600' },
 
-  // 보드 ft 입력
-  boardFtRow: {
-    paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border + '80',
-    gap: 6,
+  // 추천 메커니즘 안내 — "내 보드" 도입 전 임시 안내
+  recommendHint: {
+    backgroundColor: colors.primary + '10',
+    borderRadius: 12,
+    padding: spacing.md,
+    gap: 4,
   },
-  boardFtLabel: { fontSize: 11, color: colors.textSecondary },
-  boardFtInputRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  boardFtInput: {
-    flex: 1, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border,
-    borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8,
-    fontSize: 14, color: colors.text, textAlign: 'center',
+  recommendHintTitle: {
+    fontSize: 13, fontWeight: '600', color: colors.primary,
   },
-  boardFtUnit: { fontSize: 13, color: colors.textSecondary },
-  boardFtSave: {
-    backgroundColor: colors.primary, borderRadius: 10,
-    paddingHorizontal: 14, paddingVertical: 8,
+  recommendHintBody: {
+    fontSize: 11, color: colors.textSecondary, lineHeight: 16,
   },
-  boardFtSaveText: { fontSize: 13, color: '#fff', fontWeight: '700' },
 
   // 메뉴 아이템
   menuItem: {

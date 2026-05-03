@@ -91,7 +91,7 @@ export function MyBoardsSection() {
 
   return (
     <div className="bg-card border border-border rounded-xl p-4">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-bold flex items-center gap-1.5">
           🏄 내 보드
           {boards.length > 0 && (
@@ -104,6 +104,13 @@ export function MyBoardsSection() {
         >
           <Plus className="w-3 h-3" /> 추가
         </button>
+      </div>
+
+      {/* 추천 메커니즘 안내 — 사용자가 보드 등록 동기 부여 + 렌탈/강습 보드도 OK */}
+      <div className="text-[11px] text-muted-foreground leading-relaxed mb-3 px-2 py-1.5 bg-primary/5 rounded-md">
+        💡 <span className="font-medium">레벨과 메인 보드에 따라 파도가 추천돼요</span>
+        <br />
+        본인 보드 외에 자주 타는 강습/렌탈 보드도 등록해보세요
       </div>
 
       {loading && (

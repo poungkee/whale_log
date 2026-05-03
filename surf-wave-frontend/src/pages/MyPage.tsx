@@ -366,7 +366,7 @@ export function MyPage({
         {/* ── 내부 탭 ── */}
         <div className="flex border-b border-border bg-card sticky top-[61px] z-30">
           {(['profile', 'stats', 'badges'] as MyInfoTab[]).map((tab) => {
-            const labels: Record<MyInfoTab, string> = { profile: '프로필', stats: '통계', badges: '뱃지' };
+            const labels: Record<MyInfoTab, string> = { profile: '프로필', stats: '다이어리', badges: '뱃지' };
             return (
               <button
                 key={tab}
@@ -456,11 +456,10 @@ export function MyPage({
               </button>
 
 
-              {/* 레벨 · 보드 변경 */}
-              <div className="bg-card border border-border rounded-xl divide-y divide-border">
-                {/* 레벨 변경 */}
+              {/* 서핑 레벨 변경 — 보드 타입은 "내 보드" 섹션으로 이관됨 */}
+              <div className="bg-card border border-border rounded-xl">
                 <button
-                  onClick={() => { setShowLevelPicker(!showLevelPicker); setShowBoardPicker(false); }}
+                  onClick={() => setShowLevelPicker(!showLevelPicker)}
                   className="w-full flex items-center justify-between p-4 hover:bg-secondary transition-colors"
                 >
                   <span className="text-sm font-medium">서핑 레벨</span>
@@ -470,7 +469,7 @@ export function MyPage({
                   </div>
                 </button>
                 {showLevelPicker && (
-                  <div className="p-4 bg-secondary/50 space-y-2">
+                  <div className="p-4 bg-secondary/50 space-y-2 border-t border-border">
                     {ALL_LEVELS.map((level) => (
                       <button
                         key={level}
@@ -483,66 +482,6 @@ export function MyPage({
                         {surfLevel === level && <span className="text-primary text-sm">현재</span>}
                       </button>
                     ))}
-                  </div>
-                )}
-
-                {/* 보드 변경 */}
-                <button
-                  onClick={() => { setShowBoardPicker(!showBoardPicker); setShowLevelPicker(false); }}
-                  className="w-full flex items-center justify-between p-4 hover:bg-secondary transition-colors"
-                >
-                  <span className="text-sm font-medium">보드 타입</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm" style={{ color: BOARD_COLORS[currentBoard] }}>{BOARD_LABELS[currentBoard]}</span>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                </button>
-                {showBoardPicker && (
-                  <div className="p-4 bg-secondary/50 space-y-2">
-                    {ALL_BOARDS.map((board) => (
-                      <button
-                        key={board}
-                        onClick={() => { onBoardTypeChange(board); setShowBoardPicker(false); }}
-                        className={`w-full flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                          currentBoard === board ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50'
-                        }`}
-                      >
-                        <span className="font-medium" style={{ color: BOARD_COLORS[board] }}>{BOARD_LABELS[board]}</span>
-                        {currentBoard === board && <span className="text-primary text-sm">현재</span>}
-                      </button>
-                    ))}
-                    {/* 보드 길이 입력 */}
-                    <div className="pt-2 border-t border-border/50">
-                      <label className="text-xs text-muted-foreground mb-1 block">보드 길이 (선택)</label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          value={boardFtInput}
-                          onChange={(e) => setBoardFtInput(e.target.value)}
-                          placeholder="예: 6.2"
-                          min={3.0} max={12.0} step={0.1}
-                          className="flex-1 px-3 py-2 bg-card border border-border rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
-                        />
-                        <span className="text-sm text-muted-foreground">ft</span>
-                        <button
-                          onClick={async () => {
-                            const token = localStorage.getItem('accessToken');
-                            if (!token) return;
-                            const ft = boardFtInput.trim() ? parseFloat(boardFtInput) : null;
-                            try {
-                              await fetch(api('/api/v1/users/me'), {
-                                method: 'PATCH',
-                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                                body: JSON.stringify({ boardSizeFt: ft }),
-                              });
-                            } catch { /* 실패 무시 */ }
-                          }}
-                          className="px-3 py-2 bg-primary text-primary-foreground text-xs rounded-lg font-medium"
-                        >
-                          저장
-                        </button>
-                      </div>
-                    </div>
                   </div>
                 )}
               </div>
