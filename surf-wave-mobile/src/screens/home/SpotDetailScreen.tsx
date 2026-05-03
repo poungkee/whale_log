@@ -950,36 +950,9 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
               {/* AI 추천 코멘트는 제거 — 현재 요약/적합도 분석/hints에 이미 정보가 충분히 표시되어 중복 */}
 
-              {/* 투표 */}
-              <View style={s.card}>
-                <Text style={s.cardTitle}>오늘 컨디션 어때요?</Text>
-                <View style={s.voteRow}>
-                  <TouchableOpacity
-                    style={[s.voteBtn, voteStatus?.myVote === 'GOOD' && s.voteBtnGood]}
-                    onPress={() => {
-                      if (!isAuthenticated) { Alert.alert('로그인 필요'); return; }
-                      voteMutation.mutate('GOOD');
-                    }}
-                  >
-                    <ThumbsUp size={18} color={voteStatus?.myVote === 'GOOD' ? colors.success : colors.textSecondary} />
-                    <Text style={[s.voteTxt, voteStatus?.myVote === 'GOOD' && { color: colors.success }]}>
-                      좋음 {voteStatus?.good ?? 0}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[s.voteBtn, voteStatus?.myVote === 'BAD' && s.voteBtnBad]}
-                    onPress={() => {
-                      if (!isAuthenticated) { Alert.alert('로그인 필요'); return; }
-                      voteMutation.mutate('BAD');
-                    }}
-                  >
-                    <ThumbsDown size={18} color={voteStatus?.myVote === 'BAD' ? colors.error : colors.textSecondary} />
-                    <Text style={[s.voteTxt, voteStatus?.myVote === 'BAD' && { color: colors.error }]}>
-                      별로 {voteStatus?.bad ?? 0}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
+              {/* Phase 2: SpotVote(👍👎 컨디션 투표) 제거 — 다이어리 별점과 의미 중복.
+                * 다이어리 작성 시 매기는 별점이 더 풍부한 정보 제공.
+                */}
             </>
           )}
 

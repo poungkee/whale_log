@@ -840,10 +840,9 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
           </>
         )}
 
-        {/* 오늘의 컨디션 투표 */}
-        <div className="px-4 py-3">
-          <SpotVote spotId={spot.id} />
-        </div>
+        {/* Phase 2: SpotVote(👍👎 컨디션 투표) 제거 — 다이어리 별점과 의미 중복.
+         *  다이어리 작성 시 매기는 별점이 더 풍부한 정보 제공.
+         */}
 
         {/* ====== 서핑 기록 탭 - 스팟별 공개 다이어리 피드 ====== */}
         {activeTab === 'diary' && (
