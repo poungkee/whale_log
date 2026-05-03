@@ -77,6 +77,7 @@ export class BadgesService {
 
   /**
    * 뱃지 시드 — 앱 시작 시 badges 테이블에 정의 목록 삽입 (없는 것만)
+   * + 자동 마이그레이션: sortOrder 보정 (Task #57)
    */
   async seedBadges(): Promise<void> {
     for (const def of BADGE_DEFINITIONS) {
@@ -86,6 +87,27 @@ export class BadgesService {
       }
     }
     this.logger.log(`뱃지 시드 완료: ${BADGE_DEFINITIONS.length}개`);
+
+    /**
+     * Task #57 자동 마이그레이션 — DIARY_100 sortOrder 12 → 13
+     * 배경: DIARY_50 (반환점) 신규 추가로 sortOrder 충돌
+     *       seedBadges는 INSERT만 하고 UPDATE 안 해서 운영 DB는 12로 남음
+     * 멱등성: WHERE sort_order = 12 조건 → 이미 13이면 0 row affected (NOOP)
+     * 첫 배포 시 1회만 실제 UPDATE, 이후 부팅에선 자동 스킵.
+     */
+    try {
+      const result = await this.badgeRepo
+        .createQueryBuilder()
+        .update()
+        .set({ sortOrder: 13 })
+        .where('key = :key AND sort_order = :oldOrder', { key: 'DIARY_100', oldOrder: 12 })
+        .execute();
+      if (result.affected && result.affected > 0) {
+        this.logger.log(`자동 마이그: DIARY_100 sortOrder 12 → 13 (${result.affected} row)`);
+      }
+    } catch (err) {
+      this.logger.warn(`DIARY_100 sortOrder 마이그 실패: ${(err as Error).message}`);
+    }
   }
 
   /**
