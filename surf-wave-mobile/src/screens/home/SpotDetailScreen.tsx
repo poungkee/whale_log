@@ -1,5 +1,5 @@
 // 스팟 상세 화면 — 웹앱 SpotDetailModal과 1:1 동일 구현
-// 파도 탭(적합도바+24h차트+스웰/바람) / 소통 탭 / 기록 탭
+// 파도 탭(적합도바+24h차트+스웰/바람) / 기록 탭 (Phase 2: 소통 탭 제거)
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, ActivityIndicator,
@@ -17,6 +17,7 @@ import { api } from '../../config/api';
 import { colors, spacing, typography } from '../../theme';
 import { useAuthStore } from '../../stores/authStore';
 import Avatar from '../../components/common/Avatar';
+import { DiaryHelpfulButton } from '../../components/DiaryHelpfulButton';
 import KhoaBadge, { KhoaEnrichment } from '../../components/spot/KhoaBadge';
 
 // HomeStack과 ExploreStack 둘 다 동일한 파라미터 구조 사용
@@ -1020,6 +1021,9 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                     </Text>
                   </View>
                   {d.memo && <Text style={s.diaryMemo} numberOfLines={3}>{d.memo}</Text>}
+
+                  {/* 도움됐어요 + 댓글 토글 (Phase 2C) */}
+                  <DiaryHelpfulButton diaryId={d.id} />
                 </View>
               ))}
               {diaryHasMore && (

@@ -43,6 +43,7 @@ function getKhoaIndexColor(index: string): string {
 import type { SpotForecast, SurfLevel, RatingDetail, ForecastInfo } from '../types';
 import { SpotVote } from './SpotVote';
 import { CommunityFeed } from './community/CommunityFeed';
+import { DiaryInteractions } from './DiaryInteractions';
 
 interface SpotDetailModalProps {
   /** 스팟 예보 데이터 (대시보드에서 전달) */
@@ -980,13 +981,16 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
 
                         {/* 메모 (있으면 표시) */}
                         {entry.memo && (
-                          <div className="relative">
+                          <div className="relative mb-2">
                             <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-full bg-primary/30" />
                             <p className="text-[11px] text-muted-foreground line-clamp-2 pl-2.5 italic leading-relaxed">
                               "{entry.memo}"
                             </p>
                           </div>
                         )}
+
+                        {/* 도움됐어요 + 댓글 (Phase 2C) */}
+                        <DiaryInteractions diaryId={entry.id} />
                       </div>
                     </div>
                   );
