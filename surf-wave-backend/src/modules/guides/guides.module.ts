@@ -13,6 +13,7 @@ import { GuidesService } from './guides.service';
 import { Guide } from './entities/guide.entity';
 import { GuideProgress } from './entities/guide-progress.entity';
 import { BadgesModule } from '../badges/badges.module';
+import { GUIDE_SEED } from '../../database/seeds/guides-data';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Guide, GuideProgress]), BadgesModule],
@@ -84,8 +85,45 @@ export class GuidesModule implements OnModuleInit {
       );
 
       this.logger.log('guides + guide_progress 테이블 + enum 확인 완료');
+
+      /** 시드 INSERT — title 중복 시 스킵 (멱등) */
+      await this.seedGuides();
     } catch (err) {
       this.logger.error(`guides 초기화 실패: ${(err as Error).message}`);
     }
+  }
+
+  /**
+   * Round 2 가이드 시드 — Guide.tsx에서 추출한 34개 가이드를 DB에 INSERT
+   * - 동일 title이 이미 존재하면 스킵 (멱등성 보장)
+   * - 운영자가 수정한 가이드는 그대로 유지 (덮어쓰기 안 함)
+   * - 빈 DB에 첫 시드 시 34개 모두 INSERT
+   */
+  private async seedGuides() {
+    let inserted = 0;
+    let skipped = 0;
+    for (const item of GUIDE_SEED) {
+      try {
+        const result = await this.dataSource.query(
+          `INSERT INTO guides (title, content, category, sort_order, estimated_read_minutes, is_published)
+           SELECT $1, $2, $3, $4, $5, $6
+           WHERE NOT EXISTS (SELECT 1 FROM guides WHERE title = $1)
+           RETURNING id`,
+          [
+            item.title,
+            item.content,
+            item.category,
+            item.sortOrder,
+            item.estimatedReadMinutes,
+            item.isPublished,
+          ],
+        );
+        if (result.length > 0) inserted++;
+        else skipped++;
+      } catch (err) {
+        this.logger.warn(`가이드 시드 실패 (${item.title}): ${(err as Error).message}`);
+      }
+    }
+    this.logger.log(`가이드 시드 완료: 신규 ${inserted}개, 스킵 ${skipped}개 / 전체 ${GUIDE_SEED.length}개`);
   }
 }
