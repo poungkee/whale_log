@@ -66,7 +66,15 @@ export class SpotsService {
       qb.andWhere('spot.difficulty = :difficulty', { difficulty });
     }
     if (search) {
-      qb.andWhere('spot.name ILIKE :search', { search: `%${search}%` });
+      /**
+       * 검색 — name + region 둘 다 ILIKE 매칭 (한글 + 영문 모두 동작)
+       * 예: "양양" → 이름에 양양 포함 OR region이 '양양'인 모든 스팟
+       *     "Bali" → 이름에 Bali OR region이 'Bali - ...'인 모든 스팟
+       *     기존엔 name만 매칭이라 "Bali"로 검색 시 발리 스팟 거의 못 찾음
+       */
+      qb.andWhere('(spot.name ILIKE :search OR spot.region ILIKE :search)', {
+        search: `%${search}%`,
+      });
     }
 
     const [spots, total] = await qb
