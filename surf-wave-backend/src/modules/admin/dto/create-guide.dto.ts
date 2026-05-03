@@ -43,4 +43,10 @@ export class CreateGuideDto {
   @IsInt()
   @Min(1)
   estimatedReadMinutes: number;
+
+  /** 공개 여부 — 체크 해제 시 사용자에게 안 보임 (기본값 true) */
+  @ApiPropertyOptional({ description: '공개 여부 (default: true)' })
+  @IsOptional()
+  @IsBoolean()
+  isPublished?: boolean;
 }
