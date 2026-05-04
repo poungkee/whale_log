@@ -173,6 +173,7 @@ export interface ForecastInfo {
   waterTemperature: string | null;     // 수온 (°C, 문자열)
   airTemperature: string | null;       // 기온 (°C, 문자열)
   weatherCondition: string | null;     // 날씨 상태 (맑음/흐림 등)
+  updatedAt?: string;                  // 백엔드 갱신 시각 (Task #84 위성지도 갱신 라벨용)
 }
 
 /**

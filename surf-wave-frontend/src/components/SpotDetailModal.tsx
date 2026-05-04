@@ -53,6 +53,7 @@ import { SpotVote } from './SpotVote';
 import { CommunityFeed } from './community/CommunityFeed';
 import { DiaryInteractions } from './DiaryInteractions';
 import { ReportModal } from './ReportModal';
+import { SpotSatelliteMap } from './SpotSatelliteMap';
 
 interface SpotDetailModalProps {
   /** 스팟 예보 데이터 (대시보드에서 전달) */
@@ -430,6 +431,24 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
         {/* ====== 파도 탭 (적합도 + 시간별 통합) ====== */}
         {activeTab === 'wave' && forecast && detail && (
           <>
+            {/**
+             * 위성지도 + 풍향/스웰 화살표 카드 (Task #84)
+             * - 적합도 차트 위쪽에 배치 — 시각적으로 가장 임팩트 큼
+             * - hourlyData가 비어있으면 카드 자체 안 표시 (예보 데이터 없음)
+             */}
+            {hourlyData.length > 0 && (
+              <SpotSatelliteMap
+                spot={{
+                  name: spot.name,
+                  latitude: spot.latitude,
+                  longitude: spot.longitude,
+                  coastFacingDeg: spot.coastFacingDeg,
+                }}
+                hourlyData={hourlyData}
+                lastUpdated={hourlyData[0]?.updatedAt}
+              />
+            )}
+
             {/* 5개 적합도 바 차트 - 신호등 색상 적용 */}
             <div className="bg-card rounded-xl border border-border p-4 mb-4">
               <div className="space-y-3">

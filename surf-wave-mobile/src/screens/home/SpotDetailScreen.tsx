@@ -28,6 +28,7 @@ import {
   getWindTypeColor,
   degToCompassKo,
 } from '../../lib/wind';
+import { SpotSatelliteMap } from '../../components/spot/SpotSatelliteMap';
 
 // HomeStack과 ExploreStack 둘 다 동일한 파라미터 구조 사용
 type Props = NativeStackScreenProps<any, 'SpotDetail'>;
@@ -39,8 +40,20 @@ interface RatingDetail {
 }
 
 interface SpotForecast {
-  /** 해변이 바라보는 방향 (°) — 풍향 OFFSHORE/ONSHORE 판정용 (Phase 2D #55) */
-  spot: { id: string; name: string; region: string; difficulty: string; coastFacingDeg?: number | null };
+  /**
+   * 해변 방향 + 좌표 (Task #84 위성지도용)
+   * - coastFacingDeg: 풍향 OFFSHORE/ONSHORE 판정 + 해변선 그리기
+   * - latitude/longitude: 위성지도 중심 좌표
+   */
+  spot: {
+    id: string;
+    name: string;
+    region: string;
+    difficulty: string;
+    coastFacingDeg?: number | null;
+    latitude?: string | number;
+    longitude?: string | number;
+  };
   forecast: {
     waveHeight: string; wavePeriod: string; windSpeed: string;
     windDirection: string; waterTemperature: string; airTemperature: string;
@@ -64,10 +77,13 @@ interface HourlyForecast {
   forecastTime: string;
   waveHeight: string | number;
   windSpeed: string | number;
+  windDirection?: string | null;          // Task #84 위성지도 풍향 화살표용
+  swellDirection?: string | null;         // Task #84 위성지도 스웰 화살표용
   tideHeight?: string | number;
   airTemperature?: string | number;
   waterTemperature?: string | number;
   weatherCondition?: string;
+  updatedAt?: string;                      // Task #84 갱신 시각 라벨용
 }
 
 interface PublicDiary {
@@ -677,6 +693,28 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
           {/* ═══════════════ 파도 탭 ═══════════════ */}
           {activeTab === 'wave' && (
             <>
+              {/**
+               * 위성지도 + 풍향/스웰 화살표 카드 (Task #84)
+               * 점수 바로 아래 — 가장 임팩트 큰 시각화
+               */}
+              {hourlyData.length > 0 && spotData?.spot.latitude && spotData?.spot.longitude && (
+                <SpotSatelliteMap
+                  spot={{
+                    name: spotData.spot.name,
+                    latitude: spotData.spot.latitude,
+                    longitude: spotData.spot.longitude,
+                    coastFacingDeg: spotData.spot.coastFacingDeg ?? null,
+                  }}
+                  hourlyData={hourlyData.map(h => ({
+                    forecastTime: h.forecastTime,
+                    windDirection: h.windDirection ?? null,
+                    swellDirection: h.swellDirection ?? null,
+                    updatedAt: h.updatedAt,
+                  }))}
+                  lastUpdated={hourlyData[0]?.updatedAt}
+                />
+              )}
+
               {/* ── 현재 요약 — 점수 바로 아래 핵심 정보 (웹앱 패턴) ── */}
               <View style={s.card}>
                 <Text style={s.cardTitle}>📋 현재 요약</Text>
