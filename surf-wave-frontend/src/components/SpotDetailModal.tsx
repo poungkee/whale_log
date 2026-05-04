@@ -328,7 +328,7 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
         </div>
       </header>
 
-      <div className="max-w-md mx-auto px-4 py-4 pb-8">
+      <div className="max-w-md mx-auto px-4 py-4 pb-24">
         {/* 안전 경고 배너 - BLOCKED는 빨강, WARNING은 노랑 */}
         {safetyReasons && safetyReasons.length > 0 && (
           <div className={`mb-4 p-3 rounded-lg border ${
