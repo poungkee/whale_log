@@ -1,0 +1,23 @@
+# Railway 배포 최적화 — 백엔드와 무관한 폴더 무시
+# 모노레포에서 백엔드 외 폴더 변경 시 불필요한 재배포 방지
+# (Railway는 .railwayignore의 패턴을 무시하지만, 변경 감지에서 제외하는 효과는 .gitignore 형식)
+
+# 프론트엔드 (Vercel 배포)
+surf-wave-frontend/
+
+# 모바일 앱 (EAS Build)
+surf-wave-mobile/
+
+# 문서/임시 파일
+docs/
+*.md
+.cursor/
+.claude/
+
+# Mac/Windows 임시
+.DS_Store
+Thumbs.db
+
+# 로그
+*.log
+npm-debug.log*

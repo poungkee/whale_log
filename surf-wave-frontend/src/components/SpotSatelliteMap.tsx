@@ -179,26 +179,13 @@ export function SpotSatelliteMap({
             longitude: lng,
             zoom: 15,
           }}
-          mapStyle={{
-            version: 8,
-            sources: {
-              'mapbox-satellite': {
-                type: 'raster',
-                tiles: [
-                  `https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.jpg90?access_token=${mapboxToken}`,
-                ],
-                tileSize: 256,
-                attribution: '© Mapbox © Maxar',
-              },
-            },
-            layers: [
-              {
-                id: 'satellite',
-                type: 'raster',
-                source: 'mapbox-satellite',
-              },
-            ],
-          }}
+          /**
+           * Mapbox Style URL 직접 사용 (가장 안정적)
+           * - satellite-streets-v12: 위성 + 도로/지명 라벨
+           * - 또는 satellite-v9: 순수 위성사진만
+           * - maplibre-gl이 자동으로 raster + label 처리
+           */
+          mapStyle={`https://api.mapbox.com/styles/v1/mapbox/satellite-v9?access_token=${mapboxToken}`}
           dragRotate={false}
           touchZoomRotate={true}
         >
