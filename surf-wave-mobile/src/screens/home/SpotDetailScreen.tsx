@@ -22,6 +22,12 @@ import KhoaBadge, { KhoaEnrichment } from '../../components/spot/KhoaBadge';
 import { kmhToMs } from '../../lib/units';
 import { ReportModal } from '../../components/common/ReportModal';
 import { Flag } from 'lucide-react-native';
+import {
+  getWindType,
+  getWindTypeLabel,
+  getWindTypeColor,
+  degToCompassKo,
+} from '../../lib/wind';
 
 // HomeStack과 ExploreStack 둘 다 동일한 파라미터 구조 사용
 type Props = NativeStackScreenProps<any, 'SpotDetail'>;
@@ -33,7 +39,8 @@ interface RatingDetail {
 }
 
 interface SpotForecast {
-  spot: { id: string; name: string; region: string; difficulty: string };
+  /** 해변이 바라보는 방향 (°) — 풍향 OFFSHORE/ONSHORE 판정용 (Phase 2D #55) */
+  spot: { id: string; name: string; region: string; difficulty: string; coastFacingDeg?: number | null };
   forecast: {
     waveHeight: string; wavePeriod: string; windSpeed: string;
     windDirection: string; waterTemperature: string; airTemperature: string;
@@ -87,12 +94,8 @@ interface CommunityPost {
 
 // ── 유틸 ────────────────────────────────────────────────────
 
-/** 풍향 도수 → 한국어 방위 (16방위) — 웹앱 degToCompass와 동일 */
-function degToCompass(deg: number): string {
-  if (isNaN(deg) || deg < 0 || deg > 360) return '?';
-  const directions = ['북', '북북동', '북동', '동북동', '동', '동남동', '남동', '남남동', '남', '남남서', '남서', '서남서', '서', '서북서', '북서', '북북서'];
-  return directions[Math.round(deg / 22.5) % 16];
-}
+/** 풍향 도수 → 한국어 방위 (lib/wind.ts의 degToCompassKo 위임) */
+const degToCompass = degToCompassKo;
 
 /** 풍속 한국어 강도 라벨 */
 function getWindStrength(kmh: number): string {
@@ -683,15 +686,25 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                     <Text style={s.summaryLabel}>스웰</Text>
                     <Text style={s.summaryValue}>
                       {forecast.swellHeight
-                        ? `${parseFloat(forecast.swellHeight).toFixed(1)}m @${parseFloat(forecast.swellPeriod || '0').toFixed(0)}s → ${parseFloat(forecast.swellDirection || '0').toFixed(0)}°`
+                        ? `${parseFloat(forecast.swellHeight).toFixed(1)}m @${parseFloat(forecast.swellPeriod || '0').toFixed(0)}s → ${degToCompass(parseFloat(forecast.swellDirection || '0'))} (${parseFloat(forecast.swellDirection || '0').toFixed(0)}°)`
                         : '-'}
                     </Text>
                   </View>
+                  {/* 바람 — "오프쇼어 · 남서 (270°) · 5m/s" 통일 형식 (#55) */}
                   <View style={s.summaryRow}>
                     <Wind size={15} color="#22c55e" />
                     <Text style={s.summaryLabel}>바람</Text>
                     <Text style={s.summaryValue}>
-                      {kmhToMs(forecast.windSpeed)}m/s · {degToCompass(parseFloat(forecast.windDirection))} ({parseFloat(forecast.windDirection).toFixed(0)}°)
+                      {(() => {
+                        const wt = getWindType(parseFloat(forecast.windDirection), spotData?.spot.coastFacingDeg ?? null);
+                        const label = getWindTypeLabel(wt);
+                        const compass = degToCompass(parseFloat(forecast.windDirection));
+                        const deg = parseFloat(forecast.windDirection).toFixed(0);
+                        const ms = `${kmhToMs(forecast.windSpeed)}m/s`;
+                        return label
+                          ? `${label} · ${compass} (${deg}°) · ${ms}`
+                          : `${compass} (${deg}°) · ${ms}`;
+                      })()}
                     </Text>
                   </View>
                   <View style={s.summaryRow}>
@@ -838,10 +851,16 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                       <Text style={s.detailSubInline}>  · {getWindStrength(parseFloat(forecast.windSpeed))}</Text>
                     </Text>
                   </View>
+                  {/* 풍향 — "오프쇼어 · 남서 (270°)" 통일 형식 (#55) */}
                   <View style={s.detailRow}>
                     <Text style={s.detailLabel}>풍향</Text>
                     <Text style={s.detailValue}>
-                      {degToCompass(parseFloat(forecast.windDirection))}
+                      {(() => {
+                        const wt = getWindType(parseFloat(forecast.windDirection), spotData?.spot.coastFacingDeg ?? null);
+                        const label = getWindTypeLabel(wt);
+                        const compass = degToCompass(parseFloat(forecast.windDirection));
+                        return label ? `${label} · ${compass}` : compass;
+                      })()}
                       <Text style={s.detailSubInline}>  ({parseFloat(forecast.windDirection).toFixed(0)}°)</Text>
                     </Text>
                   </View>
@@ -853,13 +872,13 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                     <Text style={s.detailLabel}>기온</Text>
                     <Text style={s.detailValue}>{parseFloat(forecast.airTemperature).toFixed(1)}°C</Text>
                   </View>
-                  {/* 스웰 정보 — 같은 한 줄 형식으로 통합 */}
+                  {/* 스웰 정보 — "1.5m @8s → 남서 (135°)" 통일 형식 */}
                   {forecast.swellHeight && (
                     <View style={s.detailRow}>
                       <Text style={s.detailLabel}>스웰</Text>
                       <Text style={s.detailValue}>
                         {parseFloat(forecast.swellHeight).toFixed(1)}m @{parseFloat(forecast.swellPeriod || '0').toFixed(0)}s
-                        <Text style={s.detailSubInline}> → {degToCompass(parseFloat(forecast.swellDirection || '0'))} {parseFloat(forecast.swellDirection || '0').toFixed(0)}°</Text>
+                        <Text style={s.detailSubInline}> → {degToCompass(parseFloat(forecast.swellDirection || '0'))} ({parseFloat(forecast.swellDirection || '0').toFixed(0)}°)</Text>
                       </Text>
                     </View>
                   )}

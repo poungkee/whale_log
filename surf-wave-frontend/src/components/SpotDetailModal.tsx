@@ -18,7 +18,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   ArrowLeft, AlertTriangle, Waves, Wind,
-  ArrowUp, ArrowDown, Navigation,
+  ArrowUp, ArrowDown,
   Thermometer, Droplets, Cloud, BookOpen, MapPin, Clock,
   Star, Sunrise, ChevronDown, Loader2, MessageCircle, Flag,
 } from 'lucide-react';
@@ -29,6 +29,13 @@ import {
 } from 'recharts';
 import { getRatingGrade, getRatingColor } from '../lib/utils';
 import { formatWindSpeed, kmhToMs } from '../lib/units';
+import {
+  getWindType,
+  getWindTypeLabel,
+  getWindTypeColor,
+  formatWindDirection,
+  degToCompassKo,
+} from '../lib/wind';
 
 /** KHOA 서핑지수 → 색상 (SpotCard의 getKhoaColor와 동일) */
 function getKhoaIndexColor(index: string): string {
@@ -104,23 +111,6 @@ const DIARY_SAT_CONFIG: Record<number, { emoji: string; color: string; label: st
   5: { emoji: '🤩', color: '#3b82f6', label: '최고' },
 };
 
-/** 바람이 offshore인지 판별 - 해안 방향 기준 */
-function getWindType(windDir: number | null, coastFacingDeg: number | null): string {
-  if (windDir == null || coastFacingDeg == null) return '';
-  const windTo = (windDir + 180) % 360;
-  const diff = Math.abs(windTo - coastFacingDeg);
-  const angle = diff > 180 ? 360 - diff : diff;
-  if (angle < 60) return 'OFFSHORE';
-  if (angle > 120) return 'ONSHORE';
-  return 'CROSS';
-}
-
-/** 방향 각도 → 나침반 텍스트 변환 */
-function degToCompass(deg: number): string {
-  const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-  return dirs[Math.round(deg / 45) % 8];
-}
-
 /** 조석 상태 한국어 변환 */
 function getTideStatusKo(status: string | null): string {
   switch (status) {
@@ -129,19 +119,6 @@ function getTideStatusKo(status: string | null): string {
     case 'HIGH': return '만조';
     case 'LOW': return '간조';
     default: return '-';
-  }
-}
-
-/**
- * 바람 종류별 색상 반환
- * OFFSHORE: 초록 (좋음), ONSHORE: 빨강 (나쁨), CROSS: 노랑 (보통)
- */
-function getWindTypeColor(type: string): string {
-  switch (type) {
-    case 'OFFSHORE': return '#2ECC71';
-    case 'ONSHORE': return '#E74C3C';
-    case 'CROSS': return '#F1C40F';
-    default: return '#95A5A6';
   }
 }
 
@@ -483,35 +460,40 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
 
             {/* 상세 정보: 스웰/바람/조석 */}
             <div className="bg-card rounded-xl border border-border p-4 space-y-3">
-              {/* 스웰 정보 */}
+              {/* 스웰 정보 — "남서 (135°)" 통일 형식 */}
               <div className="flex items-center gap-2 text-sm">
                 <Waves className="w-4 h-4 text-[#2ECC71] flex-shrink-0" />
                 <span className="text-muted-foreground">스웰</span>
                 <span className="font-medium ml-auto">
                   {forecast.swellHeight ? `${Number(forecast.swellHeight).toFixed(1)}m` : '-'}
                   {forecast.swellPeriod ? ` @${Number(forecast.swellPeriod).toFixed(0)}s` : ''}
-                  {forecast.swellDirection ? ` → ${degToCompass(Number(forecast.swellDirection))} ${Number(forecast.swellDirection).toFixed(0)}°` : ''}
+                  {forecast.swellDirection
+                    ? ` → ${degToCompassKo(Number(forecast.swellDirection))} (${Number(forecast.swellDirection).toFixed(0)}°)`
+                    : ''}
                 </span>
               </div>
 
-              {/* 바람 정보 - OFFSHORE/ONSHORE/CROSS 색상 */}
+              {/* 바람 정보 — "오프쇼어 · 남서 (270°) · 5m/s" 통일 형식 */}
               <div className="flex items-center gap-2 text-sm">
                 <Wind className="w-4 h-4 text-[#F1C40F] flex-shrink-0" />
                 <span className="text-muted-foreground">바람</span>
-                <span className="font-medium ml-auto">
-                  {forecast.windSpeed ? formatWindSpeed(forecast.windSpeed) : '-'}
+                <span className="font-medium ml-auto flex items-center gap-1">
                   {windType && (
-                    <span className="ml-1 text-xs font-bold" style={{ color: getWindTypeColor(windType) }}>
-                      {windType}
+                    <span className="text-xs font-bold" style={{ color: getWindTypeColor(windType) }}>
+                      {getWindTypeLabel(windType)}
                     </span>
                   )}
                   {forecast.windDirection && (
-                    <span className="ml-1">
-                      <Navigation className="w-3 h-3 inline" style={{
-                        transform: `rotate(${Number(forecast.windDirection)}deg)`
-                      }} />
-                      {' '}{Number(forecast.windDirection).toFixed(0)}°
-                    </span>
+                    <>
+                      {windType && <span className="text-muted-foreground">·</span>}
+                      <span>{formatWindDirection(forecast.windDirection, spot.coastFacingDeg).replace(/^[가-힣]+ · /, '')}</span>
+                    </>
+                  )}
+                  {forecast.windSpeed && (
+                    <>
+                      <span className="text-muted-foreground">·</span>
+                      <span>{formatWindSpeed(forecast.windSpeed)}</span>
+                    </>
                   )}
                 </span>
               </div>
@@ -827,18 +809,28 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
                         {forecast.swellHeight ? `${Number(forecast.swellHeight).toFixed(1)}m @${Number(forecast.swellPeriod || 0).toFixed(0)}s → ${Number(forecast.swellDirection || 0).toFixed(0)}°` : '-'}
                       </span>
                     </div>
-                    {/* 바람 요약 */}
+                    {/* 바람 요약 — "오프쇼어 · 남서 (270°) · 5m/s" 통일 형식 */}
                     <div className="flex items-center gap-2 text-sm">
                       <Wind className="w-4 h-4 text-[#F1C40F]" />
                       <span className="text-muted-foreground">바람</span>
-                      <span className="font-medium ml-auto">
-                        {forecast.windSpeed ? formatWindSpeed(forecast.windSpeed) : '-'}
+                      <span className="font-medium ml-auto flex items-center gap-1">
                         {windType && (
-                          <span className="ml-1 text-xs font-bold" style={{ color: getWindTypeColor(windType) }}>
-                            {windType}
+                          <span className="text-xs font-bold" style={{ color: getWindTypeColor(windType) }}>
+                            {getWindTypeLabel(windType)}
                           </span>
                         )}
-                        {forecast.windDirection ? ` ↑${Number(forecast.windDirection).toFixed(0)}°` : ''}
+                        {forecast.windDirection && (
+                          <>
+                            {windType && <span className="text-muted-foreground">·</span>}
+                            <span>{degToCompassKo(Number(forecast.windDirection))} ({Number(forecast.windDirection).toFixed(0)}°)</span>
+                          </>
+                        )}
+                        {forecast.windSpeed && (
+                          <>
+                            <span className="text-muted-foreground">·</span>
+                            <span>{formatWindSpeed(forecast.windSpeed)}</span>
+                          </>
+                        )}
                       </span>
                     </div>
                     {/* 조석 요약 */}
