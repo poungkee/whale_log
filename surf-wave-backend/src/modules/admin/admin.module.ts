@@ -49,7 +49,7 @@ export class AdminModule implements OnModuleInit {
    */
   async onModuleInit() {
     try {
-      /** enum 타입 — 액션 종류 */
+      /** enum 타입 — 액션 종류 (최초 생성) */
       await this.dataSource.query(`
         DO $$ BEGIN
           CREATE TYPE "admin_logs_action_type_enum" AS ENUM (
@@ -61,7 +61,18 @@ export class AdminModule implements OnModuleInit {
         END $$;
       `);
 
-      /** enum 타입 — 대상 리소스 종류 */
+      /**
+       * Phase 2D — 다이어리 숨김/숨김해제 액션 추가
+       * ALTER TYPE ADD VALUE는 트랜잭션 외부에서만 실행 가능 → IF NOT EXISTS로 멱등 처리
+       */
+      await this.dataSource.query(
+        `ALTER TYPE "admin_logs_action_type_enum" ADD VALUE IF NOT EXISTS 'HIDE_DIARY'`,
+      );
+      await this.dataSource.query(
+        `ALTER TYPE "admin_logs_action_type_enum" ADD VALUE IF NOT EXISTS 'UNHIDE_DIARY'`,
+      );
+
+      /** enum 타입 — 대상 리소스 종류 (최초 생성) */
       await this.dataSource.query(`
         DO $$ BEGIN
           CREATE TYPE "admin_logs_target_type_enum" AS ENUM (
@@ -70,6 +81,11 @@ export class AdminModule implements OnModuleInit {
         EXCEPTION WHEN duplicate_object THEN null;
         END $$;
       `);
+
+      /** Phase 2D — DIARY 대상 타입 추가 */
+      await this.dataSource.query(
+        `ALTER TYPE "admin_logs_target_type_enum" ADD VALUE IF NOT EXISTS 'DIARY'`,
+      );
 
       /** admin_logs 테이블 */
       await this.dataSource.query(`

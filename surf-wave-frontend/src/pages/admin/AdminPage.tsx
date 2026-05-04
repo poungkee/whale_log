@@ -13,13 +13,14 @@
  */
 
 import { useState } from 'react';
-import { ArrowLeft, LayoutDashboard, Users, MapPin, BookOpen, ScrollText } from 'lucide-react';
+import { ArrowLeft, LayoutDashboard, Users, MapPin, BookOpen, ScrollText, Flag } from 'lucide-react';
 import type { UserInfo, AdminTab } from '../../types';
 import { AdminOverview } from './AdminOverview';
 import { AdminUsers } from './AdminUsers';
 import { AdminSpots } from './AdminSpots';
 import { AdminGuides } from './AdminGuides';
 import { AdminLogs } from './AdminLogs';
+import { AdminReports } from './AdminReports';
 
 interface AdminPageProps {
   /** 현재 로그인된 관리자 정보 */
@@ -32,6 +33,7 @@ interface AdminPageProps {
 const TABS: { id: AdminTab; label: string; icon: React.FC<{ className?: string }> }[] = [
   { id: 'overview', label: '개요',   icon: LayoutDashboard },
   { id: 'users',    label: '유저',   icon: Users },
+  { id: 'reports',  label: '신고',   icon: Flag },
   { id: 'spots',    label: '스팟',   icon: MapPin },
   { id: 'guides',   label: '가이드', icon: BookOpen },
   { id: 'logs',     label: '로그',   icon: ScrollText },
@@ -49,6 +51,7 @@ export function AdminPage({ userInfo, onBack }: AdminPageProps) {
     switch (activeTab) {
       case 'overview': return <AdminOverview token={token} />;
       case 'users':    return <AdminUsers token={token} />;
+      case 'reports':  return <AdminReports token={token} />;
       case 'spots':    return <AdminSpots token={token} />;
       case 'guides':   return <AdminGuides token={token} />;
       case 'logs':     return <AdminLogs token={token} />;

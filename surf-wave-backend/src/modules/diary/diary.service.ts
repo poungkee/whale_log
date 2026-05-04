@@ -143,8 +143,16 @@ export class DiaryService {
   async findPublic(query: DiaryQueryDto) {
     const { spotId, page = 1, limit = 20 } = query;
 
-    /** where 조건: 공개 + (선택적) 스팟 필터 */
-    const where: Record<string, unknown> = { visibility: Visibility.PUBLIC };
+    /**
+     * where 조건:
+     * - visibility=PUBLIC (공개)
+     * - isHidden=false (관리자 숨김 처리되지 않음, Phase 2D 신고 시스템)
+     * - spotId 필터 (선택)
+     */
+    const where: Record<string, unknown> = {
+      visibility: Visibility.PUBLIC,
+      isHidden: false,
+    };
     if (spotId) {
       where.spotId = spotId;
     }
@@ -183,8 +191,23 @@ export class DiaryService {
       throw new NotFoundException('Diary not found');
     }
 
-    if (diary.userId !== userId && diary.visibility !== Visibility.PUBLIC) {
+    /**
+     * 본인은 자기 다이어리를 항상 조회 가능 (visibility/isHidden 무시)
+     * - 작성자 권리: 숨김 처분 받은 자기 글도 본인은 봐야 함
+     * - "숨김 처분되었습니다" 안내는 프론트에서 isHidden 필드 보고 표시
+     */
+    if (diary.userId === userId) {
+      return diary;
+    }
+
+    /** 비공개(PRIVATE/FRIENDS) 차단 */
+    if (diary.visibility !== Visibility.PUBLIC) {
       throw new ForbiddenException('Access denied');
+    }
+
+    /** 관리자 숨김 처분된 다이어리는 비-작성자 접근 차단 (Phase 2D) */
+    if (diary.isHidden) {
+      throw new ForbiddenException('숨김 처리된 다이어리입니다');
     }
 
     return diary;

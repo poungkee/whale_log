@@ -20,6 +20,8 @@ import Avatar from '../../components/common/Avatar';
 import { DiaryInteractions } from '../../components/DiaryInteractions';
 import KhoaBadge, { KhoaEnrichment } from '../../components/spot/KhoaBadge';
 import { kmhToMs } from '../../lib/units';
+import { ReportModal } from '../../components/common/ReportModal';
+import { Flag } from 'lucide-react-native';
 
 // HomeStack과 ExploreStack 둘 다 동일한 파라미터 구조 사용
 type Props = NativeStackScreenProps<any, 'SpotDetail'>;
@@ -482,6 +484,15 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const [diaryPage, setDiaryPage] = useState(1);
   const [diaryHasMore, setDiaryHasMore] = useState(false);
   const [diaryLoaded, setDiaryLoaded] = useState(false);
+
+  /**
+   * 다이어리 신고 모달 상태 (Phase 2D)
+   * - reportTargetDiaryId: 신고 모달이 열려있는 다이어리 ID (null이면 닫힘)
+   * - 본인 다이어리는 신고 버튼 자체가 표시되지 않음 (시나리오 F-2)
+   */
+  const [reportTargetDiaryId, setReportTargetDiaryId] = useState<string | null>(null);
+  /** 현재 로그인 사용자 ID — 본인 다이어리 신고 버튼 숨김용 */
+  const currentUserId = useAuthStore(state => state.user?.id) ?? null;
 
   const fetchDiaries = useCallback(async (page: number, append = false) => {
     setDiaryLoading(true);
@@ -977,7 +988,23 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                       <Avatar name={d.user.username || '?'} uri={d.user.avatarUrl || undefined} size="sm" />
                       <Text style={s.diaryNick}>{d.user.username || '알 수 없음'}</Text>
                     </View>
-                    <Text style={s.diarySat}>{SAT_EMOJI[d.satisfaction] ?? '😊'}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={s.diarySat}>{SAT_EMOJI[d.satisfaction] ?? '😊'}</Text>
+                      {/**
+                       * 다이어리 신고 버튼 (Phase 2D)
+                       * - 본인 다이어리에는 표시 X (시나리오 F-2)
+                       * - 비로그인 시에도 표시 X (currentUserId=null)
+                       */}
+                      {currentUserId && d.user.id !== currentUserId && (
+                        <TouchableOpacity
+                          onPress={() => setReportTargetDiaryId(d.id)}
+                          hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
+                          style={{ padding: 4 }}
+                        >
+                          <Flag size={14} color={colors.textTertiary} />
+                        </TouchableOpacity>
+                      )}
+                    </View>
                   </View>
                   <View style={s.diaryMetaRow}>
                     <View style={s.boardChip}>
@@ -1012,6 +1039,19 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
         <View style={{ height: spacing.xl }} />
       </ScrollView>
+
+      {/**
+       * 다이어리 신고 모달 (Phase 2D)
+       * - 다이어리 카드의 🚩 버튼 클릭 시 reportTargetDiaryId 세팅 → 모달 오픈
+       */}
+      {reportTargetDiaryId && (
+        <ReportModal
+          visible={true}
+          onClose={() => setReportTargetDiaryId(null)}
+          targetType="diary"
+          targetId={reportTargetDiaryId}
+        />
+      )}
     </SafeAreaView>
   );
 };

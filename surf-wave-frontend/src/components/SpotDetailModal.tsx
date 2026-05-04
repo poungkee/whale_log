@@ -20,7 +20,7 @@ import {
   ArrowLeft, AlertTriangle, Waves, Wind,
   ArrowUp, ArrowDown, Navigation,
   Thermometer, Droplets, Cloud, BookOpen, MapPin, Clock,
-  Star, Sunrise, ChevronDown, Loader2, MessageCircle,
+  Star, Sunrise, ChevronDown, Loader2, MessageCircle, Flag,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import {
@@ -45,6 +45,7 @@ import type { SpotForecast, SurfLevel, RatingDetail, ForecastInfo } from '../typ
 import { SpotVote } from './SpotVote';
 import { CommunityFeed } from './community/CommunityFeed';
 import { DiaryInteractions } from './DiaryInteractions';
+import { ReportModal } from './ReportModal';
 
 interface SpotDetailModalProps {
   /** 스팟 예보 데이터 (대시보드에서 전달) */
@@ -218,6 +219,28 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
   const [diaryPage, setDiaryPage] = useState(1);
   /** 더보기 가능 여부 */
   const [diaryHasMore, setDiaryHasMore] = useState(false);
+
+  /**
+   * 다이어리 신고 모달 상태 (Phase 2D)
+   * - reportTargetId: 신고 모달이 열려있는 다이어리 ID (null이면 닫힘)
+   * - 본인 다이어리는 신고 버튼이 표시되지 않음 (시나리오 F-2)
+   */
+  const [reportTargetId, setReportTargetId] = useState<string | null>(null);
+
+  /**
+   * 현재 로그인 사용자 ID — 본인 다이어리 신고 메뉴 숨김 처리용
+   * localStorage에 저장된 user 객체에서 추출 (App.tsx 인증 흐름과 일치)
+   */
+  const currentUserId: string | null = (() => {
+    try {
+      const raw = localStorage.getItem('user');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as { id?: string };
+      return parsed.id ?? null;
+    } catch {
+      return null;
+    }
+  })();
 
   /** 신호등 색상 - 상단 점수 표시용 */
   const ratingColor = getRatingColor(surfRating);
@@ -930,7 +953,7 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
                               </div>
                             </div>
                           </div>
-                          {/* 만족도 이모지 + 보드 배지 */}
+                          {/* 만족도 이모지 + 보드 배지 + 신고 버튼 */}
                           <div className="flex items-center gap-1.5">
                             <span className="text-lg" title={sat.label}>{sat.emoji}</span>
                             <span
@@ -939,6 +962,25 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
                             >
                               {board.emoji} {board.label}
                             </span>
+                            {/**
+                             * 다이어리 신고 버튼 (Phase 2D)
+                             * - 본인 다이어리에는 표시 X (시나리오 F-2)
+                             * - 비로그인 시에도 표시 X (currentUserId=null)
+                             */}
+                            {currentUserId && entry.user.id !== currentUserId && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setReportTargetId(entry.id);
+                                }}
+                                className="ml-0.5 w-6 h-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                                title="신고하기"
+                                aria-label="신고하기"
+                              >
+                                <Flag className="w-3 h-3" />
+                              </button>
+                            )}
                           </div>
                         </div>
 
@@ -1044,6 +1086,19 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
           </div>
         )}
       </div>
+
+      {/**
+       * 다이어리 신고 모달 (Phase 2D)
+       * - 다이어리 카드의 🚩 버튼 클릭 시 reportTargetId 세팅 → 모달 오픈
+       */}
+      {reportTargetId && (
+        <ReportModal
+          open={true}
+          onClose={() => setReportTargetId(null)}
+          targetType="diary"
+          targetId={reportTargetId}
+        />
+      )}
     </div>
   );
 }

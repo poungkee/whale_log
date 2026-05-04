@@ -78,6 +78,17 @@ export class SurfDiary extends BaseEntity {
   })
   visibility: Visibility;
 
+  /**
+   * 관리자 숨김 처리 여부 (Phase 2D 신고 시스템 연동)
+   *
+   * - true: 관리자가 부적절 컨텐츠로 판단하여 강제 숨김 (사용자가 visibility 변경해도 노출 안 됨)
+   * - false: 정상 노출 (visibility 정책에 따름)
+   * - 작성자 본인은 자신의 다이어리를 항상 볼 수 있음(숨김이어도) — findById에서 우회
+   * - 공개 피드/스팟별 다이어리 목록 조회 시 isHidden=false 필터 필수
+   */
+  @Column({ name: 'is_hidden', type: 'boolean', default: false })
+  isHidden: boolean;
+
   @Column({
     name: 'wave_height',
     type: 'decimal',

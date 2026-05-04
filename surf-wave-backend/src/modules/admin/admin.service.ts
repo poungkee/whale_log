@@ -335,11 +335,21 @@ export class AdminService {
     return { message: 'Spot deleted' };
   }
 
+  /**
+   * 신고 목록 조회 (관리자 페이지)
+   *
+   * relations:
+   * - reporter: 신고자 정보
+   * - post / comment / diary: 신고 대상 콘텐츠 (Phase 2D — diary 추가)
+   *
+   * 신고 대상 3종 모두 nullable 관계 — 셋 중 하나만 채워져 있음
+   */
   async getReports(query: PaginationDto) {
     const { page = 1, limit = 20 } = query;
 
     const [reports, total] = await this.reportRepository.findAndCount({
-      relations: ['reporter', 'post', 'comment'],
+      /** Phase 2D: diary 관계 추가 — 다이어리 신고 대상 정보 함께 조회 */
+      relations: ['reporter', 'post', 'comment', 'diary', 'diary.user'],
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
@@ -356,13 +366,109 @@ export class AdminService {
     };
   }
 
-  async resolveReport(reportId: string, dto: ResolveReportDto) {
+  /**
+   * 신고 처리 (관리자)
+   *
+   * 처리 결과:
+   * - RESOLVED: 부적절 컨텐츠 인정 → 별도 hidePost/hideDiary 호출로 숨김 처리 (#62에서 자동화 예정)
+   * - DISMISSED: 신고 부당 → 콘텐츠 그대로 유지
+   *
+   * @param adminId    - 처리한 관리자 UUID (감사 로그 + resolved_by_id 기록)
+   * @param reportId   - 신고 UUID
+   * @param dto        - 처리 상태 + 관리자 메모
+   * @param ipAddress  - 관리자 IP (감사 로그용)
+   */
+  async resolveReport(
+    adminId: string,
+    reportId: string,
+    dto: ResolveReportDto,
+    ipAddress?: string,
+  ) {
     await this.reportRepository.update(reportId, {
       status: dto.status,
       adminNote: dto.adminNote,
+      resolvedById: adminId,  // 누가 처리했는지 기록 (이전엔 누락)
       resolvedAt: new Date(),
     });
-    return { message: 'Report resolved' };
+
+    /** 감사 로그 — 누가 어떤 신고를 어떻게 처리했는지 */
+    await this.writeLog(
+      adminId,
+      AdminActionType.RESOLVE_REPORT,
+      AdminTargetType.REPORT,
+      reportId,
+      `신고 ${reportId} → ${dto.status} 처리${dto.adminNote ? ` (메모: ${dto.adminNote})` : ''}`,
+      { status: dto.status, adminNote: dto.adminNote ?? null },
+      ipAddress,
+    );
+
+    return { message: '신고가 처리되었습니다' };
+  }
+
+  /**
+   * 다이어리 숨김/숨김 해제 (Phase 2D 신규)
+   *
+   * 시나리오 Step 10-가:
+   * 1. surf_diaries.is_hidden = true 업데이트
+   * 2. AdminLog 감사 기록
+   * 3. 작성자에게 CONTENT_HIDDEN 알림 발송 (숨김 시에만)
+   *
+   * @param adminId   - 처리한 관리자 UUID
+   * @param diaryId   - 대상 다이어리 UUID
+   * @param isHidden  - true: 숨김, false: 숨김 해제(복원)
+   * @param adminNote - 처리 사유 (작성자 알림에 포함)
+   * @param ipAddress - 관리자 IP
+   */
+  async hideDiary(
+    adminId: string,
+    diaryId: string,
+    isHidden: boolean,
+    adminNote: string | undefined,
+    ipAddress?: string,
+  ) {
+    /** 다이어리 + 작성자 ID 조회 (알림 발송 대상) */
+    const diary = await this.diaryRepository.findOne({
+      where: { id: diaryId },
+      select: ['id', 'userId', 'memo'],
+    });
+    if (!diary) {
+      throw new NotFoundException('다이어리를 찾을 수 없습니다');
+    }
+
+    /** ① 숨김 상태 변경 */
+    await this.diaryRepository.update(diaryId, { isHidden });
+
+    /** ② 감사 로그 */
+    await this.writeLog(
+      adminId,
+      isHidden ? AdminActionType.HIDE_DIARY : AdminActionType.UNHIDE_DIARY,
+      AdminTargetType.DIARY,
+      diaryId,
+      `다이어리 ${diaryId} ${isHidden ? '숨김' : '숨김 해제'}${adminNote ? ` (사유: ${adminNote})` : ''}`,
+      { isHidden, adminNote: adminNote ?? null },
+      ipAddress,
+    );
+
+    /**
+     * ③ 작성자 알림 (숨김 처리 시에만)
+     * - 숨김 해제는 복원 케이스 — 알림 보낼 필요 없음
+     * - 사용자가 "왜 숨김됐는지" 알 권리 → adminNote를 body에 포함
+     */
+    if (isHidden) {
+      await this.notificationsService.createNotification(
+        diary.userId,
+        NotificationType.CONTENT_HIDDEN,
+        '다이어리가 숨김 처리되었습니다',
+        adminNote
+          ? `회원님의 다이어리가 커뮤니티 가이드라인 위반으로 숨김 처리되었습니다.\n사유: ${adminNote}`
+          : '회원님의 다이어리가 커뮤니티 가이드라인 위반으로 숨김 처리되었습니다.',
+        { contentType: 'DIARY', contentId: diaryId, adminNote: adminNote ?? null },
+      );
+    }
+
+    return {
+      message: isHidden ? '다이어리가 숨김 처리되었습니다' : '다이어리가 노출되었습니다',
+    };
   }
 
   /**

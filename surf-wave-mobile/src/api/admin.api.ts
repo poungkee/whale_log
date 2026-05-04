@@ -31,6 +31,10 @@ export const adminApi = {
   hidePost: (postId: string, data: { isHidden: boolean }) =>
     api.patch(`/admin/posts/${postId}/hide`, data),
 
+  /** 다이어리 숨김/노출 (Phase 2D) — 작성자에게 CONTENT_HIDDEN 알림 자동 발송 */
+  hideDiary: (diaryId: string, data: { isHidden: boolean; adminNote?: string }) =>
+    api.patch(`/admin/diaries/${diaryId}/hide`, data),
+
   createGuide: (data: any) =>
     api.post('/admin/guides', data),
 

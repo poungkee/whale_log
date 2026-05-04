@@ -155,8 +155,11 @@ export class AdminController {
   async resolveReport(
     @Param('reportId', ParseUUIDPipe) reportId: string,
     @Body() dto: ResolveReportDto,
+    @Request() req: any,
+    @Ip() ip: string,
   ) {
-    return this.adminService.resolveReport(reportId, dto);
+    /** 관리자 ID + IP 자동 주입 (감사 로그 + resolved_by_id 기록) */
+    return this.adminService.resolveReport(req.user.sub, reportId, dto, ip);
   }
 
   /**
@@ -171,6 +174,27 @@ export class AdminController {
     @Ip() ip: string,
   ) {
     return this.adminService.hidePost(req.user.sub, postId, isHidden, ip);
+  }
+
+  /**
+   * 다이어리 숨김/노출 (Phase 2D 신규)
+   *
+   * Body 스펙:
+   * - isHidden: true(숨김) | false(숨김 해제)
+   * - adminNote: (선택) 처리 사유 — 작성자 알림 본문에 포함됨
+   *
+   * 작성자에게 CONTENT_HIDDEN 알림 발송 (isHidden=true 시에만)
+   */
+  @Patch('diaries/:diaryId/hide')
+  @ApiOperation({ summary: '다이어리 숨김/노출 (Phase 2D)' })
+  async hideDiary(
+    @Param('diaryId', ParseUUIDPipe) diaryId: string,
+    @Body('isHidden') isHidden: boolean,
+    @Body('adminNote') adminNote: string | undefined,
+    @Request() req: any,
+    @Ip() ip: string,
+  ) {
+    return this.adminService.hideDiary(req.user.sub, diaryId, isHidden, adminNote, ip);
   }
 
   @Post('guides')

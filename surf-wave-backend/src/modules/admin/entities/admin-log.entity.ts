@@ -34,6 +34,8 @@ export enum AdminActionType {
   /** 콘텐츠 관련 */
   HIDE_POST      = 'HIDE_POST',        // 게시글 숨김
   SHOW_POST      = 'SHOW_POST',        // 게시글 노출 복원
+  HIDE_DIARY     = 'HIDE_DIARY',       // 다이어리 숨김 (Phase 2D 신고 처리)
+  UNHIDE_DIARY   = 'UNHIDE_DIARY',     // 다이어리 숨김 해제 (오판 시 복원)
   DELETE_SPOT    = 'DELETE_SPOT',      // 스팟 삭제
   DELETE_GUIDE   = 'DELETE_GUIDE',     // 가이드 삭제
   /** 신고 처리 */
@@ -46,6 +48,7 @@ export enum AdminActionType {
 export enum AdminTargetType {
   USER    = 'USER',
   POST    = 'POST',
+  DIARY   = 'DIARY',     // 다이어리 (Phase 2D 신고 처리 대상)
   SPOT    = 'SPOT',
   GUIDE   = 'GUIDE',
   REPORT  = 'REPORT',

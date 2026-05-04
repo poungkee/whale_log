@@ -15,8 +15,8 @@ export type BoardType = 'SHORTBOARD' | 'LONGBOARD' | 'FUNBOARD' | 'FISH' | 'SUP'
 /** 앱 화면 상태 - 현재 표시 중인 화면 ('admin' 추가: 관리자 대시보드) */
 export type AppScreen = 'splash' | 'welcome' | 'login' | 'register' | 'forgot-password' | 'level-select' | 'main' | 'admin';
 
-/** 관리자 대시보드 탭 */
-export type AdminTab = 'overview' | 'users' | 'content' | 'spots' | 'guides' | 'traffic' | 'logs';
+/** 관리자 대시보드 탭 (Phase 2D: reports 추가) */
+export type AdminTab = 'overview' | 'users' | 'content' | 'spots' | 'guides' | 'reports' | 'traffic' | 'logs';
 
 /** 관리자 대시보드 통계 — GET /api/v1/admin/dashboard 응답 */
 export interface AdminStats {

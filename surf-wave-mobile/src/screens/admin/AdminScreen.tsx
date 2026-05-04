@@ -14,7 +14,7 @@ import {
 import { api } from '../../config/api';
 import { colors, spacing, typography } from '../../theme';
 
-type AdminTab = 'overview' | 'users' | 'spots' | 'logs';
+type AdminTab = 'overview' | 'users' | 'reports' | 'spots' | 'logs';
 
 // ─── 타입 정의 ────────────────────────────────────────────
 interface AdminStats {
@@ -64,7 +64,9 @@ const fmtDate = (s: string | null) => {
 const ACTION_LABELS: Record<string, string> = {
   SUSPEND_USER: '유저 정지', UNSUSPEND_USER: '정지 해제',
   CHANGE_ROLE: '역할 변경', HIDE_POST: '게시글 숨김',
-  SHOW_POST: '게시글 노출', DELETE_SPOT: '스팟 삭제',
+  SHOW_POST: '게시글 노출',
+  HIDE_DIARY: '다이어리 숨김', UNHIDE_DIARY: '다이어리 노출 복원',
+  DELETE_SPOT: '스팟 삭제',
   RESOLVE_REPORT: '신고 처리', BROADCAST: '전체 공지',
 };
 
@@ -424,10 +426,346 @@ const LogsTab: React.FC = () => {
   );
 };
 
+// ─── 신고 처리 탭 (Phase 2D) ─────────────────────────────
+// 게시글/댓글/다이어리 신고 통합 처리
+// - 숨김 + 처분 (RESOLVED): 컨텐츠 isHidden=true + 작성자에게 CONTENT_HIDDEN 알림 발송
+// - 기각 (DISMISSED): 컨텐츠 그대로, 작성자에게 알림 X
+const REPORT_REASONS_KO: Record<string, string> = {
+  SPAM: '스팸/광고', HARASSMENT: '괴롭힘/욕설', INAPPROPRIATE: '부적절',
+  MISINFORMATION: '허위 정보', OTHER: '기타',
+};
+const STATUS_KO: Record<string, { label: string; color: string }> = {
+  PENDING:   { label: '대기',      color: '#F59E0B' },
+  REVIEWED:  { label: '검토 중',   color: '#3B82F6' },
+  RESOLVED:  { label: '처분 완료', color: '#10B981' },
+  DISMISSED: { label: '기각',      color: '#6B7280' },
+};
+
+interface ReportItem {
+  id: string;
+  reason: string;
+  description: string | null;
+  status: 'PENDING' | 'REVIEWED' | 'RESOLVED' | 'DISMISSED';
+  adminNote: string | null;
+  createdAt: string;
+  reporter: { id: string; username: string | null; email: string };
+  post: { id: string; content: string } | null;
+  comment: { id: string; content: string } | null;
+  diary: {
+    id: string;
+    memo: string | null;
+    surfDate: string;
+    isHidden: boolean;
+    user: { id: string; username: string | null };
+  } | null;
+}
+
+const ReportsTab: React.FC = () => {
+  const [reports, setReports] = useState<ReportItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<'PENDING' | 'RESOLVED' | 'DISMISSED' | 'ALL'>('PENDING');
+  const [resolveTarget, setResolveTarget] = useState<ReportItem | null>(null);
+  const [resolveAction, setResolveAction] = useState<'hide' | 'dismiss'>('hide');
+  const [adminNote, setAdminNote] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const fetchReports = useCallback(async () => {
+    setLoading(true);
+    try {
+      const r = await api.get('/admin/reports?page=1&limit=50');
+      const items: ReportItem[] = r.data?.data ?? [];
+      const filtered = statusFilter === 'ALL' ? items : items.filter(x => x.status === statusFilter);
+      setReports(filtered);
+    } catch {
+      Alert.alert('오류', '신고 목록 조회에 실패했어요.');
+    } finally {
+      setLoading(false);
+    }
+  }, [statusFilter]);
+
+  useEffect(() => { fetchReports(); }, [fetchReports]);
+
+  const handleResolve = async () => {
+    if (!resolveTarget) return;
+    setSubmitting(true);
+    try {
+      const isHide = resolveAction === 'hide';
+
+      /** ① 컨텐츠 숨김 (다이어리 또는 게시글) — 작성자 알림 자동 발송 */
+      if (isHide) {
+        if (resolveTarget.diary) {
+          await api.patch(`/admin/diaries/${resolveTarget.diary.id}/hide`, {
+            isHidden: true,
+            adminNote: adminNote || undefined,
+          });
+        } else if (resolveTarget.post) {
+          await api.patch(`/admin/posts/${resolveTarget.post.id}/hide`, { isHidden: true });
+        }
+      }
+
+      /** ② 신고 상태 업데이트 */
+      await api.patch(`/admin/reports/${resolveTarget.id}`, {
+        status: isHide ? 'RESOLVED' : 'DISMISSED',
+        adminNote: adminNote || undefined,
+      });
+
+      Alert.alert(
+        '처리 완료',
+        isHide ? '컨텐츠가 숨김 처리되었고 작성자에게 알림이 발송되었습니다' : '신고가 기각되었습니다',
+      );
+      setResolveTarget(null);
+      setAdminNote('');
+      fetchReports();
+    } catch {
+      Alert.alert('오류', '처리 중 오류가 발생했어요.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const getTargetLabel = (r: ReportItem): string => {
+    if (r.diary) return '다이어리';
+    if (r.post) return '게시글';
+    if (r.comment) return '댓글';
+    return '?';
+  };
+
+  const getTargetPreview = (r: ReportItem): string => {
+    if (r.diary) {
+      const memo = r.diary.memo || '(메모 없음)';
+      const author = r.diary.user.username || '익명';
+      return `${author} · ${memo.slice(0, 60)}${memo.length > 60 ? '…' : ''}`;
+    }
+    if (r.post) return r.post.content.slice(0, 70);
+    if (r.comment) return r.comment.content.slice(0, 70);
+    return '-';
+  };
+
+  if (loading) {
+    return <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />;
+  }
+
+  return (
+    <View style={{ flex: 1 }}>
+      {/* 상태 필터 */}
+      <View style={reportStyles.filterRow}>
+        {(['PENDING', 'RESOLVED', 'DISMISSED', 'ALL'] as const).map(s => (
+          <TouchableOpacity
+            key={s}
+            style={[reportStyles.filterChip, statusFilter === s && reportStyles.filterChipActive]}
+            onPress={() => setStatusFilter(s)}
+          >
+            <Text style={[reportStyles.filterTxt, statusFilter === s && reportStyles.filterTxtActive]}>
+              {s === 'ALL' ? '전체' : STATUS_KO[s]?.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {reports.length === 0 ? (
+        <Text style={reportStyles.empty}>
+          {statusFilter === 'PENDING' ? '미처리 신고가 없습니다' : '신고가 없습니다'}
+        </Text>
+      ) : (
+        reports.map(r => (
+          <View key={r.id} style={reportStyles.card}>
+            <View style={reportStyles.cardHeader}>
+              <Text style={reportStyles.targetType}>{getTargetLabel(r)}</Text>
+              <Text style={reportStyles.reasonChip}>{REPORT_REASONS_KO[r.reason] || r.reason}</Text>
+              <Text style={[reportStyles.statusChip, { color: STATUS_KO[r.status]?.color }]}>
+                {STATUS_KO[r.status]?.label}
+              </Text>
+            </View>
+
+            <View style={reportStyles.preview}>
+              <Text style={reportStyles.previewTxt} numberOfLines={2}>{getTargetPreview(r)}</Text>
+            </View>
+
+            <Text style={reportStyles.metaTxt}>
+              신고자: {r.reporter.username || r.reporter.email} · {fmtDate(r.createdAt)}
+            </Text>
+            {r.description && (
+              <Text style={reportStyles.descTxt}>사유 설명: {r.description}</Text>
+            )}
+            {(r.status === 'RESOLVED' || r.status === 'DISMISSED') && r.adminNote && (
+              <Text style={reportStyles.adminNoteTxt}>관리자 메모: {r.adminNote}</Text>
+            )}
+
+            {r.status === 'PENDING' && (
+              <View style={reportStyles.actionRow}>
+                {(r.diary || r.post) && (
+                  <TouchableOpacity
+                    style={reportStyles.hideBtn}
+                    onPress={() => { setResolveTarget(r); setResolveAction('hide'); }}
+                  >
+                    <Text style={reportStyles.hideBtnTxt}>숨김 + 처분</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  style={reportStyles.dismissBtn}
+                  onPress={() => { setResolveTarget(r); setResolveAction('dismiss'); }}
+                >
+                  <Text style={reportStyles.dismissBtnTxt}>기각</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        ))
+      )}
+
+      {/* 처리 모달 */}
+      {resolveTarget && (
+        <View style={reportStyles.modalBackdrop}>
+          <View style={reportStyles.modalCard}>
+            <Text style={reportStyles.modalTitle}>
+              {resolveAction === 'hide' ? '컨텐츠 숨김 처분' : '신고 기각'}
+            </Text>
+
+            <View style={reportStyles.modalPreview}>
+              <Text style={reportStyles.previewTxt} numberOfLines={3}>{getTargetPreview(resolveTarget)}</Text>
+            </View>
+
+            <Text style={reportStyles.modalNotice}>
+              {resolveAction === 'hide'
+                ? '⚠️ 이 컨텐츠를 숨김 처리하고 작성자에게 알림이 발송됩니다.'
+                : 'ℹ️ 신고를 기각합니다. 작성자에게는 알리지 않습니다.'}
+            </Text>
+
+            <Text style={reportStyles.modalLabel}>
+              관리자 메모 ({resolveAction === 'hide' ? '작성자 알림에 포함됨' : '내부 기록용'})
+            </Text>
+            <TextInput
+              style={reportStyles.modalInput}
+              value={adminNote}
+              onChangeText={(t) => setAdminNote(t.slice(0, 500))}
+              placeholder={resolveAction === 'hide' ? '예: 노출 사진 가이드라인 9.2 위반' : '예: 신고 사유에 해당하지 않음'}
+              placeholderTextColor={colors.textTertiary}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+            />
+
+            <View style={reportStyles.modalActions}>
+              <TouchableOpacity
+                style={reportStyles.modalCancel}
+                onPress={() => { setResolveTarget(null); setAdminNote(''); }}
+                disabled={submitting}
+              >
+                <Text style={reportStyles.modalCancelTxt}>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  reportStyles.modalSubmit,
+                  resolveAction === 'hide' ? { backgroundColor: colors.error } : { backgroundColor: colors.primary },
+                  submitting && { opacity: 0.4 },
+                ]}
+                onPress={handleResolve}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={reportStyles.modalSubmitTxt}>
+                    {resolveAction === 'hide' ? '숨김 처분' : '기각'}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
+    </View>
+  );
+};
+
+const reportStyles = StyleSheet.create({
+  filterRow: { flexDirection: 'row', gap: 6, marginBottom: 12, flexWrap: 'wrap' },
+  filterChip: {
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16,
+    backgroundColor: colors.surfaceSecondary,
+  },
+  filterChipActive: { backgroundColor: colors.primary },
+  filterTxt: { ...typography.caption, color: colors.textSecondary, fontWeight: '600' },
+  filterTxtActive: { color: '#fff' },
+
+  empty: { ...typography.body2, color: colors.textTertiary, textAlign: 'center', marginTop: 60 },
+
+  card: {
+    backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border,
+    borderRadius: 12, padding: 12, marginBottom: 8,
+  },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8, flexWrap: 'wrap' },
+  targetType: { ...typography.caption, fontWeight: '700', color: colors.text },
+  reasonChip: {
+    ...typography.caption, fontSize: 10, fontWeight: '600',
+    backgroundColor: '#FEE2E2', color: colors.error,
+    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8,
+  },
+  statusChip: { ...typography.caption, fontSize: 10, fontWeight: '700', marginLeft: 'auto' },
+
+  preview: {
+    backgroundColor: colors.background, borderRadius: 8, padding: 8, marginBottom: 8,
+  },
+  previewTxt: { ...typography.caption, color: colors.textSecondary, lineHeight: 16 },
+
+  metaTxt: { ...typography.caption, fontSize: 10, color: colors.textTertiary, marginBottom: 4 },
+  descTxt: { ...typography.caption, fontSize: 11, color: colors.textSecondary, marginBottom: 4 },
+  adminNoteTxt: {
+    ...typography.caption, fontSize: 11, color: colors.primary,
+    backgroundColor: colors.primaryLight + '20', padding: 6, borderRadius: 6, marginTop: 4,
+  },
+
+  actionRow: { flexDirection: 'row', gap: 8, marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: colors.border },
+  hideBtn: {
+    flex: 1, paddingVertical: 8, borderRadius: 6,
+    backgroundColor: colors.error, alignItems: 'center',
+  },
+  hideBtnTxt: { ...typography.caption, color: '#fff', fontWeight: '700' },
+  dismissBtn: {
+    flex: 1, paddingVertical: 8, borderRadius: 6,
+    backgroundColor: colors.surfaceSecondary, alignItems: 'center',
+  },
+  dismissBtnTxt: { ...typography.caption, color: colors.text, fontWeight: '600' },
+
+  modalBackdrop: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center', justifyContent: 'center', padding: 16,
+  },
+  modalCard: {
+    backgroundColor: colors.surface, borderRadius: 16, padding: 16,
+    width: '100%', maxWidth: 420,
+  },
+  modalTitle: { ...typography.h4, color: colors.text, fontWeight: '700', marginBottom: 12 },
+  modalPreview: {
+    backgroundColor: colors.background, borderRadius: 8, padding: 8, marginBottom: 12,
+  },
+  modalNotice: {
+    ...typography.caption, color: colors.text,
+    backgroundColor: colors.primaryLight + '20',
+    padding: 8, borderRadius: 8, marginBottom: 12,
+  },
+  modalLabel: { ...typography.caption, color: colors.textSecondary, fontWeight: '600', marginBottom: 6 },
+  modalInput: {
+    backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border,
+    borderRadius: 8, padding: 8, color: colors.text,
+    minHeight: 70, ...typography.body2, marginBottom: 12,
+  },
+  modalActions: { flexDirection: 'row', gap: 8 },
+  modalCancel: {
+    flex: 1, paddingVertical: 10, borderRadius: 8,
+    borderWidth: 1, borderColor: colors.border, alignItems: 'center',
+  },
+  modalCancelTxt: { ...typography.body2, color: colors.text, fontWeight: '600' },
+  modalSubmit: { flex: 1, paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
+  modalSubmitTxt: { ...typography.body2, color: '#fff', fontWeight: '700' },
+});
+
 // ─── 메인 AdminScreen ─────────────────────────────────────
 const TABS: { id: AdminTab; label: string; icon: any }[] = [
   { id: 'overview', label: '개요', icon: LayoutDashboard },
   { id: 'users',    label: '유저', icon: Users },
+  { id: 'reports',  label: '신고', icon: AlertTriangle },
   { id: 'spots',    label: '스팟', icon: MapPin },
   { id: 'logs',     label: '로그', icon: ScrollText },
 ];
@@ -439,6 +777,7 @@ const AdminScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     switch (activeTab) {
       case 'overview': return <OverviewTab />;
       case 'users':    return <UsersTab />;
+      case 'reports':  return <ReportsTab />;
       case 'spots':    return <SpotsTab />;
       case 'logs':     return <LogsTab />;
     }
