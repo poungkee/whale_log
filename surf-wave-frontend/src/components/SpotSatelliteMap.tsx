@@ -77,8 +77,10 @@ export function SpotSatelliteMap({
   onRefresh,
   refreshing = false,
 }: SpotSatelliteMapProps) {
-  /** 환경변수 토큰 — 없으면 컴포넌트 자체를 안 그림 (M-5) */
-  const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
+  /**
+   * 위성지도는 ESRI World Imagery 사용 (무료, 토큰 불필요)
+   * Mapbox 토큰은 향후 다른 용도(geocoding 등)에 활용 가능하도록 .env에 유지
+   */
 
   /** 슬라이더 인덱스 — clamp(0, len-1) (M-6) */
   const [hourIndex, setHourIndex] = useState(
@@ -142,11 +144,6 @@ export function SpotSatelliteMap({
     return result;
   }, [lat, lng, spot.coastFacingDeg, currentForecast]);
 
-  /** 토큰 없으면 컴포넌트 자체 숨김 (M-5) */
-  if (!mapboxToken) {
-    return null;
-  }
-
   /** 시간 라벨 — "12시" 형식 */
   const hourLabel = currentForecast?.forecastTime
     ? new Date(currentForecast.forecastTime).getHours() + '시'
@@ -180,12 +177,27 @@ export function SpotSatelliteMap({
             zoom: 15,
           }}
           /**
-           * Mapbox Style URL 직접 사용 (가장 안정적)
-           * - satellite-streets-v12: 위성 + 도로/지명 라벨
-           * - 또는 satellite-v9: 순수 위성사진만
-           * - maplibre-gl이 자동으로 raster + label 처리
+           * ESRI World Imagery — 무료 위성사진 raster tile (토큰 불필요)
+           * - 전 세계 커버리지 (한국/발리 포함)
+           * - maplibre-gl과 호환성 검증됨 (Mapbox v8 spec과 다른 이슈 없음)
+           * - attribution: Esri (지도 우하단 자동 표시)
            */
-          mapStyle={`https://api.mapbox.com/styles/v1/mapbox/satellite-v9?access_token=${mapboxToken}`}
+          mapStyle={{
+            version: 8,
+            sources: {
+              'satellite': {
+                type: 'raster',
+                tiles: [
+                  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                ],
+                tileSize: 256,
+                attribution: 'Tiles © Esri',
+              },
+            },
+            layers: [
+              { id: 'satellite-layer', type: 'raster', source: 'satellite' },
+            ],
+          }}
           dragRotate={false}
           touchZoomRotate={true}
         >
