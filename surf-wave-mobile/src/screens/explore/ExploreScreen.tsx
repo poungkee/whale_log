@@ -14,6 +14,7 @@ import { api } from '../../config/api';
 import { colors, spacing, typography } from '../../theme';
 import { ExploreStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/authStore';
+import { kmhToMs } from '../../lib/units';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -285,8 +286,8 @@ const ExploreScreen: React.FC = () => {
             <View style={styles.dataDivider} />
             <View style={styles.dataItem}>
               <Wind size={14} color={colors.textSecondary} />
-              <Text style={styles.dataVal}>{parseFloat(selectedSpot.forecast.windSpeed).toFixed(0)}</Text>
-              <Text style={styles.dataLbl}>km/h</Text>
+              <Text style={styles.dataVal}>{kmhToMs(selectedSpot.forecast.windSpeed)}</Text>
+              <Text style={styles.dataLbl}>m/s</Text>
             </View>
             <View style={styles.dataDivider} />
             <View style={styles.dataItem}>

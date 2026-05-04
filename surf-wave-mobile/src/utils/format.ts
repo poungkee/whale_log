@@ -61,8 +61,9 @@ export const formatWaveHeight = (meters: number): string => {
   return `${meters.toFixed(1)}m`;
 };
 
+/** 풍속 km/h → m/s 변환 (서핑 표준) — DB는 km/h(Open-Meteo), 화면은 m/s 통일 */
 export const formatWindSpeed = (kmh: number): string => {
-  return `${Math.round(kmh)}km/h`;
+  return `${(kmh / 3.6).toFixed(1)}m/s`;
 };
 
 export const formatTemperature = (celsius: number): string => {

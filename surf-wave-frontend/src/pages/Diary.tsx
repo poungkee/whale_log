@@ -24,6 +24,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import type { BoardType } from '../types';
 import { DiaryFormModal } from '../components/DiaryFormModal';
 import { api } from '../lib/api';
+import { formatWindSpeed, kmhToMs } from '../lib/units';
 import type { DiaryFullEntry } from '../components/DiaryFormModal';
 
 interface DiaryProps {
@@ -162,11 +163,11 @@ export function Diary({ defaultBoardType, onBack }: DiaryProps) {
       if (!res.ok) throw new Error('forecast fetch failed');
       const forecasts = await res.json();
 
-      /** 시간별 차트 데이터 변환 */
+      /** 시간별 차트 데이터 변환 (풍속 km/h → m/s 서핑 표준) */
       const data = (Array.isArray(forecasts) ? forecasts : []).map((f: Record<string, unknown>) => ({
         time: new Date(f.forecastTime as string).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
         waveHeight: Number(f.waveHeight) || 0,
-        windSpeed: Number(f.windSpeed) || 0,
+        windSpeed: f.windSpeed ? Number(kmhToMs(f.windSpeed as string | number)) : 0,
         waterTemp: f.waterTemperature ? Number(f.waterTemperature) : null,
       }));
       setChartData(data);
@@ -517,7 +518,7 @@ export function Diary({ defaultBoardType, onBack }: DiaryProps) {
                           )}
                           {entry.windSpeed && (
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/10 text-green-400">
-                              {Number(entry.windSpeed).toFixed(0)}km/h
+                              {formatWindSpeed(entry.windSpeed)}
                             </span>
                           )}
                           {entry.images && entry.images.length > 0 && (
@@ -837,7 +838,7 @@ export function Diary({ defaultBoardType, onBack }: DiaryProps) {
                     {detailEntry.windSpeed && (
                       <div className="flex items-center gap-1 text-xs bg-green-500/10 px-2.5 py-1.5 rounded-lg">
                         <Wind className="w-3.5 h-3.5 text-green-400" />
-                        <span className="font-semibold text-green-400">{Number(detailEntry.windSpeed).toFixed(0)}km/h</span>
+                        <span className="font-semibold text-green-400">{formatWindSpeed(detailEntry.windSpeed)}</span>
                       </div>
                     )}
                   </div>
@@ -887,7 +888,7 @@ export function Diary({ defaultBoardType, onBack }: DiaryProps) {
                           stroke="#4ade80"
                           strokeWidth={1.5}
                           dot={false}
-                          name="풍속(km/h)"
+                          name="풍속(m/s)"
                           strokeDasharray="4 2"
                         />
                       </LineChart>

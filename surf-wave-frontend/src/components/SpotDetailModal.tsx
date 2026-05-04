@@ -28,6 +28,7 @@ import {
   Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 import { getRatingGrade, getRatingColor } from '../lib/utils';
+import { formatWindSpeed, kmhToMs } from '../lib/units';
 
 /** KHOA 서핑지수 → 색상 (SpotCard의 getKhoaColor와 동일) */
 function getKhoaIndexColor(index: string): string {
@@ -287,11 +288,13 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
     }
   }, [activeTab, publicDiaries.length, diaryTotal, fetchPublicDiaries]);
 
-  /** 차트용 데이터 변환 - 시간별 파고/풍속/조석/기온/수온 */
+  /** 차트용 데이터 변환 - 시간별 파고/풍속/조석/기온/수온
+   * 풍속은 km/h(DB) → m/s(서핑 표준) 변환하여 차트에 표시
+   */
   const chartData = hourlyData.map(h => ({
     time: formatHour(h.forecastTime),
     파고: Number(h.waveHeight) || 0,
-    풍속: h.windSpeed ? Number(h.windSpeed) : 0,
+    풍속: h.windSpeed ? Number(kmhToMs(h.windSpeed)) : 0,
     조석: h.tideHeight ? Number(h.tideHeight) : 0,
     기온: h.airTemperature ? Number(h.airTemperature) : null,
     수온: h.waterTemperature ? Number(h.waterTemperature) : null,
@@ -473,7 +476,7 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
                 <Wind className="w-4 h-4 text-[#F1C40F] flex-shrink-0" />
                 <span className="text-muted-foreground">바람</span>
                 <span className="font-medium ml-auto">
-                  {forecast.windSpeed ? `${Number(forecast.windSpeed).toFixed(0)}km/h` : '-'}
+                  {forecast.windSpeed ? formatWindSpeed(forecast.windSpeed) : '-'}
                   {windType && (
                     <span className="ml-1 text-xs font-bold" style={{ color: getWindTypeColor(windType) }}>
                       {windType}
@@ -582,7 +585,7 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
                         strokeWidth={2}
                         dot={{ r: 2, fill: '#F1C40F' }}
                         activeDot={{ r: 4 }}
-                        unit="km/h"
+                        unit="m/s"
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -806,7 +809,7 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
                       <Wind className="w-4 h-4 text-[#F1C40F]" />
                       <span className="text-muted-foreground">바람</span>
                       <span className="font-medium ml-auto">
-                        {forecast.windSpeed ? `${Number(forecast.windSpeed).toFixed(0)}km/h` : '-'}
+                        {forecast.windSpeed ? formatWindSpeed(forecast.windSpeed) : '-'}
                         {windType && (
                           <span className="ml-1 text-xs font-bold" style={{ color: getWindTypeColor(windType) }}>
                             {windType}
@@ -960,11 +963,11 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
                               <span className="font-medium text-blue-300">{Number(entry.wavePeriod).toFixed(1)}s</span>
                             </div>
                           )}
-                          {/* 풍속 */}
+                          {/* 풍속 - 서핑 표준 m/s 표시 */}
                           {entry.windSpeed && (
                             <div className="flex items-center gap-1 text-[10px] bg-green-500/10 px-1.5 py-0.5 rounded">
                               <Wind className="w-2.5 h-2.5 text-green-400" />
-                              <span className="font-medium text-green-300">{Number(entry.windSpeed).toFixed(0)}km/h</span>
+                              <span className="font-medium text-green-300">{formatWindSpeed(entry.windSpeed)}</span>
                             </div>
                           )}
                           {/* 만족도 별점 */}

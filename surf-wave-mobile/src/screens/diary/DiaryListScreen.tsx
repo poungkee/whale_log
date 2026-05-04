@@ -14,6 +14,7 @@ import {
 import { api } from '../../config/api';
 import { colors, spacing, typography } from '../../theme';
 import { DiaryStackParamList } from '../../navigation/types';
+import { formatWindSpeed } from '../../lib/units';
 
 type Props = {
   navigation: NativeStackNavigationProp<DiaryStackParamList, 'DiaryList'>;
@@ -316,7 +317,7 @@ const DiaryListScreen: React.FC<Props> = ({ navigation }) => {
                       {item.windSpeed && (
                         <View style={[s.chip, { backgroundColor: 'rgba(34,197,94,0.1)' }]}>
                           <Text style={[s.chipText, { color: '#22C55E' }]}>
-                            {Number(item.windSpeed).toFixed(0)}km/h
+                            {formatWindSpeed(item.windSpeed)}
                           </Text>
                         </View>
                       )}

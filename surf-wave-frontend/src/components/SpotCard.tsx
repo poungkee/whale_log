@@ -13,6 +13,7 @@
 import { useState } from 'react';
 import { Wind, Clock, ArrowDown, ArrowUp, Sun, CloudRain, Cloud, Droplets, Heart, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { getRatingGrade, getRatingColor, getLevelFitColor, getLevelFitLabel } from '../lib/utils';
+import { formatWindSpeed } from '../lib/units';
 import type { SpotForecast, SurfLevel, HintTag, WeatherAlert } from '../types';
 
 /** 날씨 상태 → lucide 아이콘 + 라벨 반환 */
@@ -242,7 +243,7 @@ export function SpotCard({ data, currentLevel, onClick, isFavorited, onToggleFav
           {forecast.windSpeed && (
             <div className="flex items-center gap-0.5">
               <Wind className="w-3 h-3" />
-              <span className="font-semibold text-foreground">{Number(forecast.windSpeed).toFixed(0)}km/h</span>
+              <span className="font-semibold text-foreground">{formatWindSpeed(forecast.windSpeed)}</span>
             </div>
           )}
           {forecast.tideStatus && (

@@ -3,6 +3,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Waves, Clock, Wind, Thermometer } from 'lucide-react-native';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import { formatWindSpeed } from '../../lib/units';
 
 interface Forecast {
   waveHeight?: number;
@@ -21,7 +22,7 @@ const SpotConditions: React.FC<SpotConditionsProps> = ({ forecast }) => {
   const conditions = [
     { Icon: Waves, label: '파고', value: `${forecast.waveHeight || '-'}m` },
     { Icon: Clock, label: '주기', value: `${forecast.wavePeriod || '-'}s` },
-    { Icon: Wind, label: '바람', value: `${forecast.windSpeed || '-'}km/h` },
+    { Icon: Wind, label: '바람', value: forecast.windSpeed != null ? formatWindSpeed(forecast.windSpeed) : '-' },
     { Icon: Thermometer, label: '수온', value: `${forecast.waterTemperature || '-'}°C` },
   ];
 

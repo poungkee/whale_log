@@ -8,6 +8,7 @@
 
 import { Popup } from 'react-map-gl/maplibre';
 import { getRatingColor, getRatingGrade } from '../lib/utils';
+import { formatWindSpeed } from '../lib/units';
 import type { SpotForecast } from '../types';
 
 interface SpotPopupProps {
@@ -54,7 +55,7 @@ export function SpotPopup({ spotForecast, onClose, onDetail }: SpotPopupProps) {
             <div>파고: <span className="font-semibold text-gray-900">{Number(forecast.waveHeight).toFixed(1)}m</span></div>
             <div>주기: <span className="font-semibold text-gray-900">{Number(forecast.wavePeriod).toFixed(0)}s</span></div>
             {forecast.windSpeed && (
-              <div>풍속: <span className="font-semibold text-gray-900">{Number(forecast.windSpeed).toFixed(0)}km/h</span></div>
+              <div>풍속: <span className="font-semibold text-gray-900">{formatWindSpeed(forecast.windSpeed)}</span></div>
             )}
             {simpleCondition && (
               <div>상태: <span className="font-semibold text-gray-900">{simpleCondition.overall}</span></div>

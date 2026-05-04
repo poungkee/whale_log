@@ -19,6 +19,7 @@ import { useAuthStore } from '../../stores/authStore';
 import Avatar from '../../components/common/Avatar';
 import { DiaryInteractions } from '../../components/DiaryInteractions';
 import KhoaBadge, { KhoaEnrichment } from '../../components/spot/KhoaBadge';
+import { kmhToMs } from '../../lib/units';
 
 // HomeStack과 ExploreStack 둘 다 동일한 파라미터 구조 사용
 type Props = NativeStackScreenProps<any, 'SpotDetail'>;
@@ -187,7 +188,7 @@ const FIT_LABELS: { key: keyof RatingDetail; label: string; color: string }[] = 
 const SCR_W = Dimensions.get('window').width;
 const CHART_W = SCR_W - spacing.lg * 2 - spacing.md * 2; // 카드 안쪽 여백 반영
 const CHART_H = 130;
-/** Y축 라벨 공간 — 좌측 38px (조석 "0.6m" 같은 라벨이 그래프와 겹치지 않게), 우측 36px (풍속 km/h용) */
+/** Y축 라벨 공간 — 좌측 38px (조석 "0.6m" 같은 라벨이 그래프와 겹치지 않게), 우측 36px (풍속 m/s용) */
 const P = { top: 14, right: 36, bottom: 26, left: 38 };
 
 /** 차트 공통 — X축 시간 라벨 인덱스 (4시간 간격) */
@@ -323,15 +324,16 @@ const TideChart: React.FC<{ data: HourlyForecast[] }> = ({ data }) => {
 /**
  * 24시간 시간별 예보 차트
  * - 파고: 영역 그래프 (primary 색상)
- * - 풍속: 점선 (초록)
- * - Y축 라벨 좌(파고 m) / 우(풍속 km/h) 표시
+ * - 풍속: 점선 (초록) — DB는 km/h, 차트는 m/s 서핑 표준
+ * - Y축 라벨 좌(파고 m) / 우(풍속 m/s) 표시
  * - X축에 4시간 간격 시간 + 0/12/24시 그리드 라인
  */
 const HourlyChart: React.FC<{ data: HourlyForecast[] }> = ({ data }) => {
   if (data.length < 2) return null;
 
   const waves = data.map(d => Number(d.waveHeight) || 0);
-  const winds = data.map(d => Number(d.windSpeed) || 0);
+  /** 풍속 km/h → m/s 변환 후 그래프 좌표 계산 */
+  const winds = data.map(d => (Number(d.windSpeed) || 0) / 3.6);
   /**
    * Y축 max를 데이터의 1.15배로 설정 — 위쪽 여백 + 변화 시각화 향상.
    * 이전엔 max(waves, 0.5)라서 작은 파고에서는 답답하게 0~0.5 범위로만 그려짐.
@@ -393,9 +395,9 @@ const HourlyChart: React.FC<{ data: HourlyForecast[] }> = ({ data }) => {
         0
       </SvgText>
 
-      {/* Y축 라벨 우측 (풍속 max km/h) */}
+      {/* Y축 라벨 우측 (풍속 max m/s) */}
       <SvgText x={CHART_W - P.right + 4} y={P.top + 4} fontSize="9" fill="#22c55e" fontWeight="700" textAnchor="start">
-        {maxWind.toFixed(0)}km/h
+        {maxWind.toFixed(1)}m/s
       </SvgText>
 
       {/* X축 시간 라벨 */}
@@ -678,7 +680,7 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                     <Wind size={15} color="#22c55e" />
                     <Text style={s.summaryLabel}>바람</Text>
                     <Text style={s.summaryValue}>
-                      {parseFloat(forecast.windSpeed).toFixed(0)}km/h · {degToCompass(parseFloat(forecast.windDirection))} ({parseFloat(forecast.windDirection).toFixed(0)}°)
+                      {kmhToMs(forecast.windSpeed)}m/s · {degToCompass(parseFloat(forecast.windDirection))} ({parseFloat(forecast.windDirection).toFixed(0)}°)
                     </Text>
                   </View>
                   <View style={s.summaryRow}>
@@ -732,7 +734,7 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                   <View style={s.legendItem}>
                     {/** 풍속 — 점도 함께 표시 (이전엔 점선만 있어 점 없음 지적 반영) */}
                     <View style={[s.legendDot, { backgroundColor: '#22c55e' }]} />
-                    <Text style={s.legendTxt}>풍속 (km/h)</Text>
+                    <Text style={s.legendTxt}>풍속 (m/s)</Text>
                   </View>
                 </View>
                 {chartLoading
@@ -821,7 +823,7 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                   <View style={s.detailRow}>
                     <Text style={s.detailLabel}>풍속</Text>
                     <Text style={s.detailValue}>
-                      {parseFloat(forecast.windSpeed).toFixed(0)}km/h
+                      {kmhToMs(forecast.windSpeed)}m/s
                       <Text style={s.detailSubInline}>  · {getWindStrength(parseFloat(forecast.windSpeed))}</Text>
                     </Text>
                   </View>

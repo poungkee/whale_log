@@ -19,6 +19,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { colors, spacing, typography } from '../../theme';
 import { HomeStackParamList } from '../../navigation/types';
 import KhoaBadge, { KhoaEnrichment } from '../../components/spot/KhoaBadge';
+import { kmhToMs } from '../../lib/units';
 
 type Props = {
   navigation: NativeStackNavigationProp<HomeStackParamList, 'Home'>;
@@ -743,7 +744,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                       </View>
                       <View style={styles.inlineStat}>
                         <Wind size={13} color={colors.textTertiary} />
-                        <Text style={styles.inlineStatText}>{parseFloat(item.forecast.windSpeed).toFixed(0)}km/h</Text>
+                        <Text style={styles.inlineStatText}>{kmhToMs(item.forecast.windSpeed)}m/s</Text>
                       </View>
                       {tideInfo && (
                         <View style={styles.inlineStat}>

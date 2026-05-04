@@ -16,6 +16,7 @@
 
 import { X, Waves, Wind, Clock, ArrowUp, ArrowDown, Sun, CloudRain, Cloud, Droplets } from 'lucide-react';
 import { getRatingColor, getRatingGrade } from '../lib/utils';
+import { formatWindSpeed } from '../lib/units';
 import type { SpotForecast } from '../types';
 
 /** 날씨 상태 → lucide 아이콘 반환 */
@@ -137,7 +138,7 @@ export function SpotBottomCard({ spotForecast, onClose, onDetail }: SpotBottomCa
                     <Wind className="w-4 h-4 text-teal-500" />
                     <div>
                       <div className="text-sm font-bold text-gray-900">
-                        {Number(forecast.windSpeed).toFixed(0)}km/h
+                        {formatWindSpeed(forecast.windSpeed)}
                       </div>
                       <div className="text-[10px] text-gray-400">풍속</div>
                     </div>
