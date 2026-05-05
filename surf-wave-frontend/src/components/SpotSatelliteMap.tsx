@@ -184,59 +184,37 @@ export function SpotSatelliteMap({
     }
 
     /**
-     * 화살표 기준점 (회전축 = 시계바늘 중심)
-     * - spot 좌표에서 바다쪽(coastFacingDeg 방향)으로 100m offset
-     * - 이유: spot 좌표가 해변선에 있으면 화살표 일부가 육지에 걸침
-     *   바다쪽으로 미리 밀어두면 거의 모든 국내 스팟이 안전하게 바다 위
+     * 화살표 기준점 = 일체형 아이콘 회전축 (●)
+     * - spot 좌표에서 바다쪽(coastFacingDeg 방향)으로 220m offset
+     * - 이유: 100m는 모래사장/얕은 바다(육지 인접)에 떠 있는 케이스 많음
+     *   220m면 거의 모든 국내 해변에서 명백한 바다 위
      * - coastFacingDeg null인 스팟은 spot 그대로 (offset 불가능)
      */
     const arrowOrigin = spot.coastFacingDeg != null
-      ? arrowEndPoint(lat, lng, spot.coastFacingDeg, 100)
+      ? arrowEndPoint(lat, lng, spot.coastFacingDeg, 220)
       : { lat, lng };
 
     /**
-     * 두 화살표 위치 결정 (사용자 가이드라인):
-     * - 각도 차 < 90° (같은~유사 방향): 평행 위/아래 분리 (──▶ over ──▶)
-     *   · perpendicular(±90°)로 25m offset
-     * - 각도 차 ≥ 90° (마주봄/대각): 같은 좌표 = arrowOrigin (시계 바늘 회전축 공유)
-     *   · 마주봄 (180°): ━━━▶ ●◀━━━
-     *   · 대각 (90~180°): 자연스럽게 두 시계 바늘이 갈라짐
+     * 두 화살표 위치 = arrowOrigin 통일 (회전축 공유)
+     * - 사용자 요구: 두 화살표 머리가 중앙(●)에서 만나는 일체형 아이콘
+     *   ━━━▶ ● ◀━━━ 형태 (각도는 풍향/스웰 실제 값)
+     * - 평행/시계바늘 분기 제거 — SVG 두 개가 같은 회전축에서 자기 각도로 회전
+     * - 시각적 분리는 새 아이콘 디자인 (사용자 제공 예정) 으로 처리
      */
-    if (windRotateDeg !== null && swellRotateDeg !== null) {
-      const angleDiff = Math.abs(windRotateDeg - swellRotateDeg) % 360;
-      const minDiff = Math.min(angleDiff, 360 - angleDiff);
-      const isOpposite = minDiff >= 90;
-
-      if (isOpposite) {
-        /** 마주봄/대각: 두 화살표 시작점이 모두 arrowOrigin = 시계 바늘 */
-        result.windPos = arrowOrigin;
-        result.swellPos = arrowOrigin;
-      } else {
-        /** 같은~유사 방향 (< 90°): 진행 방향 기준 perpendicular로 위/아래 평행 */
-        const perpUp = (windRotateDeg + 90) % 360;
-        const perpDown = (windRotateDeg - 90 + 360) % 360;
-        result.windPos = arrowEndPoint(arrowOrigin.lat, arrowOrigin.lng, perpUp, 25);
-        result.swellPos = arrowEndPoint(arrowOrigin.lat, arrowOrigin.lng, perpDown, 25);
-      }
-    } else if (windRotateDeg !== null) {
-      /** 풍향만 있는 경우 */
-      result.windPos = arrowOrigin;
-    } else if (swellRotateDeg !== null) {
-      /** 스웰만 있는 경우 */
-      result.swellPos = arrowOrigin;
-    }
+    if (windRotateDeg !== null) result.windPos = arrowOrigin;
+    if (swellRotateDeg !== null) result.swellPos = arrowOrigin;
 
     return result;
   }, [lat, lng, spot.coastFacingDeg, currentForecast, isBali]);
 
   /**
    * 지도 중심 좌표
-   * - 국내: 바다쪽으로 250m offset (좌 해변, 우 바다 비율)
+   * - 국내: 바다쪽으로 220m offset → arrowOrigin과 일치 → 화살표 = 화면 중앙
    * - 발리: 스팟 위치 그대로 (지형 다양해서 일률적 offset 부적합)
    */
   const mapCenter = useMemo(() => {
     if (isBali || spot.coastFacingDeg == null) return { lat, lng };
-    return arrowEndPoint(lat, lng, spot.coastFacingDeg, 250);
+    return arrowEndPoint(lat, lng, spot.coastFacingDeg, 220);
   }, [lat, lng, spot.coastFacingDeg, isBali]);
 
   /** 시간 라벨 — "12시" 형식 */
