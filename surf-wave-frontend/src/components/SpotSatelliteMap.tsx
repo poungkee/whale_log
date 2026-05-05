@@ -29,6 +29,7 @@ import {
   arrowLineString,
   coastLineString,
   windArrowDirection,
+  arrowEndPoint,
 } from '../lib/geoArrow';
 import {
   getWindType,
@@ -109,26 +110,40 @@ export function SpotSatelliteMap({
   const lat = typeof spot.latitude === 'string' ? parseFloat(spot.latitude) : spot.latitude;
   const lng = typeof spot.longitude === 'string' ? parseFloat(spot.longitude) : spot.longitude;
 
-  /** 화살표 데이터 메모이제이션 — 방향/거리 계산 비용 절감 */
+  /**
+   * 화살표 데이터 메모이제이션 — 방향/거리 계산 비용 절감
+   *
+   * 길이 단축 (해안가 육지 침범 방지):
+   * - 풍향: 250m → 150m
+   * - 스웰: 300m → 200m
+   * - 해변선: 200m → 150m (양방향 합 300m)
+   *
+   * 끝점 좌표 추가 — 화살표 머리(▶) Marker 배치용
+   */
   const arrowData = useMemo(() => {
     const result: {
       coast?: GeoJSON.FeatureCollection<GeoJSON.LineString>;
       wind?: GeoJSON.FeatureCollection<GeoJSON.LineString>;
       swell?: GeoJSON.FeatureCollection<GeoJSON.LineString>;
+      windEnd?: { lat: number; lng: number; rotateDeg: number };
+      swellEnd?: { lat: number; lng: number; rotateDeg: number };
       windColor: string;
       windLabel: string;
     } = { windColor: '#95A5A6', windLabel: '' };
 
-    /** 해변선 (M-1) */
+    /** 해변선 (M-1) — 양방향 직선이라 화살표 머리 없음 */
     if (spot.coastFacingDeg != null) {
-      result.coast = coastLineString(lat, lng, spot.coastFacingDeg, 200);
+      result.coast = coastLineString(lat, lng, spot.coastFacingDeg, 150);
     }
 
-    /** 풍향 화살표 (M-2) — FROM → TO 변환 */
+    /** 풍향 화살표 (M-2) — FROM → TO 변환 + 끝점 머리 */
     if (currentForecast?.windDirection) {
       const windFromDeg = Number(currentForecast.windDirection);
       const arrowDeg = windArrowDirection(windFromDeg);
-      result.wind = arrowLineString(lat, lng, arrowDeg, 250);
+      const distanceM = 150;
+      result.wind = arrowLineString(lat, lng, arrowDeg, distanceM);
+      const end = arrowEndPoint(lat, lng, arrowDeg, distanceM);
+      result.windEnd = { lat: end.lat, lng: end.lng, rotateDeg: arrowDeg };
       const windType = getWindType(windFromDeg, spot.coastFacingDeg);
       result.windColor = getWindTypeColor(windType);
       result.windLabel = getWindTypeLabel(windType);
@@ -138,7 +153,10 @@ export function SpotSatelliteMap({
     if (currentForecast?.swellDirection) {
       const swellFromDeg = Number(currentForecast.swellDirection);
       const arrowDeg = (swellFromDeg + 180) % 360;
-      result.swell = arrowLineString(lat, lng, arrowDeg, 300);
+      const distanceM = 200;
+      result.swell = arrowLineString(lat, lng, arrowDeg, distanceM);
+      const end = arrowEndPoint(lat, lng, arrowDeg, distanceM);
+      result.swellEnd = { lat: end.lat, lng: end.lng, rotateDeg: arrowDeg };
     }
 
     return result;
@@ -226,10 +244,48 @@ export function SpotSatelliteMap({
           dragRotate={false}
           touchZoomRotate={true}
         >
-          {/* 스팟 마커 */}
+          {/* 스팟 마커 — 시작점 (파란 점) */}
           <Marker latitude={lat} longitude={lng}>
             <div className="w-4 h-4 rounded-full bg-primary border-2 border-white shadow-md" />
           </Marker>
+
+          {/**
+           * 풍향 화살표 머리 (▶) — 끝점에 SVG로 표시
+           * - rotateDeg: 화살표 진행 방향 (북=0, 동=90, 남=180, 서=270)
+           * - SVG 기본 ▶는 오른쪽(동쪽=90°) 방향 → CSS rotate에서 -90 보정
+           */}
+          {arrowData.windEnd && (
+            <Marker latitude={arrowData.windEnd.lat} longitude={arrowData.windEnd.lng}>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                style={{
+                  transform: `rotate(${arrowData.windEnd.rotateDeg - 90}deg)`,
+                  filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))',
+                }}
+              >
+                <polygon points="0,2 14,8 0,14" fill={arrowData.windColor} stroke="white" strokeWidth="1" />
+              </svg>
+            </Marker>
+          )}
+
+          {/* 스웰 화살표 머리 (▶) */}
+          {arrowData.swellEnd && (
+            <Marker latitude={arrowData.swellEnd.lat} longitude={arrowData.swellEnd.lng}>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 16 16"
+                style={{
+                  transform: `rotate(${arrowData.swellEnd.rotateDeg - 90}deg)`,
+                  filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))',
+                }}
+              >
+                <polygon points="0,2 14,8 0,14" fill="#3B82F6" stroke="white" strokeWidth="1" />
+              </svg>
+            </Marker>
+          )}
 
           {/* 해변선 (검정) */}
           {arrowData.coast && (
