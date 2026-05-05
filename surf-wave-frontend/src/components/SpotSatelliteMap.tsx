@@ -151,27 +151,65 @@ export function SpotSatelliteMap({
     /** 발리는 화살표 생성 안 함 (지형 다양 → 육지 표시 케이스 많음) */
     if (isBali) return result;
 
-    /** 풍향 — 바다쪽 150m 위치, 풍향 회전 */
-    if (currentForecast?.windDirection && spot.coastFacingDeg != null) {
+    /**
+     * 시계 바늘 디자인 (사용자 요청):
+     * - 두 화살표 시작점 = 스팟 (회전축, 시계 바늘처럼)
+     * - 회전 = 풍향/스웰 가는 방향 (TO direction)
+     * - 같은 방향(30도 이내): perpendicular offset으로 위/아래 평행 분리
+     * - 다른 방향: 같은 좌표 (마주봄=양쪽 뻗음, 사이드=V자)
+     */
+
+    /** 풍향 — 풍향이 가는 방향 (TO) 회전 */
+    let windRotateDeg: number | null = null;
+    if (currentForecast?.windDirection) {
       const windFromDeg = Number(currentForecast.windDirection);
-      result.windRotateDeg = windArrowDirection(windFromDeg);
-      result.windPos = arrowEndPoint(lat, lng, spot.coastFacingDeg, 150);
+      windRotateDeg = windArrowDirection(windFromDeg);
+      result.windRotateDeg = windRotateDeg;
       const windType = getWindType(windFromDeg, spot.coastFacingDeg);
       result.windColor = getWindTypeColor(windType);
       result.windLabel = getWindTypeLabel(windType);
     }
 
-    /** 스웰 — 바다쪽 280m 위치 (풍향보다 더 멀리, 시각 분리), 스웰 방향 회전 */
-    if (currentForecast?.swellDirection && spot.coastFacingDeg != null) {
+    /** 파도 — 스웰이 가는 방향 (TO, 해변쪽) 회전 */
+    let swellRotateDeg: number | null = null;
+    if (currentForecast?.swellDirection) {
       const swellFromDeg = Number(currentForecast.swellDirection);
-      result.swellRotateDeg = (swellFromDeg + 180) % 360;
-      result.swellPos = arrowEndPoint(lat, lng, spot.coastFacingDeg, 280);
-      /** 라벨 — "스웰 1.5m @8s" */
+      swellRotateDeg = (swellFromDeg + 180) % 360;
+      result.swellRotateDeg = swellRotateDeg;
       const sh = (currentForecast as { swellHeight?: string | null }).swellHeight;
       const sp = (currentForecast as { swellPeriod?: string | null }).swellPeriod;
       result.swellLabel = sh
         ? `스웰 ${Number(sh).toFixed(1)}m${sp ? ` @${Number(sp).toFixed(0)}s` : ''}`
         : '스웰';
+    }
+
+    /**
+     * 두 화살표 위치 결정:
+     * - 같은 방향 (각도 차이 30° 이내): perpendicular 30m offset → 위/아래 평행
+     * - 다른 방향 (마주봄/사이드): 같은 좌표 (스팟 = 회전축)
+     */
+    if (windRotateDeg !== null && swellRotateDeg !== null) {
+      const angleDiff = Math.abs(windRotateDeg - swellRotateDeg) % 360;
+      const minDiff = Math.min(angleDiff, 360 - angleDiff);
+      const isSameDir = minDiff < 30;
+
+      if (isSameDir) {
+        /** 같은 방향: 진행 방향 기준 perpendicular(±90°)로 30m offset → 위/아래 평행 */
+        const perpUp = (windRotateDeg + 90) % 360;
+        const perpDown = (windRotateDeg - 90 + 360) % 360;
+        result.windPos = arrowEndPoint(lat, lng, perpUp, 30);
+        result.swellPos = arrowEndPoint(lat, lng, perpDown, 30);
+      } else {
+        /** 다른 방향: 같은 좌표 (스팟) — 시계 바늘처럼 회전축 공유 */
+        result.windPos = { lat, lng };
+        result.swellPos = { lat, lng };
+      }
+    } else if (windRotateDeg !== null) {
+      /** 풍향만 있는 경우 */
+      result.windPos = { lat, lng };
+    } else if (swellRotateDeg !== null) {
+      /** 스웰만 있는 경우 */
+      result.swellPos = { lat, lng };
     }
 
     return result;
@@ -282,35 +320,38 @@ export function SpotSatelliteMap({
           touchZoomRotate={true}
         >
           {/**
-           * 풍향 화살표 마커 — 폭 넓은 캡슐 + 끝 뾰족 (글자 수용)
-           * 위치: 스팟에서 바다쪽 120m
-           * 회전: 바람이 부는 방향 (TO direction)
+           * 풍향 화살표 — 시계 바늘 디자인
+           * 마커 위치 = 스팟 (회전축), SVG 좌측 중앙이 회전축
+           * 회전 = 풍향이 가는 방향 (TO direction)
            */}
           {markerData.windPos && markerData.windRotateDeg !== null && (
             <Marker latitude={markerData.windPos.lat} longitude={markerData.windPos.lng}>
               <div
                 style={{
+                  /** 회전축: 좌측 중앙 (SVG 시작점이 스팟에 고정) */
+                  transformOrigin: '0% 50%',
                   transform: `rotate(${markerData.windRotateDeg - 90}deg)`,
-                  transformOrigin: 'center center',
                   filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
+                  /** SVG가 좌측에서 우측으로 뻗어나가도록 위치 조정 */
+                  marginLeft: 0,
                 }}
               >
-                <svg width="80" height="32" viewBox="0 0 80 32">
-                  {/* 본체 캡슐 + 끝 뾰족한 화살표 머리 */}
+                <svg width="90" height="36" viewBox="0 0 90 36">
+                  {/* 본체 사각형 + 끝 뾰족한 화살표 머리 (좌측이 시작점) */}
                   <path
-                    d="M 0,8 L 56,8 L 56,2 L 78,16 L 56,30 L 56,24 L 0,24 Q -4,16 0,8 Z"
+                    d="M 0,9 L 64,9 L 64,2 L 88,18 L 64,34 L 64,27 L 0,27 Z"
                     fill={markerData.windColor}
                     stroke="white"
                     strokeWidth="2"
                   />
-                  {/* 글자 "바람" — 화살표와 함께 회전되지만 짧아서 가독 OK */}
+                  {/* 글자 "바람" — 본체 중앙, 가독성 위해 폰트 키움 */}
                   <text
-                    x="28"
-                    y="20"
+                    x="32"
+                    y="23"
                     textAnchor="middle"
                     fill="white"
-                    fontSize="13"
-                    fontWeight="700"
+                    fontSize="14"
+                    fontWeight="800"
                   >
                     바람
                   </text>
@@ -320,33 +361,33 @@ export function SpotSatelliteMap({
           )}
 
           {/**
-           * 스웰(파도) 화살표 마커 — 풍향과 같은 모양, 파란색
-           * 위치: 스팟에서 바다쪽 220m (풍향보다 더 멀리, 시각 분리)
-           * 회전: 스웰이 가는 방향 (TO = 해변쪽)
+           * 파도(스웰) 화살표 — 시계 바늘 디자인, 파란색
+           * 회전 = 스웰이 가는 방향 (TO = 해변쪽)
            */}
           {markerData.swellPos && markerData.swellRotateDeg !== null && (
             <Marker latitude={markerData.swellPos.lat} longitude={markerData.swellPos.lng}>
               <div
                 style={{
+                  transformOrigin: '0% 50%',
                   transform: `rotate(${markerData.swellRotateDeg - 90}deg)`,
-                  transformOrigin: 'center center',
                   filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
+                  marginLeft: 0,
                 }}
               >
-                <svg width="80" height="32" viewBox="0 0 80 32">
+                <svg width="90" height="36" viewBox="0 0 90 36">
                   <path
-                    d="M 0,8 L 56,8 L 56,2 L 78,16 L 56,30 L 56,24 L 0,24 Q -4,16 0,8 Z"
+                    d="M 0,9 L 64,9 L 64,2 L 88,18 L 64,34 L 64,27 L 0,27 Z"
                     fill="#3B82F6"
                     stroke="white"
                     strokeWidth="2"
                   />
                   <text
-                    x="28"
-                    y="20"
+                    x="32"
+                    y="23"
                     textAnchor="middle"
                     fill="white"
-                    fontSize="13"
-                    fontWeight="700"
+                    fontSize="14"
+                    fontWeight="800"
                   >
                     파도
                   </text>
