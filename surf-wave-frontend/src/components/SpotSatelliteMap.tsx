@@ -22,15 +22,10 @@
  */
 
 import { useState, useMemo, useEffect, useRef } from 'react';
-import Map, { Source, Layer, Marker } from 'react-map-gl/maplibre';
+import Map, { Marker } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { RefreshCw, MapPin } from 'lucide-react';
-import {
-  arrowLineString,
-  coastLineString,
-  windArrowDirection,
-  arrowEndPoint,
-} from '../lib/geoArrow';
+import { windArrowDirection } from '../lib/geoArrow';
 import {
   getWindType,
   getWindTypeColor,
@@ -111,86 +106,45 @@ export function SpotSatelliteMap({
   const lng = typeof spot.longitude === 'string' ? parseFloat(spot.longitude) : spot.longitude;
 
   /**
-   * 화살표 데이터 메모이제이션 — 방향/거리 계산 비용 절감
+   * wavelet 스타일 통합 마커 데이터
    *
-   * 핵심 정책 (사용자 요구):
-   * - 화살표 라인은 **항상 바다 방향**으로 고정 (coastFacingDeg)
-   * - 풍향이 온쇼어든 오프쇼어든 라인 위치 동일 (육지 침범 방지)
-   * - 머리(▶) 방향만 풍향에 따라 변함:
-   *   - OFFSHORE: 머리 → 바다쪽 (라인 끝, ▶)
-   *   - ONSHORE: 머리 → 스팟쪽 (라인 시작, ◀, 라인 진행 반대)
-   *   - CROSS: 머리 라인 끝 (옆 방향)
-   * - 정보는 라벨에 전달 ("오프쇼어 5m/s")
-   *
-   * 검정 해변선은 제거 (의미 적고 시각 복잡)
+   * 디자인:
+   * - 라인 화살표 모두 제거 (겹침/시각 복잡 문제 해결)
+   * - 흰 원형 마커 1개에 모든 정보 통합
+   * - 원 안에 두 개의 보드 모양 SVG:
+   *   - 큰 보드 "바람" — 풍향 색상, 풍향이 부는 방향(TO)으로 회전
+   *   - 작은 보드 "스웰" — 파란색, 스웰이 가는 방향(TO)으로 회전
+   * - 마주봄/같은 방향 모두 자연스럽게 두 보드 회전으로 표현
    */
-  const arrowData = useMemo(() => {
+  const markerData = useMemo(() => {
     const result: {
-      wind?: GeoJSON.FeatureCollection<GeoJSON.LineString>;
-      swell?: GeoJSON.FeatureCollection<GeoJSON.LineString>;
-      windMid?: { lat: number; lng: number };
-      windHead?: { lat: number; lng: number; rotateDeg: number };
-      swellMid?: { lat: number; lng: number };
-      swellHead?: { lat: number; lng: number; rotateDeg: number };
+      windRotateDeg: number | null;     // 바람 보드 회전각 (TO direction)
+      swellRotateDeg: number | null;    // 스웰 보드 회전각 (TO direction)
       windColor: string;
       windLabel: string;
       swellLabel: string;
-    } = { windColor: '#95A5A6', windLabel: '', swellLabel: '' };
+    } = {
+      windRotateDeg: null,
+      swellRotateDeg: null,
+      windColor: '#95A5A6',
+      windLabel: '',
+      swellLabel: '',
+    };
 
-    /**
-     * 풍향 화살표 — 라인은 바다 방향 고정, 머리만 풍향 따라
-     * coastFacingDeg가 없으면 풍향 방향(TO) 사용 (예외 케이스)
-     */
+    /** 풍향 — windFromDeg는 불어오는 방향, 보드는 TO 방향(불어가는 쪽) 가리킴 */
     if (currentForecast?.windDirection) {
       const windFromDeg = Number(currentForecast.windDirection);
-      const distanceM = 250;
-      const lineDeg = spot.coastFacingDeg ?? windArrowDirection(windFromDeg);
-
-      /** 라인은 항상 바다쪽 (스팟 → 바다 방향) */
-      result.wind = arrowLineString(lat, lng, lineDeg, distanceM);
-      const mid = arrowEndPoint(lat, lng, lineDeg, distanceM / 2);
-      const end = arrowEndPoint(lat, lng, lineDeg, distanceM);
-      result.windMid = { lat: mid.lat, lng: mid.lng };
-
-      /** 풍향 종류로 머리 위치/방향 결정 */
+      result.windRotateDeg = windArrowDirection(windFromDeg);
       const windType = getWindType(windFromDeg, spot.coastFacingDeg);
       result.windColor = getWindTypeColor(windType);
       result.windLabel = getWindTypeLabel(windType);
-
-      if (windType === 'ONSHORE') {
-        /** 온쇼어: 머리는 스팟쪽(시작점)에 ◀ 가리킴 (라인 진행 반대) */
-        result.windHead = { lat, lng, rotateDeg: (lineDeg + 180) % 360 };
-      } else {
-        /** 오프쇼어/사이드/판정불가: 머리는 라인 끝(바다쪽) ▶ */
-        result.windHead = { lat: end.lat, lng: end.lng, rotateDeg: lineDeg };
-      }
-
-      /** 풍속 라벨에 추가 */
-      const ws = (currentForecast as { windSpeed?: string | null }).windSpeed;
-      const wsMs = ws ? (Number(ws) / 3.6).toFixed(1) : null;
-      if (result.windLabel && wsMs) {
-        result.windLabel = `${result.windLabel} ${wsMs}m/s`;
-      } else if (wsMs) {
-        result.windLabel = `${wsMs}m/s`;
-      }
     }
 
-    /**
-     * 스웰 화살표 — 라인은 바다 방향, 머리는 스팟쪽 (스웰 도착)
-     * 스웰은 항상 바다 → 해변 방향이라 머리는 항상 스팟쪽
-     */
+    /** 스웰 — swellFromDeg는 오는 방향, 보드는 TO 방향(가는 쪽 = 해변) 가리킴 */
     if (currentForecast?.swellDirection) {
-      const distanceM = 300;
-      const lineDeg = spot.coastFacingDeg ?? 0;
-
-      result.swell = arrowLineString(lat, lng, lineDeg, distanceM);
-      const mid = arrowEndPoint(lat, lng, lineDeg, distanceM / 2);
-      result.swellMid = { lat: mid.lat, lng: mid.lng };
-
-      /** 스웰 머리: 스팟쪽 (라인 시작점, 라인 반대 방향) */
-      result.swellHead = { lat, lng, rotateDeg: (lineDeg + 180) % 360 };
-
-      /** 스웰 라벨 — "스웰 1.5m @8s" 형식 (높이/주기) */
+      const swellFromDeg = Number(currentForecast.swellDirection);
+      result.swellRotateDeg = (swellFromDeg + 180) % 360;
+      /** 라벨 — "스웰 1.5m @8s" */
       const sh = (currentForecast as { swellHeight?: string | null }).swellHeight;
       const sp = (currentForecast as { swellPeriod?: string | null }).swellPeriod;
       result.swellLabel = sh
@@ -199,17 +153,13 @@ export function SpotSatelliteMap({
     }
 
     return result;
-  }, [lat, lng, spot.coastFacingDeg, currentForecast]);
+  }, [spot.coastFacingDeg, currentForecast]);
 
   /**
-   * 지도 중심 좌표 — 바다 방향으로 offset (스팟이 카드 위쪽 = 육지쪽 위치)
-   * coastFacingDeg가 해변이 바라보는 방향 = 바다 방향
-   * 그 방향으로 400m 이동 → 지도 카드 중앙이 바다가 됨 (wavelet 스타일)
+   * 지도 중심 좌표 — 스팟 위치 그대로 (offset 없음)
+   * wavelet은 스팟이 마커 안에 있고 마커가 카드 가운데 있는 형태
    */
-  const mapCenter = useMemo(() => {
-    if (spot.coastFacingDeg == null) return { lat, lng };
-    return arrowEndPoint(lat, lng, spot.coastFacingDeg, 400);
-  }, [lat, lng, spot.coastFacingDeg]);
+  const mapCenter = { lat, lng };
 
   /** 시간 라벨 — "12시" 형식 */
   const hourLabel = currentForecast?.forecastTime
@@ -218,36 +168,42 @@ export function SpotSatelliteMap({
 
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden mb-4">
-      {/* 헤더 */}
-      <div className="px-4 py-2.5 border-b border-border flex items-center gap-2">
-        <MapPin className="w-4 h-4 text-primary" />
+      {/* 헤더 — 풍향 + 풍속 + 스웰 통합 표시 */}
+      <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 flex-wrap">
+        <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
         <h3 className="text-sm font-bold flex-1">위성지도</h3>
-        {arrowData.windLabel && (
+        {markerData.windLabel && (
           <span
             className="text-xs font-bold px-2 py-0.5 rounded-full"
             style={{
-              color: arrowData.windColor,
-              backgroundColor: `${arrowData.windColor}18`,
+              color: markerData.windColor,
+              backgroundColor: `${markerData.windColor}18`,
             }}
           >
-            {arrowData.windLabel}
+            {markerData.windLabel}
+            {currentForecast?.windSpeed
+              ? ` ${(Number(currentForecast.windSpeed) / 3.6).toFixed(1)}m/s`
+              : ''}
+          </span>
+        )}
+        {markerData.swellLabel && (
+          <span
+            className="text-xs font-bold px-2 py-0.5 rounded-full"
+            style={{ color: '#3B82F6', backgroundColor: '#3B82F618' }}
+          >
+            {markerData.swellLabel}
           </span>
         )}
       </div>
 
-      {/* 지도 영역 — 카드 높이 320px (이전 280) */}
-      <div className="relative w-full h-[320px]">
+      {/* 지도 영역 — 카드 높이 정사각형에 가깝게 (wavelet 스타일) */}
+      <div className="relative w-full h-[280px]">
         <Map
           initialViewState={{
-            /**
-             * 지도 중심을 바다 방향 400m offset (wavelet 스타일)
-             * - 스팟 마커: 카드 위쪽 (육지 끝)
-             * - 바다: 카드 중앙/하단 (포커스)
-             * 줌 15.5 — 화살표가 충분히 크게 보임 + 해안선 분명
-             */
+            /** 줌 14 — wavelet 비율 (스팟+해안선+바다 한눈에) */
             latitude: mapCenter.lat,
             longitude: mapCenter.lng,
-            zoom: 15.5,
+            zoom: 14,
           }}
           /**
            * ESRI World Imagery — 무료 위성사진 raster tile (토큰 불필요)
@@ -295,163 +251,98 @@ export function SpotSatelliteMap({
           dragRotate={false}
           touchZoomRotate={true}
         >
-          {/* 스팟 마커 — 시작점 (파란 점) */}
+          {/**
+           * wavelet 스타일 통합 마커 — 흰 원 + 두 보드 SVG
+           *
+           * 디자인:
+           * - 흰색 반투명 원 (90x90)
+           * - 안에 두 개의 서핑보드 모양 SVG:
+           *   - 큰 보드 "바람" (풍향 색상, 풍향 따라 회전)
+           *   - 작은 보드 "스웰" (파란색, 스웰 방향 따라 회전)
+           * - 보드 회전축 = 원 중심
+           * - 마주봄/같은 방향 모두 자연스럽게 표현
+           */}
           <Marker latitude={lat} longitude={lng}>
-            <div className="w-4 h-4 rounded-full bg-primary border-2 border-white shadow-md" />
+            <div
+              style={{
+                width: 100,
+                height: 100,
+                borderRadius: '50%',
+                background: 'rgba(255,255,255,0.5)',
+                border: '3px solid rgba(255,255,255,0.85)',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {/* 큰 보드 — 바람 (풍향 색상, 회전) */}
+              {markerData.windRotateDeg !== null && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    width: 36,
+                    height: 56,
+                    transform: `rotate(${markerData.windRotateDeg}deg)`,
+                    transformOrigin: 'center center',
+                  }}
+                >
+                  <svg width="36" height="56" viewBox="0 0 36 56">
+                    {/* 서핑보드 모양 — 위쪽 뾰족, 길쭉한 타원, 아래 핀 */}
+                    <path
+                      d="M 18,2 Q 30,8 32,28 Q 32,46 24,52 L 18,56 L 12,52 Q 4,46 4,28 Q 6,8 18,2 Z"
+                      fill={markerData.windColor}
+                      stroke="white"
+                      strokeWidth="2"
+                    />
+                    {/* 텍스트 "바람" — 보드와 함께 회전 (간결성) */}
+                    <text
+                      x="18" y="32"
+                      textAnchor="middle"
+                      fill="white"
+                      fontSize="10"
+                      fontWeight="700"
+                    >
+                      바람
+                    </text>
+                  </svg>
+                </div>
+              )}
+
+              {/* 작은 보드 — 스웰 (파란색, 회전) */}
+              {markerData.swellRotateDeg !== null && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    width: 26,
+                    height: 42,
+                    transform: `translate(18px, 14px) rotate(${markerData.swellRotateDeg}deg)`,
+                    transformOrigin: 'center center',
+                  }}
+                >
+                  <svg width="26" height="42" viewBox="0 0 26 42">
+                    <path
+                      d="M 13,2 Q 22,6 23,21 Q 23,34 17,38 L 13,42 L 9,38 Q 3,34 3,21 Q 4,6 13,2 Z"
+                      fill="#3B82F6"
+                      stroke="white"
+                      strokeWidth="1.5"
+                    />
+                    <text
+                      x="13" y="24"
+                      textAnchor="middle"
+                      fill="white"
+                      fontSize="8"
+                      fontWeight="700"
+                    >
+                      스웰
+                    </text>
+                  </svg>
+                </div>
+              )}
+            </div>
           </Marker>
-
-          {/**
-           * 풍향 라벨 캡슐 — 라인 중간에 표시 (wavelet 스타일)
-           * - 회전 X (글자 항상 정방향, 가독성)
-           * - 색상 dot + 라벨 텍스트 ("오프쇼어")
-           */}
-          {arrowData.windMid && arrowData.windLabel && (
-            <Marker latitude={arrowData.windMid.lat} longitude={arrowData.windMid.lng}>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  background: 'white',
-                  border: `2px solid ${arrowData.windColor}`,
-                  borderRadius: 12,
-                  padding: '2px 8px',
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: arrowData.windColor,
-                  whiteSpace: 'nowrap',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
-                }}
-              >
-                <span
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: '50%',
-                    background: arrowData.windColor,
-                  }}
-                />
-                {arrowData.windLabel}
-              </div>
-            </Marker>
-          )}
-
-          {/* 스웰 라벨 캡슐 — 라인 중간 (파란색) */}
-          {arrowData.swellMid && arrowData.swellLabel && (
-            <Marker latitude={arrowData.swellMid.lat} longitude={arrowData.swellMid.lng}>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  background: 'white',
-                  border: '2px solid #3B82F6',
-                  borderRadius: 12,
-                  padding: '2px 8px',
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: '#3B82F6',
-                  whiteSpace: 'nowrap',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
-                }}
-              >
-                <span
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: '50%',
-                    background: '#3B82F6',
-                  }}
-                />
-                {arrowData.swellLabel}
-              </div>
-            </Marker>
-          )}
-
-          {/**
-           * 풍향 화살표 머리 (▶) — 끝점에 SVG로 표시
-           * - rotateDeg: 화살표 진행 방향 (북=0, 동=90, 남=180, 서=270)
-           * - SVG 기본 ▶는 오른쪽(동쪽=90°) 방향 → CSS rotate에서 -90 보정
-           */}
-          {arrowData.windHead && (
-            <Marker latitude={arrowData.windHead.lat} longitude={arrowData.windHead.lng}>
-              <svg
-                width="26"
-                height="26"
-                viewBox="0 0 16 16"
-                style={{
-                  transform: `rotate(${arrowData.windHead.rotateDeg - 90}deg)`,
-                  filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.6))',
-                }}
-              >
-                <polygon points="0,2 14,8 0,14" fill={arrowData.windColor} stroke="white" strokeWidth="1.5" />
-              </svg>
-            </Marker>
-          )}
-
-          {/* 스웰 화살표 머리 — 스팟쪽 (스웰 도착) */}
-          {arrowData.swellHead && (
-            <Marker latitude={arrowData.swellHead.lat} longitude={arrowData.swellHead.lng}>
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 16 16"
-                style={{
-                  transform: `rotate(${arrowData.swellHead.rotateDeg - 90}deg)`,
-                  filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.6))',
-                }}
-              >
-                <polygon points="0,2 14,8 0,14" fill="#3B82F6" stroke="white" strokeWidth="1.5" />
-              </svg>
-            </Marker>
-          )}
-
-          {/* 스웰 화살표 라인 (파란색) — 라인 굵게 */}
-          {arrowData.swell && (
-            <Source id="swell" type="geojson" data={arrowData.swell}>
-              <Layer
-                id="swell-line"
-                type="line"
-                paint={{
-                  'line-color': '#3B82F6',
-                  'line-width': 10,
-                  'line-opacity': 0.9,
-                }}
-              />
-            </Source>
-          )}
-
-          {/* 풍향 화살표 라인 (오프쇼어/온쇼어/사이드 색상) — 라인 굵게 */}
-          {arrowData.wind && (
-            <Source id="wind" type="geojson" data={arrowData.wind}>
-              <Layer
-                id="wind-line"
-                type="line"
-                paint={{
-                  'line-color': arrowData.windColor,
-                  'line-width': 10,
-                  'line-opacity': 0.95,
-                }}
-              />
-            </Source>
-          )}
         </Map>
-
-        {/* 좌상단: 화살표 범례 (해변선 제거) */}
-        <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm rounded-lg px-2 py-1.5 text-[10px] text-white space-y-0.5">
-          <div className="flex items-center gap-1.5" style={{ display: 'none' }}>
-            <div className="w-3 h-0.5 bg-white" />
-            <span>해변선</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-0.5" style={{ backgroundColor: arrowData.windColor }} />
-            <span>풍향</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-0.5 bg-blue-500" />
-            <span>스웰</span>
-          </div>
-        </div>
       </div>
 
       {/* 시간 슬라이더 */}
