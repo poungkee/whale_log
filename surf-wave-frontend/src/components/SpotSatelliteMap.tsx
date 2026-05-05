@@ -184,14 +184,14 @@ export function SpotSatelliteMap({
     }
 
     /**
-     * 화살표 기준점 = 일체형 아이콘 회전축 (●)
-     * - spot 좌표에서 바다쪽(coastFacingDeg 방향)으로 220m offset
-     * - 이유: 100m는 모래사장/얕은 바다(육지 인접)에 떠 있는 케이스 많음
-     *   220m면 거의 모든 국내 해변에서 명백한 바다 위
+     * 화살표 머리(●) 위치 = 두 화살표 머리가 만나는 점
+     * - spot 좌표에서 바다쪽(coastFacingDeg 방향)으로 300m offset
+     * - 220m는 좁은 만(양양 서피비치 등)에서 모래사장/얕은 바다에 걸림
+     *   300m면 거의 모든 국내 해변에서 명백한 바다 위
      * - coastFacingDeg null인 스팟은 spot 그대로 (offset 불가능)
      */
     const arrowOrigin = spot.coastFacingDeg != null
-      ? arrowEndPoint(lat, lng, spot.coastFacingDeg, 220)
+      ? arrowEndPoint(lat, lng, spot.coastFacingDeg, 300)
       : { lat, lng };
 
     /**
@@ -209,12 +209,12 @@ export function SpotSatelliteMap({
 
   /**
    * 지도 중심 좌표
-   * - 국내: 바다쪽으로 220m offset → arrowOrigin과 일치 → 화살표 = 화면 중앙
+   * - 국내: 바다쪽으로 300m offset → arrowOrigin과 일치 → 화살표 = 화면 중앙
    * - 발리: 스팟 위치 그대로 (지형 다양해서 일률적 offset 부적합)
    */
   const mapCenter = useMemo(() => {
     if (isBali || spot.coastFacingDeg == null) return { lat, lng };
-    return arrowEndPoint(lat, lng, spot.coastFacingDeg, 220);
+    return arrowEndPoint(lat, lng, spot.coastFacingDeg, 300);
   }, [lat, lng, spot.coastFacingDeg, isBali]);
 
   /** 시간 라벨 — "12시" 형식 */
@@ -313,17 +313,24 @@ export function SpotSatelliteMap({
         >
           {/**
            * 파도(스웰) 화살표 — 먼저 렌더 (z-order: 뒤)
-           * 두 화살표 좌표 동일 → DOM 순서가 쌓임 결정
-           * 파도가 뒤로 깔리고 바람이 위에 표시됨
+           *
+           * in-pointing 디자인:
+           * - 마커 좌표 = arrowOrigin (●, 두 화살표 머리가 만나는 점)
+           * - anchor="right" + transformOrigin "100% 50%" → SVG 우측 중앙 = 머리 = 마커
+           * - 회전 = 스웰 TO 방향 → 꼬리가 자동으로 FROM(외곽)으로 뻗음
+           * - 두 화살표 머리가 같은 ●에서 마주봄 (━━━▶ ● ◀━━━)
            */}
           {markerData.swellPos && markerData.swellRotateDeg !== null && (
-            <Marker latitude={markerData.swellPos.lat} longitude={markerData.swellPos.lng}>
+            <Marker
+              latitude={markerData.swellPos.lat}
+              longitude={markerData.swellPos.lng}
+              anchor="right"
+            >
               <div
                 style={{
-                  transformOrigin: '0% 50%',
+                  transformOrigin: '100% 50%',
                   transform: `rotate(${markerData.swellRotateDeg - 90}deg)`,
                   filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
-                  marginLeft: 0,
                 }}
               >
                 <svg width="90" height="36" viewBox="0 0 90 36">
@@ -350,23 +357,25 @@ export function SpotSatelliteMap({
 
           {/**
            * 풍향 화살표 — 나중 렌더 (z-order: 앞)
-           * 마커 위치 = 스팟 (회전축), SVG 좌측 중앙이 회전축
-           * 회전 = 풍향이 가는 방향 (TO direction)
+           * in-pointing: 머리(우측)가 마커=arrowOrigin=●, 꼬리(좌측)가 FROM 방향(외곽)
+           * 회전 = 풍향 TO 방향
            */}
           {markerData.windPos && markerData.windRotateDeg !== null && (
-            <Marker latitude={markerData.windPos.lat} longitude={markerData.windPos.lng}>
+            <Marker
+              latitude={markerData.windPos.lat}
+              longitude={markerData.windPos.lng}
+              anchor="right"
+            >
               <div
                 style={{
-                  /** 회전축: 좌측 중앙 (SVG 시작점이 스팟에 고정) */
-                  transformOrigin: '0% 50%',
+                  /** 회전축 = SVG 우측 중앙 = 화살표 머리 = 마커(●) */
+                  transformOrigin: '100% 50%',
                   transform: `rotate(${markerData.windRotateDeg - 90}deg)`,
                   filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
-                  /** SVG가 좌측에서 우측으로 뻗어나가도록 위치 조정 */
-                  marginLeft: 0,
                 }}
               >
                 <svg width="90" height="36" viewBox="0 0 90 36">
-                  {/* 본체 사각형 + 끝 뾰족한 화살표 머리 (좌측이 시작점) */}
+                  {/* 본체 사각형 + 끝 뾰족한 화살표 머리 (우측 머리, 좌측 꼬리) */}
                   <path
                     d="M 0,9 L 64,9 L 64,2 L 88,18 L 64,34 L 64,27 L 0,27 Z"
                     fill={markerData.windColor}
