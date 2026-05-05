@@ -34,12 +34,14 @@ import {
 import type { ForecastInfo } from '../types';
 
 interface SpotSatelliteMapProps {
-  /** 스팟 좌표 + 해변 방향 */
+  /** 스팟 좌표 + 해변 방향 + 지역 */
   spot: {
     name: string;
     latitude: number | string;
     longitude: number | string;
     coastFacingDeg: number | null;
+    /** 지역 (예: '양양', 'Bali Uluwatu') — 발리 화살표 비활성화 판정용 */
+    region?: string;
   };
   /** 24시간 예보 배열 (시간 슬라이더용) */
   hourlyData: ForecastInfo[];
@@ -106,6 +108,16 @@ export function SpotSatelliteMap({
   const lng = typeof spot.longitude === 'string' ? parseFloat(spot.longitude) : spot.longitude;
 
   /**
+   * 발리 스팟 여부 — region 문자열에 'Bali' 포함 시 발리
+   * 발리는 지형이 다양해서 (절벽/만/강) 화살표가 육지에 표시되는 케이스 많음
+   * → 발리는 화살표 비활성화 (위성사진만 표시)
+   */
+  const isBali = useMemo(() => {
+    const region = spot.region?.toLowerCase() ?? '';
+    return region.includes('bali') || region.includes('발리');
+  }, [spot.region]);
+
+  /**
    * 화살표 마커 데이터
    *
    * 디자인:
@@ -113,9 +125,11 @@ export function SpotSatelliteMap({
    * - 폭 넓은 캡슐 + 끝 뾰족 (글자 수용 가능)
    * - 화살표 안에 "바람"/"파도" 글자 (구분)
    * - 위치: 바다 위 (육지에 그리지 않게 offset)
-   *   - 풍향: 스팟에서 바다쪽 120m
-   *   - 스웰: 스팟에서 바다쪽 220m (풍향보다 더 멀리, 시각적 분리)
+   *   - 풍향: 스팟에서 바다쪽 150m
+   *   - 스웰: 스팟에서 바다쪽 280m (풍향보다 더 멀리, 시각적 분리)
    * - 회전: 풍향/스웰 방향대로
+   *
+   * 발리는 화살표 생성 안 함 (지형 다양해서 육지 표시 케이스 많음)
    */
   const markerData = useMemo(() => {
     const result: {
@@ -133,6 +147,9 @@ export function SpotSatelliteMap({
       windLabel: '',
       swellLabel: '',
     };
+
+    /** 발리는 화살표 생성 안 함 (지형 다양 → 육지 표시 케이스 많음) */
+    if (isBali) return result;
 
     /** 풍향 — 바다쪽 150m 위치, 풍향 회전 */
     if (currentForecast?.windDirection && spot.coastFacingDeg != null) {
@@ -158,17 +175,17 @@ export function SpotSatelliteMap({
     }
 
     return result;
-  }, [lat, lng, spot.coastFacingDeg, currentForecast]);
+  }, [lat, lng, spot.coastFacingDeg, currentForecast, isBali]);
 
   /**
-   * 지도 중심 좌표 — 바다쪽으로 250m offset
-   * 결과: 좌측 1/3 해변/스팟, 가운데 화살표, 우측 2/3 깊은 바다
-   * (사용자 검증된 이상적 비율)
+   * 지도 중심 좌표
+   * - 국내: 바다쪽으로 250m offset (좌 해변, 우 바다 비율)
+   * - 발리: 스팟 위치 그대로 (지형 다양해서 일률적 offset 부적합)
    */
   const mapCenter = useMemo(() => {
-    if (spot.coastFacingDeg == null) return { lat, lng };
+    if (isBali || spot.coastFacingDeg == null) return { lat, lng };
     return arrowEndPoint(lat, lng, spot.coastFacingDeg, 250);
-  }, [lat, lng, spot.coastFacingDeg]);
+  }, [lat, lng, spot.coastFacingDeg, isBali]);
 
   /** 시간 라벨 — "12시" 형식 */
   const hourLabel = currentForecast?.forecastTime
@@ -177,11 +194,11 @@ export function SpotSatelliteMap({
 
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden mb-4">
-      {/* 헤더 — 풍향 + 풍속 + 스웰 통합 표시 */}
+      {/* 헤더 — 풍향 + 풍속 + 스웰 통합 표시 (발리는 위성사진 카드만, 라벨 X) */}
       <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 flex-wrap">
         <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
         <h3 className="text-sm font-bold flex-1">위성지도</h3>
-        {markerData.windLabel && (
+        {!isBali && markerData.windLabel && (
           <span
             className="text-xs font-bold px-2 py-0.5 rounded-full"
             style={{
@@ -195,7 +212,7 @@ export function SpotSatelliteMap({
               : ''}
           </span>
         )}
-        {markerData.swellLabel && (
+        {!isBali && markerData.swellLabel && (
           <span
             className="text-xs font-bold px-2 py-0.5 rounded-full"
             style={{ color: '#3B82F6', backgroundColor: '#3B82F618' }}
@@ -210,12 +227,13 @@ export function SpotSatelliteMap({
         <Map
           initialViewState={{
             /**
-             * 줌 14.7 — 사용자 검증된 이상적 비율
-             * 화살표가 충분히 크게 보이면서 해변+바다 균형
+             * 줌:
+             * - 국내(한국): 14.7 — 사용자 검증, 화살표 + 해변+바다 균형
+             * - 발리: 14 — 지형 다양해서 좀 더 멀리 (만/절벽/강 한눈에)
              */
             latitude: mapCenter.lat,
             longitude: mapCenter.lng,
-            zoom: 14.7,
+            zoom: isBali ? 14 : 14.7,
           }}
           /**
            * ESRI World Imagery — 무료 위성사진 raster tile (토큰 불필요)
