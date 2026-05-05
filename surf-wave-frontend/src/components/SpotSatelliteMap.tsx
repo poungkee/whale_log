@@ -113,62 +113,83 @@ export function SpotSatelliteMap({
   /**
    * 화살표 데이터 메모이제이션 — 방향/거리 계산 비용 절감
    *
-   * 길이:
-   * - 풍향: 150m
-   * - 스웰: 200m
-   * - 해변선: 150m (양방향 합 300m)
+   * 핵심 정책 (사용자 요구):
+   * - 화살표 라인은 **항상 바다 방향**으로 고정 (coastFacingDeg)
+   * - 풍향이 온쇼어든 오프쇼어든 라인 위치 동일 (육지 침범 방지)
+   * - 머리(▶) 방향만 풍향에 따라 변함:
+   *   - OFFSHORE: 머리 → 바다쪽 (라인 끝, ▶)
+   *   - ONSHORE: 머리 → 스팟쪽 (라인 시작, ◀, 라인 진행 반대)
+   *   - CROSS: 머리 라인 끝 (옆 방향)
+   * - 정보는 라벨에 전달 ("오프쇼어 5m/s")
    *
-   * 좌표 종류:
-   * - 시작점: 스팟 위치 (Marker)
-   * - 중점(mid): 라벨 캡슐 위치 (라인 중간에 떠있는 효과)
-   * - 끝점(end): 화살표 머리(▶) 위치
+   * 검정 해변선은 제거 (의미 적고 시각 복잡)
    */
   const arrowData = useMemo(() => {
     const result: {
-      coast?: GeoJSON.FeatureCollection<GeoJSON.LineString>;
       wind?: GeoJSON.FeatureCollection<GeoJSON.LineString>;
       swell?: GeoJSON.FeatureCollection<GeoJSON.LineString>;
       windMid?: { lat: number; lng: number };
-      windEnd?: { lat: number; lng: number; rotateDeg: number };
+      windHead?: { lat: number; lng: number; rotateDeg: number };
       swellMid?: { lat: number; lng: number };
-      swellEnd?: { lat: number; lng: number; rotateDeg: number };
+      swellHead?: { lat: number; lng: number; rotateDeg: number };
       windColor: string;
       windLabel: string;
       swellLabel: string;
     } = { windColor: '#95A5A6', windLabel: '', swellLabel: '' };
 
-    /** 해변선 (M-1) — 양방향 직선이라 라벨/머리 없음 */
-    if (spot.coastFacingDeg != null) {
-      result.coast = coastLineString(lat, lng, spot.coastFacingDeg, 150);
-    }
-
-    /** 풍향 — 라인 + 중간 라벨 + 끝점 머리 (M-2) */
+    /**
+     * 풍향 화살표 — 라인은 바다 방향 고정, 머리만 풍향 따라
+     * coastFacingDeg가 없으면 풍향 방향(TO) 사용 (예외 케이스)
+     */
     if (currentForecast?.windDirection) {
       const windFromDeg = Number(currentForecast.windDirection);
-      const arrowDeg = windArrowDirection(windFromDeg);
       const distanceM = 150;
-      result.wind = arrowLineString(lat, lng, arrowDeg, distanceM);
-      /** 중점 = 라인 절반 지점 (라벨 캡슐용) */
-      const mid = arrowEndPoint(lat, lng, arrowDeg, distanceM / 2);
+      const lineDeg = spot.coastFacingDeg ?? windArrowDirection(windFromDeg);
+
+      /** 라인은 항상 바다쪽 (스팟 → 바다 방향) */
+      result.wind = arrowLineString(lat, lng, lineDeg, distanceM);
+      const mid = arrowEndPoint(lat, lng, lineDeg, distanceM / 2);
+      const end = arrowEndPoint(lat, lng, lineDeg, distanceM);
       result.windMid = { lat: mid.lat, lng: mid.lng };
-      /** 끝점 = 화살표 머리 위치 */
-      const end = arrowEndPoint(lat, lng, arrowDeg, distanceM);
-      result.windEnd = { lat: end.lat, lng: end.lng, rotateDeg: arrowDeg };
+
+      /** 풍향 종류로 머리 위치/방향 결정 */
       const windType = getWindType(windFromDeg, spot.coastFacingDeg);
       result.windColor = getWindTypeColor(windType);
       result.windLabel = getWindTypeLabel(windType);
+
+      if (windType === 'ONSHORE') {
+        /** 온쇼어: 머리는 스팟쪽(시작점)에 ◀ 가리킴 (라인 진행 반대) */
+        result.windHead = { lat, lng, rotateDeg: (lineDeg + 180) % 360 };
+      } else {
+        /** 오프쇼어/사이드/판정불가: 머리는 라인 끝(바다쪽) ▶ */
+        result.windHead = { lat: end.lat, lng: end.lng, rotateDeg: lineDeg };
+      }
+
+      /** 풍속 라벨에 추가 */
+      const ws = (currentForecast as { windSpeed?: string | null }).windSpeed;
+      const wsMs = ws ? (Number(ws) / 3.6).toFixed(1) : null;
+      if (result.windLabel && wsMs) {
+        result.windLabel = `${result.windLabel} ${wsMs}m/s`;
+      } else if (wsMs) {
+        result.windLabel = `${wsMs}m/s`;
+      }
     }
 
-    /** 스웰 — 라인 + 중간 라벨 + 끝점 머리 (M-3) */
+    /**
+     * 스웰 화살표 — 라인은 바다 방향, 머리는 스팟쪽 (스웰 도착)
+     * 스웰은 항상 바다 → 해변 방향이라 머리는 항상 스팟쪽
+     */
     if (currentForecast?.swellDirection) {
-      const swellFromDeg = Number(currentForecast.swellDirection);
-      const arrowDeg = (swellFromDeg + 180) % 360;
       const distanceM = 200;
-      result.swell = arrowLineString(lat, lng, arrowDeg, distanceM);
-      const mid = arrowEndPoint(lat, lng, arrowDeg, distanceM / 2);
+      const lineDeg = spot.coastFacingDeg ?? 0;
+
+      result.swell = arrowLineString(lat, lng, lineDeg, distanceM);
+      const mid = arrowEndPoint(lat, lng, lineDeg, distanceM / 2);
       result.swellMid = { lat: mid.lat, lng: mid.lng };
-      const end = arrowEndPoint(lat, lng, arrowDeg, distanceM);
-      result.swellEnd = { lat: end.lat, lng: end.lng, rotateDeg: arrowDeg };
+
+      /** 스웰 머리: 스팟쪽 (라인 시작점, 라인 반대 방향) */
+      result.swellHead = { lat, lng, rotateDeg: (lineDeg + 180) % 360 };
+
       /** 스웰 라벨 — "스웰 1.5m @8s" 형식 (높이/주기) */
       const sh = (currentForecast as { swellHeight?: string | null }).swellHeight;
       const sp = (currentForecast as { swellPeriod?: string | null }).swellPeriod;
@@ -351,55 +372,40 @@ export function SpotSatelliteMap({
            * - rotateDeg: 화살표 진행 방향 (북=0, 동=90, 남=180, 서=270)
            * - SVG 기본 ▶는 오른쪽(동쪽=90°) 방향 → CSS rotate에서 -90 보정
            */}
-          {arrowData.windEnd && (
-            <Marker latitude={arrowData.windEnd.lat} longitude={arrowData.windEnd.lng}>
+          {arrowData.windHead && (
+            <Marker latitude={arrowData.windHead.lat} longitude={arrowData.windHead.lng}>
               <svg
-                width="16"
-                height="16"
+                width="20"
+                height="20"
                 viewBox="0 0 16 16"
                 style={{
-                  transform: `rotate(${arrowData.windEnd.rotateDeg - 90}deg)`,
-                  filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))',
+                  transform: `rotate(${arrowData.windHead.rotateDeg - 90}deg)`,
+                  filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.6))',
                 }}
               >
-                <polygon points="0,2 14,8 0,14" fill={arrowData.windColor} stroke="white" strokeWidth="1" />
+                <polygon points="0,2 14,8 0,14" fill={arrowData.windColor} stroke="white" strokeWidth="1.5" />
               </svg>
             </Marker>
           )}
 
-          {/* 스웰 화살표 머리 (▶) */}
-          {arrowData.swellEnd && (
-            <Marker latitude={arrowData.swellEnd.lat} longitude={arrowData.swellEnd.lng}>
+          {/* 스웰 화살표 머리 — 스팟쪽 (스웰 도착) */}
+          {arrowData.swellHead && (
+            <Marker latitude={arrowData.swellHead.lat} longitude={arrowData.swellHead.lng}>
               <svg
-                width="14"
-                height="14"
+                width="18"
+                height="18"
                 viewBox="0 0 16 16"
                 style={{
-                  transform: `rotate(${arrowData.swellEnd.rotateDeg - 90}deg)`,
-                  filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))',
+                  transform: `rotate(${arrowData.swellHead.rotateDeg - 90}deg)`,
+                  filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.6))',
                 }}
               >
-                <polygon points="0,2 14,8 0,14" fill="#3B82F6" stroke="white" strokeWidth="1" />
+                <polygon points="0,2 14,8 0,14" fill="#3B82F6" stroke="white" strokeWidth="1.5" />
               </svg>
             </Marker>
           )}
 
-          {/* 해변선 (검정) */}
-          {arrowData.coast && (
-            <Source id="coast" type="geojson" data={arrowData.coast}>
-              <Layer
-                id="coast-line"
-                type="line"
-                paint={{
-                  'line-color': '#1f2937',
-                  'line-width': 3,
-                  'line-opacity': 0.85,
-                }}
-              />
-            </Source>
-          )}
-
-          {/* 스웰 화살표 (파란색) */}
+          {/* 스웰 화살표 라인 (파란색) — 라인 굵게 */}
           {arrowData.swell && (
             <Source id="swell" type="geojson" data={arrowData.swell}>
               <Layer
@@ -407,14 +413,14 @@ export function SpotSatelliteMap({
                 type="line"
                 paint={{
                   'line-color': '#3B82F6',
-                  'line-width': 4,
+                  'line-width': 7,
                   'line-opacity': 0.9,
                 }}
               />
             </Source>
           )}
 
-          {/* 풍향 화살표 (오프쇼어/온쇼어/사이드 색상) */}
+          {/* 풍향 화살표 라인 (오프쇼어/온쇼어/사이드 색상) — 라인 굵게 */}
           {arrowData.wind && (
             <Source id="wind" type="geojson" data={arrowData.wind}>
               <Layer
@@ -422,7 +428,7 @@ export function SpotSatelliteMap({
                 type="line"
                 paint={{
                   'line-color': arrowData.windColor,
-                  'line-width': 5,
+                  'line-width': 7,
                   'line-opacity': 0.95,
                 }}
               />
@@ -430,9 +436,9 @@ export function SpotSatelliteMap({
           )}
         </Map>
 
-        {/* 좌상단: 화살표 범례 */}
+        {/* 좌상단: 화살표 범례 (해변선 제거) */}
         <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm rounded-lg px-2 py-1.5 text-[10px] text-white space-y-0.5">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5" style={{ display: 'none' }}>
             <div className="w-3 h-0.5 bg-white" />
             <span>해변선</span>
           </div>
