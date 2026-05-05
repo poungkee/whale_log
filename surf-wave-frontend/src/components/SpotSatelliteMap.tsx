@@ -143,7 +143,7 @@ export function SpotSatelliteMap({
      */
     if (currentForecast?.windDirection) {
       const windFromDeg = Number(currentForecast.windDirection);
-      const distanceM = 150;
+      const distanceM = 250;
       const lineDeg = spot.coastFacingDeg ?? windArrowDirection(windFromDeg);
 
       /** 라인은 항상 바다쪽 (스팟 → 바다 방향) */
@@ -180,7 +180,7 @@ export function SpotSatelliteMap({
      * 스웰은 항상 바다 → 해변 방향이라 머리는 항상 스팟쪽
      */
     if (currentForecast?.swellDirection) {
-      const distanceM = 200;
+      const distanceM = 300;
       const lineDeg = spot.coastFacingDeg ?? 0;
 
       result.swell = arrowLineString(lat, lng, lineDeg, distanceM);
@@ -204,11 +204,11 @@ export function SpotSatelliteMap({
   /**
    * 지도 중심 좌표 — 바다 방향으로 offset (스팟이 카드 위쪽 = 육지쪽 위치)
    * coastFacingDeg가 해변이 바라보는 방향 = 바다 방향
-   * 그 방향으로 200m 이동 → 지도 카드 중앙이 바다가 됨 (wavelet 스타일)
+   * 그 방향으로 400m 이동 → 지도 카드 중앙이 바다가 됨 (wavelet 스타일)
    */
   const mapCenter = useMemo(() => {
     if (spot.coastFacingDeg == null) return { lat, lng };
-    return arrowEndPoint(lat, lng, spot.coastFacingDeg, 200);
+    return arrowEndPoint(lat, lng, spot.coastFacingDeg, 400);
   }, [lat, lng, spot.coastFacingDeg]);
 
   /** 시간 라벨 — "12시" 형식 */
@@ -235,18 +235,19 @@ export function SpotSatelliteMap({
         )}
       </div>
 
-      {/* 지도 영역 */}
-      <div className="relative w-full h-[280px]">
+      {/* 지도 영역 — 카드 높이 320px (이전 280) */}
+      <div className="relative w-full h-[320px]">
         <Map
           initialViewState={{
             /**
-             * 지도 중심을 바다 방향으로 offset (wavelet 스타일)
-             * - 스팟 마커: 카드 위쪽 (육지)
+             * 지도 중심을 바다 방향 400m offset (wavelet 스타일)
+             * - 스팟 마커: 카드 위쪽 (육지 끝)
              * - 바다: 카드 중앙/하단 (포커스)
+             * 줌 15.5 — 화살표가 충분히 크게 보임 + 해안선 분명
              */
             latitude: mapCenter.lat,
             longitude: mapCenter.lng,
-            zoom: 14,
+            zoom: 15.5,
           }}
           /**
            * ESRI World Imagery — 무료 위성사진 raster tile (토큰 불필요)
@@ -375,8 +376,8 @@ export function SpotSatelliteMap({
           {arrowData.windHead && (
             <Marker latitude={arrowData.windHead.lat} longitude={arrowData.windHead.lng}>
               <svg
-                width="20"
-                height="20"
+                width="26"
+                height="26"
                 viewBox="0 0 16 16"
                 style={{
                   transform: `rotate(${arrowData.windHead.rotateDeg - 90}deg)`,
@@ -392,8 +393,8 @@ export function SpotSatelliteMap({
           {arrowData.swellHead && (
             <Marker latitude={arrowData.swellHead.lat} longitude={arrowData.swellHead.lng}>
               <svg
-                width="18"
-                height="18"
+                width="24"
+                height="24"
                 viewBox="0 0 16 16"
                 style={{
                   transform: `rotate(${arrowData.swellHead.rotateDeg - 90}deg)`,
@@ -413,7 +414,7 @@ export function SpotSatelliteMap({
                 type="line"
                 paint={{
                   'line-color': '#3B82F6',
-                  'line-width': 7,
+                  'line-width': 10,
                   'line-opacity': 0.9,
                 }}
               />
@@ -428,7 +429,7 @@ export function SpotSatelliteMap({
                 type="line"
                 paint={{
                   'line-color': arrowData.windColor,
-                  'line-width': 7,
+                  'line-width': 10,
                   'line-opacity': 0.95,
                 }}
               />
