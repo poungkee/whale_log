@@ -184,32 +184,46 @@ export function SpotSatelliteMap({
     }
 
     /**
-     * 두 화살표 위치 결정:
-     * - 같은 방향 (각도 차이 30° 이내): perpendicular 30m offset → 위/아래 평행
-     * - 다른 방향 (마주봄/사이드): 같은 좌표 (스팟 = 회전축)
+     * 화살표 기준점 (회전축 = 시계바늘 중심)
+     * - spot 좌표에서 바다쪽(coastFacingDeg 방향)으로 100m offset
+     * - 이유: spot 좌표가 해변선에 있으면 화살표 일부가 육지에 걸침
+     *   바다쪽으로 미리 밀어두면 거의 모든 국내 스팟이 안전하게 바다 위
+     * - coastFacingDeg null인 스팟은 spot 그대로 (offset 불가능)
+     */
+    const arrowOrigin = spot.coastFacingDeg != null
+      ? arrowEndPoint(lat, lng, spot.coastFacingDeg, 100)
+      : { lat, lng };
+
+    /**
+     * 두 화살표 위치 결정 (사용자 가이드라인):
+     * - 각도 차 < 90° (같은~유사 방향): 평행 위/아래 분리 (──▶ over ──▶)
+     *   · perpendicular(±90°)로 25m offset
+     * - 각도 차 ≥ 90° (마주봄/대각): 같은 좌표 = arrowOrigin (시계 바늘 회전축 공유)
+     *   · 마주봄 (180°): ━━━▶ ●◀━━━
+     *   · 대각 (90~180°): 자연스럽게 두 시계 바늘이 갈라짐
      */
     if (windRotateDeg !== null && swellRotateDeg !== null) {
       const angleDiff = Math.abs(windRotateDeg - swellRotateDeg) % 360;
       const minDiff = Math.min(angleDiff, 360 - angleDiff);
-      const isSameDir = minDiff < 30;
+      const isOpposite = minDiff >= 90;
 
-      if (isSameDir) {
-        /** 같은 방향: 진행 방향 기준 perpendicular(±90°)로 30m offset → 위/아래 평행 */
+      if (isOpposite) {
+        /** 마주봄/대각: 두 화살표 시작점이 모두 arrowOrigin = 시계 바늘 */
+        result.windPos = arrowOrigin;
+        result.swellPos = arrowOrigin;
+      } else {
+        /** 같은~유사 방향 (< 90°): 진행 방향 기준 perpendicular로 위/아래 평행 */
         const perpUp = (windRotateDeg + 90) % 360;
         const perpDown = (windRotateDeg - 90 + 360) % 360;
-        result.windPos = arrowEndPoint(lat, lng, perpUp, 30);
-        result.swellPos = arrowEndPoint(lat, lng, perpDown, 30);
-      } else {
-        /** 다른 방향: 같은 좌표 (스팟) — 시계 바늘처럼 회전축 공유 */
-        result.windPos = { lat, lng };
-        result.swellPos = { lat, lng };
+        result.windPos = arrowEndPoint(arrowOrigin.lat, arrowOrigin.lng, perpUp, 25);
+        result.swellPos = arrowEndPoint(arrowOrigin.lat, arrowOrigin.lng, perpDown, 25);
       }
     } else if (windRotateDeg !== null) {
       /** 풍향만 있는 경우 */
-      result.windPos = { lat, lng };
+      result.windPos = arrowOrigin;
     } else if (swellRotateDeg !== null) {
       /** 스웰만 있는 경우 */
-      result.swellPos = { lat, lng };
+      result.swellPos = arrowOrigin;
     }
 
     return result;
