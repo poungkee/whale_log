@@ -134,21 +134,21 @@ export function SpotSatelliteMap({
       swellLabel: '',
     };
 
-    /** 풍향 — 바다쪽 120m 위치, 풍향 회전 */
+    /** 풍향 — 바다쪽 150m 위치, 풍향 회전 */
     if (currentForecast?.windDirection && spot.coastFacingDeg != null) {
       const windFromDeg = Number(currentForecast.windDirection);
       result.windRotateDeg = windArrowDirection(windFromDeg);
-      result.windPos = arrowEndPoint(lat, lng, spot.coastFacingDeg, 120);
+      result.windPos = arrowEndPoint(lat, lng, spot.coastFacingDeg, 150);
       const windType = getWindType(windFromDeg, spot.coastFacingDeg);
       result.windColor = getWindTypeColor(windType);
       result.windLabel = getWindTypeLabel(windType);
     }
 
-    /** 스웰 — 바다쪽 220m 위치 (풍향보다 더 멀리), 스웰 방향 회전 */
+    /** 스웰 — 바다쪽 280m 위치 (풍향보다 더 멀리, 시각 분리), 스웰 방향 회전 */
     if (currentForecast?.swellDirection && spot.coastFacingDeg != null) {
       const swellFromDeg = Number(currentForecast.swellDirection);
       result.swellRotateDeg = (swellFromDeg + 180) % 360;
-      result.swellPos = arrowEndPoint(lat, lng, spot.coastFacingDeg, 220);
+      result.swellPos = arrowEndPoint(lat, lng, spot.coastFacingDeg, 280);
       /** 라벨 — "스웰 1.5m @8s" */
       const sh = (currentForecast as { swellHeight?: string | null }).swellHeight;
       const sp = (currentForecast as { swellPeriod?: string | null }).swellPeriod;
@@ -161,12 +161,13 @@ export function SpotSatelliteMap({
   }, [lat, lng, spot.coastFacingDeg, currentForecast]);
 
   /**
-   * 지도 중심 좌표 — 바다쪽으로 200m offset
-   * 결과: 좌측 = 해변/스팟, 가운데 = 화살표, 우측 = 깊은 바다
+   * 지도 중심 좌표 — 바다쪽으로 250m offset
+   * 결과: 좌측 1/3 해변/스팟, 가운데 화살표, 우측 2/3 깊은 바다
+   * (사용자 검증된 이상적 비율)
    */
   const mapCenter = useMemo(() => {
     if (spot.coastFacingDeg == null) return { lat, lng };
-    return arrowEndPoint(lat, lng, spot.coastFacingDeg, 200);
+    return arrowEndPoint(lat, lng, spot.coastFacingDeg, 250);
   }, [lat, lng, spot.coastFacingDeg]);
 
   /** 시간 라벨 — "12시" 형식 */
@@ -208,10 +209,13 @@ export function SpotSatelliteMap({
       <div className="relative w-full h-[280px]">
         <Map
           initialViewState={{
-            /** 줌 14 — wavelet 비율 (스팟+해안선+바다 한눈에) */
+            /**
+             * 줌 14.7 — 사용자 검증된 이상적 비율
+             * 화살표가 충분히 크게 보이면서 해변+바다 균형
+             */
             latitude: mapCenter.lat,
             longitude: mapCenter.lng,
-            zoom: 14,
+            zoom: 14.7,
           }}
           /**
            * ESRI World Imagery — 무료 위성사진 raster tile (토큰 불필요)
