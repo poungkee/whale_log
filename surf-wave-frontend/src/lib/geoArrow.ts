@@ -51,51 +51,75 @@ export function arrowEndPoint(
 }
 
 /**
- * 화살표 GeoJSON LineString 생성 — maplibre-gl <Source> 용
- * 시작점 + 끝점 두 점만 가진 라인
+ * 화살표 GeoJSON FeatureCollection 생성 — maplibre-gl <Source> 용
+ *
+ * 중요: maplibre-gl은 단일 Feature 객체를 처리 못 함 (런타임 'Ne is not defined' 에러)
+ * → FeatureCollection으로 반드시 감싸서 반환해야 정상 동작
+ *
+ * 시작점(스팟 좌표) + 끝점(거리/방향 계산값) 두 점만 가진 LineString 1개를 담은 컬렉션
  */
 export function arrowLineString(
   lat: number,
   lng: number,
   bearingDeg: number,
   distanceM: number,
-): GeoJSON.Feature<GeoJSON.LineString> {
+): GeoJSON.FeatureCollection<GeoJSON.LineString> {
+  /** 좌표 유효성 검증 — NaN/Infinity면 빈 컬렉션 반환 (지도 깨짐 방지) */
+  if (!isFinite(lat) || !isFinite(lng) || !isFinite(bearingDeg) || !isFinite(distanceM)) {
+    return { type: 'FeatureCollection', features: [] };
+  }
   const end = arrowEndPoint(lat, lng, bearingDeg, distanceM);
   return {
-    type: 'Feature',
-    properties: {},
-    geometry: {
-      type: 'LineString',
-      coordinates: [
-        [lng, lat],
-        [end.lng, end.lat],
-      ],
-    },
+    type: 'FeatureCollection',
+    features: [
+      {
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'LineString',
+          coordinates: [
+            [lng, lat],
+            [end.lng, end.lat],
+          ],
+        },
+      },
+    ],
   };
 }
 
 /**
  * 해변선 LineString 생성 — coastFacingDeg ± 90° 양쪽으로 뻗은 직선
  * 해변이 동향(90°)이면 해변선은 남↔북 방향 (90-90=0° 와 90+90=180°)
+ *
+ * 반환은 FeatureCollection (maplibre-gl 호환성)
  */
 export function coastLineString(
   lat: number,
   lng: number,
   coastFacingDeg: number,
   halfLengthM: number = 200,
-): GeoJSON.Feature<GeoJSON.LineString> {
+): GeoJSON.FeatureCollection<GeoJSON.LineString> {
+  /** 좌표 유효성 검증 */
+  if (!isFinite(lat) || !isFinite(lng) || !isFinite(coastFacingDeg)) {
+    return { type: 'FeatureCollection', features: [] };
+  }
   const left = arrowEndPoint(lat, lng, coastFacingDeg - 90, halfLengthM);
   const right = arrowEndPoint(lat, lng, coastFacingDeg + 90, halfLengthM);
   return {
-    type: 'Feature',
-    properties: {},
-    geometry: {
-      type: 'LineString',
-      coordinates: [
-        [left.lng, left.lat],
-        [right.lng, right.lat],
-      ],
-    },
+    type: 'FeatureCollection',
+    features: [
+      {
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'LineString',
+          coordinates: [
+            [left.lng, left.lat],
+            [right.lng, right.lat],
+          ],
+        },
+      },
+    ],
   };
 }
 

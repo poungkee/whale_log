@@ -112,9 +112,9 @@ export function SpotSatelliteMap({
   /** 화살표 데이터 메모이제이션 — 방향/거리 계산 비용 절감 */
   const arrowData = useMemo(() => {
     const result: {
-      coast?: GeoJSON.Feature<GeoJSON.LineString>;
-      wind?: GeoJSON.Feature<GeoJSON.LineString>;
-      swell?: GeoJSON.Feature<GeoJSON.LineString>;
+      coast?: GeoJSON.FeatureCollection<GeoJSON.LineString>;
+      wind?: GeoJSON.FeatureCollection<GeoJSON.LineString>;
+      swell?: GeoJSON.FeatureCollection<GeoJSON.LineString>;
       windColor: string;
       windLabel: string;
     } = { windColor: '#95A5A6', windLabel: '' };
@@ -174,7 +174,11 @@ export function SpotSatelliteMap({
           initialViewState={{
             latitude: lat,
             longitude: lng,
-            zoom: 15,
+            /**
+             * 줌 14 — 좌표가 약간 부정확해도 해변+주변 지형이 한눈에 보임
+             * (15는 너무 확대돼서 좌표 1km만 빗나가도 화면 밖)
+             */
+            zoom: 14,
           }}
           /**
            * ESRI World Imagery — 무료 위성사진 raster tile (토큰 불필요)
