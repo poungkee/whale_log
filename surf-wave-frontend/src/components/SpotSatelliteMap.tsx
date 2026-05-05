@@ -34,14 +34,18 @@ import {
 import type { ForecastInfo } from '../types';
 
 interface SpotSatelliteMapProps {
-  /** 스팟 좌표 + 해변 방향 + 지역 */
+  /** 스팟 좌표 + 해변 방향 + 지역 + ocean point */
   spot: {
     name: string;
     latitude: number | string;
     longitude: number | string;
     coastFacingDeg: number | null;
-    /** 지역 (예: '양양', 'Bali Uluwatu') — 발리 화살표 비활성화 판정용 */
     region?: string;
+    /** OSM 해안선 기반 자동 계산된 바다 위 좌표 (화살표 머리 위치) */
+    oceanLatitude?: string | number | null;
+    oceanLongitude?: string | number | null;
+    /** ocean point 계산 상태 — 'failed'면 화살표 비활성화 */
+    oceanCalcStatus?: string | null;
   };
   /** 24시간 예보 배열 (시간 슬라이더용) */
   hourlyData: ForecastInfo[];
@@ -108,14 +112,27 @@ export function SpotSatelliteMap({
   const lng = typeof spot.longitude === 'string' ? parseFloat(spot.longitude) : spot.longitude;
 
   /**
-   * 발리 스팟 여부 — region 문자열에 'Bali' 포함 시 발리
-   * 발리는 지형이 다양해서 (절벽/만/강) 화살표가 육지에 표시되는 케이스 많음
-   * → 발리는 화살표 비활성화 (위성사진만 표시)
+   * 발리 스팟 여부 — 헤더 라벨/지도 줌 결정용
+   * (이전: 발리 화살표 비활성화 — 이제 ocean point 자동 계산으로 발리도 활성화됨)
    */
   const isBali = useMemo(() => {
     const region = spot.region?.toLowerCase() ?? '';
     return region.includes('bali') || region.includes('발리');
   }, [spot.region]);
+
+  /**
+   * ocean point 좌표 (OSM 해안선 기반 자동 계산)
+   * - DB에 ocean_lat/lng 있으면 그것을 사용 (정확)
+   * - 없거나 status='failed'면 fallback (spot + coastFacingDeg + 300m)
+   */
+  const arrowOriginPrecomputed = useMemo<{ lat: number; lng: number } | null>(() => {
+    if (spot.oceanCalcStatus === 'failed') return null;
+    if (spot.oceanLatitude == null || spot.oceanLongitude == null) return null;
+    const oLat = typeof spot.oceanLatitude === 'string' ? parseFloat(spot.oceanLatitude) : spot.oceanLatitude;
+    const oLng = typeof spot.oceanLongitude === 'string' ? parseFloat(spot.oceanLongitude) : spot.oceanLongitude;
+    if (!isFinite(oLat) || !isFinite(oLng)) return null;
+    return { lat: oLat, lng: oLng };
+  }, [spot.oceanLatitude, spot.oceanLongitude, spot.oceanCalcStatus]);
 
   /**
    * 화살표 마커 데이터
@@ -148,8 +165,8 @@ export function SpotSatelliteMap({
       swellLabel: '',
     };
 
-    /** 발리는 화살표 생성 안 함 (지형 다양 → 육지 표시 케이스 많음) */
-    if (isBali) return result;
+    /** ocean_calc_status='failed'인 spot은 화살표 비활성화 (계산 실패 — fallback도 부정확) */
+    if (spot.oceanCalcStatus === 'failed') return result;
 
     /**
      * 시계 바늘 디자인 (사용자 요청):
@@ -185,14 +202,20 @@ export function SpotSatelliteMap({
 
     /**
      * 화살표 머리(●) 위치 = 두 화살표 머리가 만나는 점
-     * - spot 좌표에서 바다쪽(coastFacingDeg 방향)으로 300m offset
-     * - 220m는 좁은 만(양양 서피비치 등)에서 모래사장/얕은 바다에 걸림
-     *   300m면 거의 모든 국내 해변에서 명백한 바다 위
-     * - coastFacingDeg null인 스팟은 spot 그대로 (offset 불가능)
+     *
+     * 우선순위 (ocean point 자동 보정 시스템):
+     * 1. DB의 ocean_lat/lng 사용 (OSM 해안선 기반 자동 계산 — 가장 정확)
+     * 2. fallback: spot 좌표 + coastFacingDeg + 300m offset (수동값)
+     * 3. coastFacingDeg null이면 spot 그대로 (offset 불가능)
      */
-    const arrowOrigin = spot.coastFacingDeg != null
-      ? arrowEndPoint(lat, lng, spot.coastFacingDeg, 300)
-      : { lat, lng };
+    let arrowOrigin: { lat: number; lng: number };
+    if (arrowOriginPrecomputed) {
+      arrowOrigin = arrowOriginPrecomputed;
+    } else if (spot.coastFacingDeg != null) {
+      arrowOrigin = arrowEndPoint(lat, lng, spot.coastFacingDeg, 300);
+    } else {
+      arrowOrigin = { lat, lng };
+    }
 
     /**
      * 두 화살표 위치 = arrowOrigin 통일 (회전축 공유)
@@ -205,17 +228,19 @@ export function SpotSatelliteMap({
     if (swellRotateDeg !== null) result.swellPos = arrowOrigin;
 
     return result;
-  }, [lat, lng, spot.coastFacingDeg, currentForecast, isBali]);
+  }, [lat, lng, spot.coastFacingDeg, spot.oceanCalcStatus, arrowOriginPrecomputed, currentForecast]);
 
   /**
-   * 지도 중심 좌표
-   * - 국내: 바다쪽으로 300m offset → arrowOrigin과 일치 → 화살표 = 화면 중앙
-   * - 발리: 스팟 위치 그대로 (지형 다양해서 일률적 offset 부적합)
+   * 지도 중심 좌표 — arrowOrigin과 일치 → 화살표 = 화면 중앙
+   * - DB의 ocean_lat/lng 우선
+   * - 없으면 spot + coastFacingDeg + 300m offset
+   * - coastFacingDeg null이면 spot 그대로
    */
   const mapCenter = useMemo(() => {
-    if (isBali || spot.coastFacingDeg == null) return { lat, lng };
+    if (arrowOriginPrecomputed) return arrowOriginPrecomputed;
+    if (spot.coastFacingDeg == null) return { lat, lng };
     return arrowEndPoint(lat, lng, spot.coastFacingDeg, 300);
-  }, [lat, lng, spot.coastFacingDeg, isBali]);
+  }, [lat, lng, spot.coastFacingDeg, arrowOriginPrecomputed]);
 
   /** 시간 라벨 — "12시" 형식 */
   const hourLabel = currentForecast?.forecastTime

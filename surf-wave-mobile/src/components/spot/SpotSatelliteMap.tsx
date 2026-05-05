@@ -42,6 +42,11 @@ interface SpotSatelliteMapProps {
     latitude: number | string;
     longitude: number | string;
     coastFacingDeg: number | null;
+    /** OSM 해안선 기반 자동 계산된 바다 위 좌표 — 화살표/지도 중심 위치 */
+    oceanLatitude?: string | number | null;
+    oceanLongitude?: string | number | null;
+    /** 'failed'면 화살표 비활성화 */
+    oceanCalcStatus?: string | null;
   };
   hourlyData: HourlyForecast[];
   initialHourIndex?: number;
@@ -92,6 +97,21 @@ export const SpotSatelliteMap: React.FC<SpotSatelliteMapProps> = ({
   const lat = typeof spot.latitude === 'string' ? parseFloat(spot.latitude) : spot.latitude;
   const lng = typeof spot.longitude === 'string' ? parseFloat(spot.longitude) : spot.longitude;
 
+  /**
+   * 화살표 시작점 (●) — ocean point 우선 사용 (OSM 해안선 기반 자동 보정)
+   * - DB에 ocean_lat/lng 있으면 그것 (정확한 바다 위 좌표)
+   * - 없거나 status='failed'면 spot 좌표 그대로 (fallback)
+   */
+  const arrowOrigin = useMemo(() => {
+    if (spot.oceanCalcStatus === 'failed') return { lat, lng };
+    if (spot.oceanLatitude != null && spot.oceanLongitude != null) {
+      const oLat = typeof spot.oceanLatitude === 'string' ? parseFloat(spot.oceanLatitude) : spot.oceanLatitude;
+      const oLng = typeof spot.oceanLongitude === 'string' ? parseFloat(spot.oceanLongitude) : spot.oceanLongitude;
+      if (isFinite(oLat) && isFinite(oLng)) return { lat: oLat, lng: oLng };
+    }
+    return { lat, lng };
+  }, [lat, lng, spot.oceanLatitude, spot.oceanLongitude, spot.oceanCalcStatus]);
+
   /** 화살표 데이터 메모이제이션 */
   const arrows = useMemo(() => {
     const result: {
@@ -102,14 +122,18 @@ export const SpotSatelliteMap: React.FC<SpotSatelliteMapProps> = ({
       windLabel: string;
     } = { windColor: '#95A5A6', windLabel: '' };
 
+    /** 화살표 시작점 = arrowOrigin (ocean point) — 정확한 바다 위 */
+    const ox = arrowOrigin.lat;
+    const oy = arrowOrigin.lng;
+
     if (spot.coastFacingDeg != null) {
-      result.coast = coastLinePolyline(lat, lng, spot.coastFacingDeg, 200);
+      result.coast = coastLinePolyline(ox, oy, spot.coastFacingDeg, 200);
     }
     if (currentForecast?.windDirection) {
       const windFromDeg = parseFloat(currentForecast.windDirection);
       if (!isNaN(windFromDeg)) {
         const arrowDeg = windArrowDirection(windFromDeg);
-        result.wind = arrowPolyline(lat, lng, arrowDeg, 250);
+        result.wind = arrowPolyline(ox, oy, arrowDeg, 250);
         const wt = getWindType(windFromDeg, spot.coastFacingDeg);
         result.windColor = getWindTypeColor(wt);
         result.windLabel = getWindTypeLabel(wt);
@@ -119,11 +143,11 @@ export const SpotSatelliteMap: React.FC<SpotSatelliteMapProps> = ({
       const swellFromDeg = parseFloat(currentForecast.swellDirection);
       if (!isNaN(swellFromDeg)) {
         const arrowDeg = (swellFromDeg + 180) % 360;
-        result.swell = arrowPolyline(lat, lng, arrowDeg, 300);
+        result.swell = arrowPolyline(ox, oy, arrowDeg, 300);
       }
     }
     return result;
-  }, [lat, lng, spot.coastFacingDeg, currentForecast]);
+  }, [arrowOrigin, spot.coastFacingDeg, currentForecast]);
 
   const hourLabel = currentForecast?.forecastTime
     ? new Date(currentForecast.forecastTime).getHours() + '시'
@@ -149,8 +173,8 @@ export const SpotSatelliteMap: React.FC<SpotSatelliteMapProps> = ({
           mapType="satellite"
           style={s.map}
           initialRegion={{
-            latitude: lat,
-            longitude: lng,
+            latitude: arrowOrigin.lat,
+            longitude: arrowOrigin.lng,
             latitudeDelta: 0.01,
             longitudeDelta: 0.01,
           }}

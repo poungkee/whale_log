@@ -150,6 +150,15 @@ export interface SpotInfo {
   rating?: string;
   /** 평점 매긴 사용자 수 — 0이면 표시 안 함 */
   ratingCount?: number;
+  /**
+   * 화살표 머리(●) 위치할 정확한 바다 좌표 — OSM 해안선 기반 자동 계산
+   * - null이면 fallback (latitude/longitude + coastFacingDeg + 300m offset)
+   * - SpotSatelliteMap에서 화살표 머리 위치로 사용
+   */
+  oceanLatitude?: string | null;
+  oceanLongitude?: string | null;
+  /** ocean point 계산 상태: 'ok' | 'auto_only' | 'failed' */
+  oceanCalcStatus?: string | null;
 }
 
 /**

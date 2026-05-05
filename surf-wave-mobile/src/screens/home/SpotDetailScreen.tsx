@@ -53,6 +53,10 @@ interface SpotForecast {
     coastFacingDeg?: number | null;
     latitude?: string | number;
     longitude?: string | number;
+    /** ocean point 자동 보정 (OSM 해안선 기반) */
+    oceanLatitude?: string | number | null;
+    oceanLongitude?: string | number | null;
+    oceanCalcStatus?: string | null;
   };
   forecast: {
     waveHeight: string; wavePeriod: string; windSpeed: string;
@@ -704,6 +708,9 @@ const SpotDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                     latitude: spotData.spot.latitude,
                     longitude: spotData.spot.longitude,
                     coastFacingDeg: spotData.spot.coastFacingDeg ?? null,
+                    oceanLatitude: spotData.spot.oceanLatitude,
+                    oceanLongitude: spotData.spot.oceanLongitude,
+                    oceanCalcStatus: spotData.spot.oceanCalcStatus,
                   }}
                   hourlyData={hourlyData.map(h => ({
                     forecastTime: h.forecastTime,

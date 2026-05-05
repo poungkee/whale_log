@@ -106,6 +106,36 @@ export class Spot extends BaseEntity {
   @Column({ name: 'tolerable_wave_max', type: 'decimal', precision: 3, scale: 1, nullable: true })
   tolerableWaveMax: number | null;
 
+  /**
+   * 화살표 머리(●)가 위치할 정확한 바다 좌표 — OSM 해안선 기반 자동 계산
+   * - null이면 프론트에서 fallback (spot 좌표 + coastFacingDeg + 300m)
+   * - calculate-ocean-points.js 스크립트로 일괄 산출
+   */
+  @Column({ name: 'ocean_latitude', type: 'decimal', precision: 10, scale: 7, nullable: true })
+  oceanLatitude: number | null;
+
+  @Column({ name: 'ocean_longitude', type: 'decimal', precision: 10, scale: 7, nullable: true })
+  oceanLongitude: number | null;
+
+  /**
+   * 자동 계산된 외법선 방향 (해안선 외측 = 바다 방향)
+   * - coastFacingDeg(수동) 검증/대체 용도
+   */
+  @Column({ name: 'coast_facing_deg_auto', type: 'decimal', precision: 5, scale: 2, nullable: true })
+  coastFacingDegAuto: number | null;
+
+  /**
+   * ocean point 계산 상태
+   * - 'ok': 정상 계산
+   * - 'auto_only': 수동 coastFacingDeg 없어 자동 추정만 사용 (정확도 낮음)
+   * - 'failed': 계산 실패 — 프론트는 fallback 사용
+   */
+  @Column({ name: 'ocean_calc_status', type: 'varchar', length: 20, nullable: true })
+  oceanCalcStatus: string | null;
+
+  @Column({ name: 'ocean_calculated_at', type: 'timestamp', nullable: true })
+  oceanCalculatedAt: Date | null;
+
   // ---- Relations ----
 
   @OneToMany(() => Forecast, (forecast) => forecast.spot)

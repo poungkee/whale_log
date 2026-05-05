@@ -443,8 +443,11 @@ export function SpotDetailModal({ data, currentLevel, onClose }: SpotDetailModal
                   latitude: spot.latitude,
                   longitude: spot.longitude,
                   coastFacingDeg: spot.coastFacingDeg,
-                  /** Phase 2D: 발리 식별용 region 전달 (발리는 화살표 비활성화) */
                   region: spot.region,
+                  /** ocean point 자동 보정 (OSM 해안선 기반) */
+                  oceanLatitude: spot.oceanLatitude,
+                  oceanLongitude: spot.oceanLongitude,
+                  oceanCalcStatus: spot.oceanCalcStatus,
                 }}
                 hourlyData={hourlyData}
                 lastUpdated={hourlyData[0]?.updatedAt}

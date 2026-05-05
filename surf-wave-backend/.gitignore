@@ -29,3 +29,6 @@ coverage/
 # Docker volumes
 postgres_data/
 redis_data/
+
+# OSM ocean point 계산 결과 (DB에 저장됨, 재실행 가능)
+data/ocean-points-result.json
