@@ -312,7 +312,44 @@ export function SpotSatelliteMap({
           touchZoomRotate={true}
         >
           {/**
-           * 풍향 화살표 — 시계 바늘 디자인
+           * 파도(스웰) 화살표 — 먼저 렌더 (z-order: 뒤)
+           * 두 화살표 좌표 동일 → DOM 순서가 쌓임 결정
+           * 파도가 뒤로 깔리고 바람이 위에 표시됨
+           */}
+          {markerData.swellPos && markerData.swellRotateDeg !== null && (
+            <Marker latitude={markerData.swellPos.lat} longitude={markerData.swellPos.lng}>
+              <div
+                style={{
+                  transformOrigin: '0% 50%',
+                  transform: `rotate(${markerData.swellRotateDeg - 90}deg)`,
+                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
+                  marginLeft: 0,
+                }}
+              >
+                <svg width="90" height="36" viewBox="0 0 90 36">
+                  <path
+                    d="M 0,9 L 64,9 L 64,2 L 88,18 L 64,34 L 64,27 L 0,27 Z"
+                    fill="#3B82F6"
+                    stroke="white"
+                    strokeWidth="2"
+                  />
+                  <text
+                    x="32"
+                    y="23"
+                    textAnchor="middle"
+                    fill="white"
+                    fontSize="14"
+                    fontWeight="800"
+                  >
+                    파도
+                  </text>
+                </svg>
+              </div>
+            </Marker>
+          )}
+
+          {/**
+           * 풍향 화살표 — 나중 렌더 (z-order: 앞)
            * 마커 위치 = 스팟 (회전축), SVG 좌측 중앙이 회전축
            * 회전 = 풍향이 가는 방향 (TO direction)
            */}
@@ -346,42 +383,6 @@ export function SpotSatelliteMap({
                     fontWeight="800"
                   >
                     바람
-                  </text>
-                </svg>
-              </div>
-            </Marker>
-          )}
-
-          {/**
-           * 파도(스웰) 화살표 — 시계 바늘 디자인, 파란색
-           * 회전 = 스웰이 가는 방향 (TO = 해변쪽)
-           */}
-          {markerData.swellPos && markerData.swellRotateDeg !== null && (
-            <Marker latitude={markerData.swellPos.lat} longitude={markerData.swellPos.lng}>
-              <div
-                style={{
-                  transformOrigin: '0% 50%',
-                  transform: `rotate(${markerData.swellRotateDeg - 90}deg)`,
-                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
-                  marginLeft: 0,
-                }}
-              >
-                <svg width="90" height="36" viewBox="0 0 90 36">
-                  <path
-                    d="M 0,9 L 64,9 L 64,2 L 88,18 L 64,34 L 64,27 L 0,27 Z"
-                    fill="#3B82F6"
-                    stroke="white"
-                    strokeWidth="2"
-                  />
-                  <text
-                    x="32"
-                    y="23"
-                    textAnchor="middle"
-                    fill="white"
-                    fontSize="14"
-                    fontWeight="800"
-                  >
-                    파도
                   </text>
                 </svg>
               </div>
