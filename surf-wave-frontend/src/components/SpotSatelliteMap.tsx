@@ -113,35 +113,45 @@ export function SpotSatelliteMap({
   /**
    * 화살표 데이터 메모이제이션 — 방향/거리 계산 비용 절감
    *
-   * 길이 단축 (해안가 육지 침범 방지):
-   * - 풍향: 250m → 150m
-   * - 스웰: 300m → 200m
-   * - 해변선: 200m → 150m (양방향 합 300m)
+   * 길이:
+   * - 풍향: 150m
+   * - 스웰: 200m
+   * - 해변선: 150m (양방향 합 300m)
    *
-   * 끝점 좌표 추가 — 화살표 머리(▶) Marker 배치용
+   * 좌표 종류:
+   * - 시작점: 스팟 위치 (Marker)
+   * - 중점(mid): 라벨 캡슐 위치 (라인 중간에 떠있는 효과)
+   * - 끝점(end): 화살표 머리(▶) 위치
    */
   const arrowData = useMemo(() => {
     const result: {
       coast?: GeoJSON.FeatureCollection<GeoJSON.LineString>;
       wind?: GeoJSON.FeatureCollection<GeoJSON.LineString>;
       swell?: GeoJSON.FeatureCollection<GeoJSON.LineString>;
+      windMid?: { lat: number; lng: number };
       windEnd?: { lat: number; lng: number; rotateDeg: number };
+      swellMid?: { lat: number; lng: number };
       swellEnd?: { lat: number; lng: number; rotateDeg: number };
       windColor: string;
       windLabel: string;
-    } = { windColor: '#95A5A6', windLabel: '' };
+      swellLabel: string;
+    } = { windColor: '#95A5A6', windLabel: '', swellLabel: '' };
 
-    /** 해변선 (M-1) — 양방향 직선이라 화살표 머리 없음 */
+    /** 해변선 (M-1) — 양방향 직선이라 라벨/머리 없음 */
     if (spot.coastFacingDeg != null) {
       result.coast = coastLineString(lat, lng, spot.coastFacingDeg, 150);
     }
 
-    /** 풍향 화살표 (M-2) — FROM → TO 변환 + 끝점 머리 */
+    /** 풍향 — 라인 + 중간 라벨 + 끝점 머리 (M-2) */
     if (currentForecast?.windDirection) {
       const windFromDeg = Number(currentForecast.windDirection);
       const arrowDeg = windArrowDirection(windFromDeg);
       const distanceM = 150;
       result.wind = arrowLineString(lat, lng, arrowDeg, distanceM);
+      /** 중점 = 라인 절반 지점 (라벨 캡슐용) */
+      const mid = arrowEndPoint(lat, lng, arrowDeg, distanceM / 2);
+      result.windMid = { lat: mid.lat, lng: mid.lng };
+      /** 끝점 = 화살표 머리 위치 */
       const end = arrowEndPoint(lat, lng, arrowDeg, distanceM);
       result.windEnd = { lat: end.lat, lng: end.lng, rotateDeg: arrowDeg };
       const windType = getWindType(windFromDeg, spot.coastFacingDeg);
@@ -149,18 +159,36 @@ export function SpotSatelliteMap({
       result.windLabel = getWindTypeLabel(windType);
     }
 
-    /** 스웰 화살표 (M-3) */
+    /** 스웰 — 라인 + 중간 라벨 + 끝점 머리 (M-3) */
     if (currentForecast?.swellDirection) {
       const swellFromDeg = Number(currentForecast.swellDirection);
       const arrowDeg = (swellFromDeg + 180) % 360;
       const distanceM = 200;
       result.swell = arrowLineString(lat, lng, arrowDeg, distanceM);
+      const mid = arrowEndPoint(lat, lng, arrowDeg, distanceM / 2);
+      result.swellMid = { lat: mid.lat, lng: mid.lng };
       const end = arrowEndPoint(lat, lng, arrowDeg, distanceM);
       result.swellEnd = { lat: end.lat, lng: end.lng, rotateDeg: arrowDeg };
+      /** 스웰 라벨 — "스웰 1.5m @8s" 형식 (높이/주기) */
+      const sh = (currentForecast as { swellHeight?: string | null }).swellHeight;
+      const sp = (currentForecast as { swellPeriod?: string | null }).swellPeriod;
+      result.swellLabel = sh
+        ? `스웰 ${Number(sh).toFixed(1)}m${sp ? ` @${Number(sp).toFixed(0)}s` : ''}`
+        : '스웰';
     }
 
     return result;
   }, [lat, lng, spot.coastFacingDeg, currentForecast]);
+
+  /**
+   * 지도 중심 좌표 — 바다 방향으로 offset (스팟이 카드 위쪽 = 육지쪽 위치)
+   * coastFacingDeg가 해변이 바라보는 방향 = 바다 방향
+   * 그 방향으로 200m 이동 → 지도 카드 중앙이 바다가 됨 (wavelet 스타일)
+   */
+  const mapCenter = useMemo(() => {
+    if (spot.coastFacingDeg == null) return { lat, lng };
+    return arrowEndPoint(lat, lng, spot.coastFacingDeg, 200);
+  }, [lat, lng, spot.coastFacingDeg]);
 
   /** 시간 라벨 — "12시" 형식 */
   const hourLabel = currentForecast?.forecastTime
@@ -190,12 +218,13 @@ export function SpotSatelliteMap({
       <div className="relative w-full h-[280px]">
         <Map
           initialViewState={{
-            latitude: lat,
-            longitude: lng,
             /**
-             * 줌 14 — 좌표가 약간 부정확해도 해변+주변 지형이 한눈에 보임
-             * (15는 너무 확대돼서 좌표 1km만 빗나가도 화면 밖)
+             * 지도 중심을 바다 방향으로 offset (wavelet 스타일)
+             * - 스팟 마커: 카드 위쪽 (육지)
+             * - 바다: 카드 중앙/하단 (포커스)
              */
+            latitude: mapCenter.lat,
+            longitude: mapCenter.lng,
             zoom: 14,
           }}
           /**
@@ -248,6 +277,74 @@ export function SpotSatelliteMap({
           <Marker latitude={lat} longitude={lng}>
             <div className="w-4 h-4 rounded-full bg-primary border-2 border-white shadow-md" />
           </Marker>
+
+          {/**
+           * 풍향 라벨 캡슐 — 라인 중간에 표시 (wavelet 스타일)
+           * - 회전 X (글자 항상 정방향, 가독성)
+           * - 색상 dot + 라벨 텍스트 ("오프쇼어")
+           */}
+          {arrowData.windMid && arrowData.windLabel && (
+            <Marker latitude={arrowData.windMid.lat} longitude={arrowData.windMid.lng}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  background: 'white',
+                  border: `2px solid ${arrowData.windColor}`,
+                  borderRadius: 12,
+                  padding: '2px 8px',
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: arrowData.windColor,
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                }}
+              >
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    background: arrowData.windColor,
+                  }}
+                />
+                {arrowData.windLabel}
+              </div>
+            </Marker>
+          )}
+
+          {/* 스웰 라벨 캡슐 — 라인 중간 (파란색) */}
+          {arrowData.swellMid && arrowData.swellLabel && (
+            <Marker latitude={arrowData.swellMid.lat} longitude={arrowData.swellMid.lng}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  background: 'white',
+                  border: '2px solid #3B82F6',
+                  borderRadius: 12,
+                  padding: '2px 8px',
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: '#3B82F6',
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                }}
+              >
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    background: '#3B82F6',
+                  }}
+                />
+                {arrowData.swellLabel}
+              </div>
+            </Marker>
+          )}
 
           {/**
            * 풍향 화살표 머리 (▶) — 끝점에 SVG로 표시
