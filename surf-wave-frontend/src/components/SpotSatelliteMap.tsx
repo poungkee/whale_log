@@ -186,8 +186,21 @@ export function SpotSatelliteMap({
            * - maplibre-gl과 호환성 검증됨 (Mapbox v8 spec과 다른 이슈 없음)
            * - attribution: Esri (지도 우하단 자동 표시)
            */
+          /**
+           * maplibre-gl 5.x 호환을 위해 style spec에 모든 필드 명시
+           * - glyphs: 라벨 폰트 (사용 안 해도 spec은 요구할 수 있음)
+           * - terrain: null 명시 (자동 setTerrain 호출 시 에러 방지)
+           * - light: 기본 light 명시
+           */
           mapStyle={{
             version: 8,
+            name: 'Whale Log Satellite',
+            /**
+             * glyphs: maplibre-gl 5.x는 spec에 glyphs URL 누락 시 worker 초기화 실패
+             * (실제 텍스트 라벨 layer 없어도 spec 유효성 검증 통과해야 함)
+             * demotiles.maplibre.org는 maplibre 공식 무료 폰트 서버
+             */
+            glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
             sources: {
               'satellite': {
                 type: 'raster',
@@ -195,11 +208,19 @@ export function SpotSatelliteMap({
                   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
                 ],
                 tileSize: 256,
+                minzoom: 0,
+                maxzoom: 18,
                 attribution: 'Tiles © Esri',
               },
             },
             layers: [
-              { id: 'satellite-layer', type: 'raster', source: 'satellite' },
+              {
+                id: 'satellite-layer',
+                type: 'raster',
+                source: 'satellite',
+                minzoom: 0,
+                maxzoom: 22,
+              },
             ],
           }}
           dragRotate={false}
